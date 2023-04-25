@@ -1,5 +1,5 @@
-import { getItem, setItem } from '$utils/googlePlace';
 import { setGooglePlaceDataToForm } from '$utils/googlePlace';
+import { getItem, setItem } from '$utils/localStorage';
 
 const googlePlaceFromStorage = getItem('restaurant');
 if (googlePlaceFromStorage) {
