@@ -1,6 +1,7 @@
-const setInputElementValue = (elementName, value) => {
-  $(`input[name=${elementName}]`).val(value);
-};
+import { setInputElementValue } from '$utils/globals';
+import { getItem, setItem } from '$utils/localStorage';
+
+const restaurantObject = 'restaurant';
 
 const setAddressComponents = (googlePlace, componentForm) => {
   let route = '';
@@ -35,7 +36,7 @@ const setOtherComponents = (googlePlace, componentForm) => {
   });
 };
 
-export const setGooglePlaceDataToForm = (googlePlace) => {
+const setGooglePlaceDataToForm = (googlePlace) => {
   if (!googlePlace) return;
 
   const componentForm = {
@@ -58,4 +59,49 @@ export const setGooglePlaceDataToForm = (googlePlace) => {
   setAddressComponents(googlePlace, componentForm);
   setTypes(googlePlace);
   setOtherComponents(googlePlace, componentForm);
+};
+
+const initGooglePlaceAutocomplete = () => {
+  const googlePlaceFromStorage = getItem(restaurantObject);
+  if (googlePlaceFromStorage) {
+    setGooglePlaceDataToForm(googlePlaceFromStorage);
+    setInputElementValue('restaurant-name', getItem('restaurant-value'));
+  }
+
+  const gpaOptions = {
+    componentRestrictions: { country: 'us' },
+  };
+
+  $('input[name="restaurant-name"]').each(function () {
+    const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
+    const self = $(this);
+
+    autocomplete.addListener('place_changed', function () {
+      const place = autocomplete.getPlace();
+      const value = self.val();
+
+      setGooglePlaceDataToForm(place);
+      setItem('restaurant-value', value);
+      setItem(restaurantObject, place);
+      setInputElementValue('restaurant-name', getItem('restaurant-value'));
+    });
+  });
+};
+
+const checkIfRestaurant = () => {
+  // Parse the localStorage object into a JavaScript object
+  const placeObject = JSON.parse(localStorage.getItem(restaurantObject));
+
+  // Check if the types array includes "restaurant"
+  if (placeObject.types.includes('restaurant')) {
+    return true;
+  }
+  return false;
+};
+
+export {
+  checkIfRestaurant,
+  initGooglePlaceAutocomplete,
+  restaurantObject,
+  setGooglePlaceDataToForm,
 };
