@@ -3,8 +3,8 @@ import { restaurantObject } from '$utils/googlePlace';
 import { onFormReadyCallback, waitForFormReady } from '$utils/hubspotLogic';
 import { getItem } from '$utils/localStorage';
 
-// Mapping object
-var inputMapping = {};
+/* Mapping object
+var inputMapping = {}; */
 
 // Elements
 const main = $('.main-wrapper');
@@ -37,7 +37,7 @@ function getAddressFromObject(object) {
 }
 
 // Init Form
-waitForFormReady().then(function (hsform) {});
+// waitForFormReady().then(function (hsform) {});
 
 // API
 const postRequest = async (address) => {
@@ -69,7 +69,6 @@ const generateWeb = async (address) => {
       const status = checkGenerationStatus(generationData);
       if (status === 'error' || status === 'cancelled') throw new Error(status);
     }
-    console.log('Website Generation Successful');
     return generationData.artifacts.funnelUrl;
   } catch (err) {
     const status =
@@ -90,14 +89,15 @@ function logEvent(status, address, errorMessage = '') {
 
 // Handlers
 function handleSuccess(response, requestBody) {
-  logEvent('success', requestBody.address);
+  console.log('Success:', response);
+  logEvent('Website Generation Successful', requestBody.address);
   window.location.replace(response.artifacts.funnelUrl);
 }
 
 function handleError(response, requestBody) {
   console.log('Error:', response);
   showError();
-  logEvent('error', requestBody.address);
+  logEvent('Website Generation Failed', requestBody.address);
 }
 
 function handleException(err, requestBody) {
