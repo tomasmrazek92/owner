@@ -60,15 +60,34 @@ const checkGenerationStatus = (generationData) => {
 const generateWeb = async (address) => {
   try {
     const { id } = await postRequest(address);
-    if (!id) throw new Error('Invalid ID received from POST request');
+    if (!id) {
+      throw new Error('Invalid ID received from POST request');
+    }
+
     console.log('Website Generation Started');
     logEvent('Website Generation Started', address);
+
     let generationData = {};
-    while (!generationData.artifacts?.funnelUrl) {
+
+    const intervalId = setInterval(async () => {
       generationData = await getGenerationData(id);
       const status = checkGenerationStatus(generationData);
-      if (status === 'error' || status === 'cancelled') throw new Error(status);
+
+      if (status === 'error' || status === 'cancelled' || status === 'success') {
+        clearInterval(intervalId);
+      }
+
+      if (status === 'error' || status === 'cancelled') {
+        throw new Error(status);
+      }
+    }, 1000);
+
+    while (generationData.status === 'processing') {
+      await new Promise((resolve) => setTimeout(resolve, 1000));
     }
+
+    console.log('Website Generation Successful');
+    logEvent('Website Generation Successful', address);
     return generationData.artifacts.funnelUrl;
   } catch (err) {
     const status =
