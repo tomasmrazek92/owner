@@ -50,11 +50,15 @@ const postRequest = async (address) => {
   return await response.json();
 };
 
-const getGenerationData = async (id) =>
-  (await fetch(`https://dev-api.owner.com/generator/v1/${id}`)).json();
+const getGenerationData = async (id) => {
+  const response = await fetch(`https://dev-api.owner.com/generator/v1/${id}`);
+  const data = await response.json();
+  return data;
+};
 
 const checkGenerationStatus = (generationData) => {
-  generationData.tasks.gmb.status;
+  console.log('Checking Generation Status:', generationData); // Log the generationData
+  return generationData.status;
 };
 
 const generateWeb = async (address) => {
@@ -69,26 +73,26 @@ const generateWeb = async (address) => {
 
     let generationData = {};
 
-    const intervalId = setInterval(async () => {
-      generationData = await getGenerationData(id);
-      const status = checkGenerationStatus(generationData);
+    return new Promise((resolve, reject) => {
+      const intervalId = setInterval(async () => {
+        generationData = await getGenerationData(id);
+        const status = checkGenerationStatus(generationData);
 
-      if (status === 'error' || status === 'cancelled' || status === 'success') {
-        clearInterval(intervalId);
-      }
+        if (status === 'error' || status === 'cancelled' || status === 'success') {
+          clearInterval(intervalId);
+        }
 
-      if (status === 'error' || status === 'cancelled') {
-        throw new Error(status);
-      }
-    }, 1000);
+        if (status === 'error' || status === 'cancelled') {
+          reject(new Error(status));
+        }
 
-    while (generationData.status === 'processing') {
-      await new Promise((resolve) => setTimeout(resolve, 1000));
-    }
-
-    console.log('Website Generation Successful');
-    logEvent('Website Generation Successful', address);
-    return generationData.artifacts.funnelUrl;
+        if (status === 'success') {
+          console.log('Website Generation Successful', generationData);
+          logEvent('Website Generation Successful', address);
+          resolve(generationData);
+        }
+      }, 1000);
+    });
   } catch (err) {
     const status =
       err.message.includes('error') || err.message.includes('cancelled') ? err.message : '';
@@ -109,20 +113,20 @@ function logEvent(status, address, errorMessage = '') {
 // Handlers
 function handleSuccess(response, requestBody) {
   console.log('Success:', response);
-  logEvent('Website Generation Successful', requestBody.address);
-  window.location.replace(response.artifacts.funnelUrl);
+  logEvent('Website Generation Successful', requestBody);
+  window.location.replace(`https://dev.ordersave.com/partnersite/${response.brandId}`);
 }
 
 function handleError(response, requestBody) {
   console.log('Error:', response);
   showError();
-  logEvent('Website Generation Failed', requestBody.address);
+  logEvent('Website Generation Failed', requestBody);
 }
 
 function handleException(err, requestBody) {
   console.log('Error:', err.message);
   showError();
-  logEvent('error', requestBody.address);
+  logEvent('error', requestBody);
 }
 
 // Action
@@ -130,12 +134,16 @@ $('#generateBtn').on('click', async function () {
   const isValid = validateInput($('input[name=restaurant-name]'));
   if (!isValid) return console.log('Validation Invalid');
   showLoading();
-  const requestBody = { address: getAddressFromObject(restaurantObject) };
+
+  let requestBody = getAddressFromObject(restaurantObject);
+
   try {
     const response = await generateWeb(requestBody);
-    response.tasks.gmb.status === 'success'
-      ? handleSuccess(response, requestBody)
-      : handleError(response, requestBody);
+    if (response && response.status === 'success') {
+      handleSuccess(response, requestBody);
+    } else {
+      handleError(response, requestBody);
+    }
   } catch (err) {
     handleException(err, requestBody);
   }
