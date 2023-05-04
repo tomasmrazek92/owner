@@ -1,1 +1,114 @@
-"use strict";(()=>{var o=(t,e)=>{$(`input[name=${t}]`).val(e)};var c=t=>{let e=localStorage.getItem(t);try{return JSON.parse(e)}catch{return e}},l=(t,e)=>{let n=typeof e=="object"?JSON.stringify(e):e;localStorage.setItem(t,n)};var i="restaurant",d=(t,e)=>{let n="",s="";t.address_components.forEach(a=>{let r=a.types[0],m=e.address_components[r];if(m){let u=a[m];r==="route"?n=u:r==="street_number"?s=u:o(r,u)}}),o("restaurant-address",`${s} ${n}`)},_=t=>{if(!t.types)return;let e=t.types.join(", ");o("place_types",e)},g=(t,e)=>{Object.keys(e).forEach(n=>{if(n==="address_components")return;let s=t[n];s&&o(n,s)})},p=t=>{if(!t)return;let e={name:"",international_phone_number:"",website:"",place_id:"",rating:"",user_ratings_total:"",address_components:{street_number:"short_name",route:"long_name",locality:"long_name",administrative_area_level_1:"short_name",country:"short_name",postal_code:"short_name"}};d(t,e),_(t),g(t,e)},f=()=>{let t=c(i);t&&(p(t),o("restaurant-name",c("restaurant-value")));let e={componentRestrictions:{country:"us"}};$('input[name="restaurant-name"]').each(function(){let n=new google.maps.places.Autocomplete(this,e),s=$(this);n.addListener("place_changed",function(){let a=n.getPlace(),r=s.val();p(a),l("restaurant-value",r),l(i,a),o("restaurant-name",c("restaurant-value"))})})};$(document).ready(()=>{f(),$("form[data-form=multistep]").submit(function(t){t.preventDefault()})});})();
+"use strict";
+(() => {
+  // bin/live-reload.js
+  new EventSource(`${"http://localhost:3000"}/esbuild`).addEventListener("change", () => location.reload());
+
+  // src/utils/globals.js
+  var setInputElementValue = (elementName, value) => {
+    $(`input[name=${elementName}]`).val(value);
+  };
+
+  // src/utils/localStorage.js
+  var getItem = (key) => {
+    const value = localStorage.getItem(key);
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      return value;
+    }
+  };
+  var setItem = (key, value) => {
+    const serializedValue = typeof value === "object" ? JSON.stringify(value) : value;
+    localStorage.setItem(key, serializedValue);
+  };
+
+  // src/utils/googlePlace.js
+  var restaurantObject = "restaurant";
+  var setAddressComponents = (googlePlace, componentForm) => {
+    let route = "";
+    let streetNumber = "";
+    googlePlace.address_components.forEach((component) => {
+      const addressType = component.types[0];
+      const type = componentForm.address_components[addressType];
+      if (type) {
+        const val = component[type];
+        if (addressType === "route")
+          route = val;
+        else if (addressType === "street_number")
+          streetNumber = val;
+        else
+          setInputElementValue(addressType, val);
+      }
+    });
+    setInputElementValue("restaurant-address", `${streetNumber} ${route}`);
+  };
+  var setTypes = (googlePlace) => {
+    if (!googlePlace.types)
+      return;
+    const typesAsString = googlePlace.types.join(", ");
+    setInputElementValue("place_types", typesAsString);
+  };
+  var setOtherComponents = (googlePlace, componentForm) => {
+    Object.keys(componentForm).forEach((key) => {
+      if (key === "address_components")
+        return;
+      const value = googlePlace[key];
+      if (value)
+        setInputElementValue(key, value);
+    });
+  };
+  var setGooglePlaceDataToForm = (googlePlace) => {
+    if (!googlePlace)
+      return;
+    const componentForm = {
+      name: "",
+      international_phone_number: "",
+      website: "",
+      place_id: "",
+      rating: "",
+      user_ratings_total: "",
+      address_components: {
+        street_number: "short_name",
+        route: "long_name",
+        locality: "long_name",
+        administrative_area_level_1: "short_name",
+        country: "short_name",
+        postal_code: "short_name"
+      }
+    };
+    setAddressComponents(googlePlace, componentForm);
+    setTypes(googlePlace);
+    setOtherComponents(googlePlace, componentForm);
+  };
+  var initGooglePlaceAutocomplete = () => {
+    const googlePlaceFromStorage = getItem(restaurantObject);
+    if (googlePlaceFromStorage) {
+      setGooglePlaceDataToForm(googlePlaceFromStorage);
+      setInputElementValue("restaurant-name", getItem("restaurant-value"));
+    }
+    const gpaOptions = {
+      componentRestrictions: { country: "us" }
+    };
+    $('input[name="restaurant-name"]').each(function() {
+      const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
+      const self = $(this);
+      autocomplete.addListener("place_changed", function() {
+        const place = autocomplete.getPlace();
+        const value = self.val();
+        setGooglePlaceDataToForm(place);
+        setItem("restaurant-value", value);
+        setItem(restaurantObject, place);
+        setInputElementValue("restaurant-name", getItem("restaurant-value"));
+      });
+    });
+  };
+
+  // src/index.js
+  $(document).ready(() => {
+    initGooglePlaceAutocomplete();
+    $("form[data-form=multistep]").submit(function(e) {
+      e.preventDefault();
+    });
+  });
+})();
+//# sourceMappingURL=index.js.map
