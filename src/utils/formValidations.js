@@ -46,7 +46,12 @@ function validateGooglePlace(input) {
 }
 
 // Validate CheckPlaceType
+let hasRun = false;
 function checkPlaceType(input) {
+  if (hasRun) {
+    return true;
+  }
+
   let isValid = checkIfRestaurant();
 
   if (!isValid) {
@@ -59,6 +64,7 @@ function checkPlaceType(input) {
     toggleValidationMsg($(input), false);
   }
 
+  hasRun = true;
   return isValid;
 }
 

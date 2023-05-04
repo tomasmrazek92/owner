@@ -92,9 +92,12 @@ const checkIfRestaurant = () => {
   // Parse the localStorage object into a JavaScript object
   const placeObject = JSON.parse(localStorage.getItem(restaurantObject));
 
-  // Check if the types array includes "restaurant"
-  if (placeObject.types.includes('restaurant')) {
-    return true;
+  // Check if the types array includes at least one of the valid types
+  const validTypes = ['bar', 'cafe', 'bakery', 'food', 'restaurant'];
+  for (let i = 0; i < validTypes.length; i++) {
+    if (placeObject.types.includes(validTypes[i])) {
+      return true;
+    }
   }
   return false;
 };
