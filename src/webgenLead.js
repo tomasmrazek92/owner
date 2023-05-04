@@ -21,7 +21,6 @@ hbspt.forms.create({
 });
 */
 
-console.log(getItem(restaurantObject).website);
 function showLoading() {
   // Hide Rest
   $(main, growthError).hide();
