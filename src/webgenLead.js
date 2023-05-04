@@ -21,8 +21,30 @@ hbspt.forms.create({
 });
 */
 
+console.log(getItem(restaurantObject).website);
 function showLoading() {
+  // Hide Rest
   $(main, growthError).hide();
+
+  let iframeBox = $('.growth-loading_iframe');
+  let iframe = iframeBox.find('iframe');
+  let { website } = getItem(restaurantObject);
+  let iframeUrl;
+
+  // If
+  if (website) {
+    if (website.indexOf('http://') >= 0 || website.indexOf('https://') >= 0) {
+      iframeUrl = website.replace('http://', 'https://');
+    } else {
+      iframeUrl = 'https://' + website;
+    }
+    iframe.attr('src', iframeUrl);
+    iframe.on('load', function () {
+      iframeBox.show();
+    });
+  } else {
+    iframeBox.hide();
+  }
   $(growthLoading).fadeIn();
 }
 
@@ -56,9 +78,15 @@ const getGenerationData = async (id) => {
   return data;
 };
 
+const loggedStatuses = new Set();
+
 const checkGenerationStatus = (generationData) => {
-  console.log('Checking Generation Status:', generationData); // Log the generationData
-  return generationData.status;
+  const { status } = generationData;
+  if (!loggedStatuses.has(status)) {
+    console.log('Checking Generation Status:', generationData);
+    loggedStatuses.add(status);
+  }
+  return status;
 };
 
 const generateWeb = async (address) => {
@@ -114,7 +142,7 @@ function logEvent(status, address, errorMessage = '') {
 function handleSuccess(response, requestBody) {
   console.log('Success:', response);
   logEvent('Website Generation Successful', requestBody);
-  window.location.replace(`https://dev.ordersave.com/partnersite/${response.brandId}`);
+  window.location.href = `https://dev.ordersave.com/partnersite/${response.brandId}`;
 }
 
 function handleError(response, requestBody) {
