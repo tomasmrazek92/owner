@@ -52,20 +52,20 @@ function showError() {
   $(growthError).fadeIn();
 }
 
-function getAddressFromObject(object) {
+function getPlaceIdFromObject(object) {
   let restaurantObject = getItem(object);
-  return restaurantObject.formatted_address;
+  return restaurantObject.place_id;
 }
 
 // Init Form
 // waitForFormReady().then(function (hsform) {});
 
 // API
-const postRequest = async (address) => {
+const postRequest = async (placeId) => {
   const response = await fetch('https://dev-api.owner.com/generator/v1', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
-    body: JSON.stringify({ address }),
+    body: JSON.stringify({ googleId: placeId }),
   });
   if (!response.ok) console.error('POST request error:', response.status, await response.text());
   return await response.json();
@@ -88,15 +88,15 @@ const checkGenerationStatus = (generationData) => {
   return status;
 };
 
-const generateWeb = async (address) => {
+const generateWeb = async (placeId) => {
   try {
-    const { id } = await postRequest(address);
+    const { id } = await postRequest(placeId);
     if (!id) {
       throw new Error('Invalid ID received from POST request');
     }
 
     console.log('Website Generation Started');
-    logEvent('Website Generation Started', address);
+    logEvent('Website Generation Started', placeId);
 
     let generationData = {};
 
@@ -115,7 +115,7 @@ const generateWeb = async (address) => {
 
         if (status === 'success') {
           console.log('Website Generation Successful', generationData);
-          logEvent('Website Generation Successful', address);
+          logEvent('Website Generation Successful', placeId);
           resolve(generationData);
         }
       }, 1000);
@@ -129,10 +129,10 @@ const generateWeb = async (address) => {
 };
 
 // Logs
-function logEvent(status, address, errorMessage = '') {
+function logEvent(status, place_id, errorMessage = '') {
   const eventStatus =
     status === 'success' ? 'Website Generation Successful' : 'Website Generation Failed';
-  const eventVars = { location: { address } };
+  const eventVars = { location: { place_id } };
   if (errorMessage) eventVars.location.errorMessage = errorMessage;
   FS.event(eventStatus, FS.setUserVars(eventVars));
 }
@@ -162,7 +162,8 @@ $('#generateBtn').on('click', async function () {
   if (!isValid) return console.log('Validation Invalid');
   showLoading();
 
-  let requestBody = getAddressFromObject(restaurantObject);
+  let requestBody = getPlaceIdFromObject(restaurantObject);
+  console.log(requestBody);
 
   try {
     const response = await generateWeb(requestBody);
