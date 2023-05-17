@@ -23,28 +23,27 @@ hbspt.forms.create({
 
 function showLoading() {
   // Hide Rest
-  $(main, growthError).hide();
+  $(main, growthError).fadeOut(1000, function () {
+    $(growthLoading).fadeIn(1000);
+  });
 
-  let iframeBox = $('.growth-loading_iframe');
-  let iframe = iframeBox.find('iframe');
-  let { website } = getItem(restaurantObject);
-  let iframeUrl;
+  // Get steps
+  let steps = $('.growth-loading_step');
+  let currentIndex = 0;
 
-  // If
-  if (website) {
-    if (website.indexOf('http://') >= 0 || website.indexOf('https://') >= 0) {
-      iframeUrl = website.replace('http://', 'https://');
-    } else {
-      iframeUrl = 'https://' + website;
+  function showNextStep() {
+    if (currentIndex < steps.length - 1) {
+      steps.eq(currentIndex).fadeOut(1000, function () {
+        currentIndex++;
+        steps.eq(currentIndex).fadeIn(1000);
+        setTimeout(showNextStep, 5000);
+      });
     }
-    iframe.attr('src', iframeUrl);
-    iframe.on('load', function () {
-      iframeBox.show();
-    });
-  } else {
-    iframeBox.hide();
   }
-  $(growthLoading).fadeIn();
+
+  // Start the loop
+  steps.hide().eq(currentIndex).show();
+  setTimeout(showNextStep, 5000);
 }
 
 function showError() {
@@ -157,7 +156,7 @@ function handleException(err, requestBody) {
 }
 
 // Action
-$('#generateBtn').on('click', async function () {
+$('[data-form=generateBtn]').on('click', async function () {
   const isValid = validateInput($('input[name=restaurant-name]'));
   if (!isValid) return console.log('Validation Invalid');
   showLoading();
