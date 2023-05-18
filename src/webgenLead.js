@@ -23,8 +23,8 @@ hbspt.forms.create({
 
 function showLoading() {
   // Hide Rest
-  $(main, growthError).fadeOut(1000, function () {
-    $(growthLoading).fadeIn(1000);
+  $(main, growthError).fadeOut(500, function () {
+    $(growthLoading).fadeIn(400);
   });
 
   // Get steps
