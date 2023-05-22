@@ -1,10 +1,8 @@
-import { toggleValidationMsg, validateInput } from '$utils/formValidations';
+import { validateInput } from '$utils/formValidations';
 import { restaurantObject } from '$utils/googlePlace';
-import { onFormReadyCallback, waitForFormReady } from '$utils/hubspotLogic';
 import { getItem } from '$utils/localStorage';
 
-/* Mapping object
-var inputMapping = {}; */
+const OWNER_API = 'https://dev-api.owner.com';
 
 // Elements
 const main = $('.main-wrapper');
@@ -34,7 +32,7 @@ function showLoading() {
   function showNextStep() {
     if (currentIndex < steps.length - 1) {
       steps.eq(currentIndex).fadeOut(1000, function () {
-        currentIndex++;
+        currentIndex += 1;
         steps.eq(currentIndex).fadeIn(1000);
         setTimeout(showNextStep, 5000);
       });
@@ -61,7 +59,7 @@ function getPlaceIdFromObject(object) {
 
 // API
 const postRequest = async (placeId) => {
-  const response = await fetch('https://dev-api.owner.com/generator/v1', {
+  const response = await fetch(`${OWNER_API}/generator/v1/generations`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json', 'Access-Control-Allow-Origin': '*' },
     body: JSON.stringify({ googleId: placeId }),
@@ -71,7 +69,7 @@ const postRequest = async (placeId) => {
 };
 
 const getGenerationData = async (id) => {
-  const response = await fetch(`https://dev-api.owner.com/generator/v1/${id}`);
+  const response = await fetch(`${OWNER_API}/generator/v1/generations/${id}`);
   const data = await response.json();
   return data;
 };
@@ -104,15 +102,13 @@ const generateWeb = async (placeId) => {
         generationData = await getGenerationData(id);
         const status = checkGenerationStatus(generationData);
 
-        if (status === 'error' || status === 'cancelled' || status === 'success') {
+        if (status !== 'processing') {
           clearInterval(intervalId);
         }
 
-        if (status === 'error' || status === 'cancelled') {
+        if (status !== 'success') {
           reject(new Error(status));
-        }
-
-        if (status === 'success') {
+        } else {
           console.log('Website Generation Successful', generationData);
           logEvent('Website Generation Successful', placeId);
           resolve(generationData);
@@ -140,7 +136,7 @@ function logEvent(status, place_id, errorMessage = '') {
 function handleSuccess(response, requestBody) {
   console.log('Success:', response);
   logEvent('Website Generation Successful', requestBody);
-  window.location.href = `https://dev.ordersave.com/partnersite/${response.brandId}`;
+  window.location.href = response.redirectUri;
 }
 
 function handleError(response, requestBody) {
