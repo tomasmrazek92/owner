@@ -102,15 +102,13 @@ const generateWeb = async (placeId) => {
         generationData = await getGenerationData(id);
         const status = checkGenerationStatus(generationData);
 
-        if (status === 'error' || status === 'cancelled' || status === 'success') {
+        if (status !== 'processing') {
           clearInterval(intervalId);
         }
 
-        if (status === 'error' || status === 'cancelled') {
+        if (status !== 'success') {
           reject(new Error(status));
-        }
-
-        if (status === 'success') {
+        } else {
           console.log('Website Generation Successful', generationData);
           logEvent('Website Generation Successful', placeId);
           resolve(generationData);
