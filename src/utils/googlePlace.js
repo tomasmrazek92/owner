@@ -68,9 +68,7 @@ const initGooglePlaceAutocomplete = () => {
     setInputElementValue('restaurant-name', getItem('restaurant-value'));
   }
 
-  const gpaOptions = {
-    componentRestrictions: { country: 'us' },
-  };
+  const gpaOptions = {};
 
   $('input[name="restaurant-name"]').each(function () {
     const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
