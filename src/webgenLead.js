@@ -45,7 +45,7 @@ function showLoading() {
 }
 
 function showError() {
-  $(main, growthLoading).hide();
+  $(main).add(growthLoading).hide();
   $(growthError).fadeIn();
 }
 
