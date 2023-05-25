@@ -4,6 +4,10 @@ import { createSwiper, swipers } from '$utils/swipers';
 createSwiper('.n_testimonials', '.n_testimonials-content', 'hp-testimonials', {
   slidesPerView: 'auto',
   spaceBetween: 32,
+  effect: 'fade',
+  fadeEffect: {
+    crossFade: true,
+  },
   on: {
     slideChange: function () {
       let currentIndex = this.activeIndex;
@@ -27,6 +31,7 @@ navigationItems.on('click', function () {
 // --- Feature Slider
 var progressBar = $('.hp-slider_nav-progress');
 var duration = 5000;
+let progress = true;
 
 // Set the Slider
 createSwiper('.n_section-hp-slider', '.hp-slider_slider', 'hp-features', {
@@ -44,11 +49,17 @@ createSwiper('.n_section-hp-slider', '.hp-slider_slider', 'hp-features', {
       updateTitle(this);
       progressBar.stop().css('width', '0%');
     },
-    slideNextTransitionStart: function () {
+    slideChangeTransitionStart: function () {
       initProgressBar();
     },
-    tap: function () {
-      progressBar.stop();
+    touchMove: function () {
+      stopProgressBar();
+    },
+    touchStart: function () {
+      stopProgressBar();
+    },
+    touchEnd: function () {
+      stopProgressBar();
     },
   },
 });
@@ -66,6 +77,12 @@ function updateTitle(swiperInstance) {
 }
 
 // Progress Bar
+function stopProgressBar() {
+  progress = false;
+  progressBar.stop();
+}
 function initProgressBar() {
-  progressBar.stop().animate({ width: '100%' }, duration);
+  if (progress) {
+    progressBar.stop().animate({ width: '100%' }, duration);
+  }
 }
