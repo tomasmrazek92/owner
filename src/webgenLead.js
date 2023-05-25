@@ -95,23 +95,21 @@ const generateWeb = async (placeId) => {
     console.log('Website Generation Started');
     logEvent('Website Generation Started', placeId);
 
-    let generationData = {};
-
     return new Promise((resolve, reject) => {
       const intervalId = setInterval(async () => {
-        generationData = await getGenerationData(id);
+        const generationData = await getGenerationData(id);
         const status = checkGenerationStatus(generationData);
 
-        if (status !== 'processing') {
+        // Removed the processing clearinterval and add check for "error"
+        if (status === 'success' || status === 'error') {
           clearInterval(intervalId);
-        }
-
-        if (status !== 'success') {
-          reject(new Error(status));
-        } else {
-          console.log('Website Generation Successful', generationData);
-          logEvent('Website Generation Successful', placeId);
-          resolve(generationData);
+          if (status === 'success') {
+            console.log('Website Generation Successful', generationData);
+            logEvent('Website Generation Successful', placeId);
+            resolve(generationData);
+          } else {
+            reject(new Error(status));
+          }
         }
       }, 1000);
     });
