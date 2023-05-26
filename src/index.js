@@ -4,6 +4,19 @@ $(document).ready(() => {
   // --- Preload Data from Google API ---
   initGooglePlaceAutocomplete();
 
+  // --- Menu on Scroll
+  window.onscroll = () => {
+    let navbar = $('.n_nav-wrapper');
+    let scrollHeight = $(navbar).height();
+    if ($(navbar)) {
+      if (window.scrollY > scrollHeight / 2) {
+        $(navbar).addClass('pinned');
+      } else {
+        $(navbar).removeClass('pinned');
+      }
+    }
+  };
+
   // --- Custom Actions ---
   // Prevent Default Submit Action
   $('form[data-submit=prevent]').submit(function (e) {

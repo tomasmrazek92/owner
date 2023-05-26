@@ -117,7 +117,9 @@ function handleEmptyRequiredInput(input) {
 
 // Show/Hide Validation Message
 export const toggleValidationMsg = (element, condition, msg) => {
-  const validation = $(element).closest('.form-field-wrapper').find('.field-validation');
+  const validation = $(element)
+    .closest('.form-field-wrapper, [field-wrapper]')
+    .find('.field-validation, [field-validation]');
   const formField = $(element).closest('.form-field');
 
   formField.toggleClass('error', condition);
