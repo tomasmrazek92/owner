@@ -88,9 +88,8 @@ const checkGenerationStatus = (generationData) => {
 const generateWeb = async (placeId) => {
   try {
     const { id } = await postRequest(placeId);
-    if (!id) {
-      throw new Error('Invalid ID received from POST request');
-    }
+
+    if (!id) throw new Error('Invalid ID received from POST request');
 
     console.log('Website Generation Started');
     logEvent('Website Generation Started', placeId);
@@ -101,15 +100,12 @@ const generateWeb = async (placeId) => {
         const status = checkGenerationStatus(generationData);
 
         // Removed the processing clearinterval and add check for "error"
-        if (status === 'success' || status === 'error') {
+        if (status !== 'processing') {
           clearInterval(intervalId);
-          if (status === 'success') {
-            console.log('Website Generation Successful', generationData);
-            logEvent('Website Generation Successful', placeId);
-            resolve(generationData);
-          } else {
-            reject(new Error(status));
-          }
+          if (status !== 'success') return reject(new Error(status));
+          console.log('Website Generation Successful', generationData);
+          logEvent('Website Generation Successful', placeId);
+          resolve(generationData);
         }
       }, 1000);
     });
