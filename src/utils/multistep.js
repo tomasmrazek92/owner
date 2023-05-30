@@ -10,6 +10,7 @@ import { fillHubSpot, mirrorHS } from '$utils/hubspotLogic';
 export const multiStep = (hubspotform, inputMapping) => {
   var form = $('[data-form="multistep"]');
   var hsform = $(hubspotform);
+
   form.each(function () {
     // Vars
     var placeChanged = false;
