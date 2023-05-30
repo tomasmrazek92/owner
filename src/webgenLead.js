@@ -34,7 +34,7 @@ function showLoading() {
       steps.eq(currentIndex).fadeOut(1000, function () {
         currentIndex += 1;
         steps.eq(currentIndex).fadeIn(1000);
-        setTimeout(showNextStep, 8000);
+        setTimeout(showNextStep, 10000);
       });
     }
   }
