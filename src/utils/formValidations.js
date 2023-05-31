@@ -11,7 +11,7 @@ export const validateInput = (element) => {
       } else if ($(input).attr('name') === 'restaurant-name') {
         isValidAll = validateGooglePlace(input);
       } else if ($(input).is('select')) {
-        isValid = validateSelect(input);
+        isValidAll = validateSelect(input);
       } else {
         isValidAll = validateOtherInputs(input);
       }
@@ -19,9 +19,12 @@ export const validateInput = (element) => {
       isValidAll = handleEmptyRequiredInput(input);
     }
   }
-
   if (!isValidAll) {
     $(input).addClass('error');
+    console.log($(input));
+    console.log($(input).val());
+  } else {
+    toggleValidationMsg($(input), false);
   }
 
   return isValidAll;
@@ -49,6 +52,7 @@ function validateGooglePlace(input) {
 let hasRun = false;
 function checkPlaceType(input) {
   if (hasRun) {
+    hasRun = false;
     return true;
   }
 

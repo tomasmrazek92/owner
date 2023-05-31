@@ -1,9 +1,4 @@
-import {
-  toggleValidationMsg,
-  validateCheckboxRadio,
-  validateInput,
-  validationCalled,
-} from '$utils/formValidations';
+import { validateCheckboxRadio, validateInput, validationCalled } from '$utils/formValidations';
 import { fillHubSpot, mirrorHS } from '$utils/hubspotLogic';
 
 // --- MultiStep Form Handling ---

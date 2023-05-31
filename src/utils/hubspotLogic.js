@@ -7,9 +7,15 @@ export const fillHubSpot = (formElement, hsform, mapping) => {
   // Collect data from the form
   Object.keys(mapping).forEach(function (sourceInputName) {
     var targetInputNames = mapping[sourceInputName];
-    var inputValue = $form
-      .find('input[name=' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + ']')
-      .val();
+    var $sourceInput = $form.find(
+      'input[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
+    );
+    if ($sourceInput.length === 0) {
+      $sourceInput = $form.find(
+        'select[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
+      );
+    }
+    var inputValue = $sourceInput.val();
 
     // If targetInputNames is not an array, wrap it in an array
     if (!Array.isArray(targetInputNames)) {
@@ -21,11 +27,15 @@ export const fillHubSpot = (formElement, hsform, mapping) => {
       var targetInput = hsform.find(
         'input[name=' + targetInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + ']'
       );
+      console.log(targetInput);
+      console.log(inputValue);
+
       targetInput.val(inputValue);
 
       // Perform focus and blur actions only for matched target input names
       if (['phone', 'mobilephone', 'email'].includes(targetInputName)) {
-        targetInput.get(0).focus().blur();
+        targetInput.get(0).focus();
+        targetInput.get(0).blur();
       }
     });
   });

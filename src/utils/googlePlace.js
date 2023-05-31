@@ -1,3 +1,4 @@
+import { toggleValidationMsg } from '$utils/formValidations';
 import { setInputElementValue } from '$utils/globals';
 import { getItem, setItem } from '$utils/localStorage';
 
@@ -75,9 +76,14 @@ const initGooglePlaceAutocomplete = () => {
     const self = $(this);
 
     autocomplete.addListener('place_changed', function () {
+      console.log('place-changed');
       const place = autocomplete.getPlace();
       const value = self.val();
 
+      // Reset Val
+      toggleValidationMsg(self, false, $(self).attr('base-text'));
+
+      // Set Content
       setGooglePlaceDataToForm(place);
       setItem('restaurant-value', value);
       setItem(restaurantObject, place);
