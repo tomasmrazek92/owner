@@ -103,8 +103,6 @@ const generateWeb = async (placeId) => {
         if (status !== 'processing') {
           clearInterval(intervalId);
           if (status !== 'success') return reject(new Error(status));
-          console.log('Website Generation Successful', generationData);
-          logEvent('Website Generation Successful', placeId);
           resolve(generationData);
         }
       }, 1000);
@@ -118,9 +116,8 @@ const generateWeb = async (placeId) => {
 };
 
 // Logs
-function logEvent(status, place_id, errorMessage = '') {
-  const eventStatus =
-    status === 'success' ? 'Website Generation Successful' : 'Website Generation Failed';
+function logEvent(status, place_id, errorMessage) {
+  const eventStatus = status;
   const eventVars = { location: { place_id } };
   if (errorMessage) eventVars.location.errorMessage = errorMessage;
   FS.event(eventStatus, FS.setUserVars(eventVars));
@@ -136,13 +133,13 @@ function handleSuccess(response, requestBody) {
 function handleError(response, requestBody) {
   console.log('Error:', response);
   showError();
-  logEvent('Website Generation Failed', requestBody);
+  logEvent('Website Generation Failed', requestBody, respoonse);
 }
 
 function handleException(err, requestBody) {
   console.log('Error:', err.message);
   showError();
-  logEvent('error', requestBody);
+  logEvent('Website Generation Failed', requestBody, err.message);
 }
 
 // Action
