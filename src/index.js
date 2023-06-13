@@ -26,7 +26,7 @@ $(document).ready(() => {
     navBrand.toggle(nav);
   };
 
-  // Show Back on Clicl
+  // Show Back on Click
   $('.n_navbar-dropdown').on('click', function () {
     switchNav(true, false);
   });
@@ -42,8 +42,10 @@ $(document).ready(() => {
     if ($(window).width() < 992) {
       // Click outside of menu
       setTimeout(function () {
-        if (!$('.w-dropdown-toggle').hasClass('w--open')) {
+        let openDropdown = $('.w-dropdown-toggle.w--open');
+        if (!openDropdown.length) {
           switchNav(false, true);
+          openDropdown.trigger('click');
         }
       }, 20);
     }
