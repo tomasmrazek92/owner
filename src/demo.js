@@ -115,7 +115,7 @@ $(document).ready(() => {
 
     let isValid = true;
 
-    $(':input:visible, select').each(function () {
+    wfForm.find(':input:visible, select').each(function () {
       let validate = validateInput($(this));
       isValid = isValid && validate;
     });
