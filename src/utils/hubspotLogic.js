@@ -1,3 +1,5 @@
+import { toggleValidationMsg } from '$utils/formValidations';
+
 // --- Fill HubSpot Forms
 export const fillHubSpot = (formElement, hsform, mapping) => {
   var $form = $(formElement);
@@ -27,8 +29,6 @@ export const fillHubSpot = (formElement, hsform, mapping) => {
       var targetInput = hsform.find(
         'input[name=' + targetInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + ']'
       );
-      console.log(targetInput);
-      console.log(inputValue);
 
       targetInput.val(inputValue);
 
@@ -52,7 +52,9 @@ export const mirrorHS = (hsform) => {
     .siblings('.hs-error-msgs')
     .find('.hs-error-msg')
     .text();
-  var gtPhoneVal = $('input[name="cellphone"]').siblings('.field-validation');
+  var gtPhoneVal = $('input[name="cellphone"]')
+    .closest('[field-wrapper]')
+    .find('[field-validation]');
   if (hsPhoneVal) {
     isError = true;
     gtPhoneVal.text(hsPhoneVal);
@@ -68,7 +70,7 @@ export const mirrorHS = (hsform) => {
     .find('.hs-error-msgs')
     .find('.hs-error-msg')
     .text();
-  var gtEmail = $('input[name="email"]').closest('.form-field').find('.field-validation');
+  var gtEmail = $('input[name="email"]').closest('[field-wrapper]').find('[field-validation]');
   if (hsEmailVal) {
     gtEmail.text(hsEmailVal);
     gtEmail.show();
