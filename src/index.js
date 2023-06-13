@@ -17,6 +17,38 @@ $(document).ready(() => {
     }
   };
 
+  // -- Menu dropdown
+  let backBtn = $('.n_navbar-back');
+  let navBrand = $('.n_nav_brand');
+
+  const switchNav = (btn, nav) => {
+    backBtn.toggle(btn);
+    navBrand.toggle(nav);
+  };
+
+  // Show Back on Clicl
+  $('.n_navbar-dropdown').on('click', function () {
+    switchNav(true, false);
+  });
+  $('.n_navbar-dropdown').on('mouseenter', function () {
+    switchNav(true, false);
+  });
+  $('.n_navbar-dropdown').on('mouseleave', function () {
+    switchNav(false, true);
+  });
+
+  // Check if we should hide "Back"
+  $(document).on('click', function () {
+    if ($(window).width() < 992) {
+      // Click outside of menu
+      setTimeout(function () {
+        if (!$('.w-dropdown-toggle').hasClass('w--open')) {
+          switchNav(false, true);
+        }
+      }, 20);
+    }
+  });
+
   // --- Custom Actions ---
   // Prevent Default Submit Action
   $('form[data-submit=prevent]').submit(function (e) {
@@ -46,12 +78,9 @@ tabs.each(function () {
     let self = $(this);
     let index = self.index();
 
-    console.log(visuals);
-
     // Check if clicked element is already opened
     if (!self.hasClass(openClass)) {
       // Reveal clicked class
-      self.addClass(openClass);
       revealTab(self);
 
       // Get all opened items except the clicked one
@@ -111,14 +140,20 @@ tabs.each(function () {
     }
 
     // Hide others
-    allItems.animate({ height: 0 }, firstClick ? 0 : 400);
+    allItems.animate({ height: 0 }, { duration: firstClick ? 0 : 400, queue: false });
 
     // Show Current
-    visibleItems.animate(
-      {
-        height: visibleItems.get(0).scrollHeight,
-      },
-      firstClick ? 0 : 400,
+    $(elem).addClass(openClass);
+    mask.animate(
+      { height: mask.get(0).scrollHeight },
+      { duration: firstClick ? 0 : 400, queue: false },
+      function () {
+        $(this).height('auto');
+      }
+    );
+    visualRe.animate(
+      { height: visualRe.get(0).scrollHeight },
+      { duration: firstClick ? 0 : 400, queue: false },
       function () {
         $(this).height('auto');
       }

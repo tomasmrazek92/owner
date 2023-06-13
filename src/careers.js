@@ -1,9 +1,7 @@
-import { heroVideo } from './utils/globals';
+import { heroVideo } from '$utils/globals';
 
 // --- Hero Video
 heroVideo();
-
-
 
 // uložit variable value tyden
 // vytvořit podminky podle hodnoty... nápověda multistep ifss....
