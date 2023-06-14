@@ -70,6 +70,9 @@ $(document).ready(() => {
           });
 
           isInView = true;
+
+          // Disconnect the observer after the first intersection
+          observer.disconnect();
         }
       }
     });
