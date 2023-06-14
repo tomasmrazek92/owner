@@ -1,4 +1,5 @@
 import { initGooglePlaceAutocomplete } from '$utils/googlePlace';
+import { createSwiper } from '$utils/swipers';
 
 $(document).ready(() => {
   // --- Preload Data from Google API ---
@@ -29,16 +30,6 @@ $(document).ready(() => {
   // Show Back on Click
   $('.n_navbar-dropdown').on('click', function () {
     switchNav(true, false);
-  });
-  $('.n_navbar-dropdown').on('mouseenter', function () {
-    if ($(window).width() < 992) {
-      switchNav(true, false);
-    }
-  });
-  $('.n_navbar-dropdown').on('mouseleave', function () {
-    if ($(window).width() < 992) {
-      switchNav(false, true);
-    }
   });
 
   // Check if we should hide "Back"
@@ -170,4 +161,15 @@ $(document).ready(() => {
       );
     }
   });
+
+  // --- Case Study Section
+  let csSlider = $('.n_section-cs');
+  console.log(csSlider);
+  if (csSlider) {
+    console.log('Init');
+    createSwiper(csSlider, '.swiper.n_case-studies', 'case-study-slider', {
+      slidesPerView: 1,
+      spaceBetween: 48,
+    });
+  }
 });
