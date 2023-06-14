@@ -66,15 +66,6 @@ $(document).ready(() => {
               slideChangeTransitionStart: function () {
                 initProgressBar();
               },
-              touchMove: function () {
-                stopProgressBar();
-              },
-              touchStart: function () {
-                stopProgressBar();
-              },
-              touchEnd: function () {
-                stopProgressBar();
-              },
             },
           });
 
