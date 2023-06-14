@@ -31,10 +31,14 @@ $(document).ready(() => {
     switchNav(true, false);
   });
   $('.n_navbar-dropdown').on('mouseenter', function () {
-    switchNav(true, false);
+    if ($(window).width() < 992) {
+      switchNav(true, false);
+    }
   });
   $('.n_navbar-dropdown').on('mouseleave', function () {
-    switchNav(false, true);
+    if ($(window).width() < 992) {
+      switchNav(false, true);
+    }
   });
 
   // Check if we should hide "Back"
@@ -117,11 +121,16 @@ tabs.each(function () {
   triggerItemClick();
 
   // run on resize
+  let windowWidth = window.innerWidth;
   window.addEventListener('resize', () => {
     clearTimeout(resizeTimeout);
     resizeTimeout = setTimeout(() => {
-      items.removeClass(openClass);
-      triggerItemClick();
+      const currentWindowWidth = window.innerWidth;
+      if (currentWindowWidth !== windowWidth) {
+        items.removeClass(openClass);
+        triggerItemClick();
+        windowWidth = currentWindowWidth;
+      }
     }, 250);
   });
 
