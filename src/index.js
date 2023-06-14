@@ -1,9 +1,13 @@
+import { heroVideo } from '$utils/globals';
 import { initGooglePlaceAutocomplete } from '$utils/googlePlace';
 import { createSwiper } from '$utils/swipers';
 
 $(document).ready(() => {
   // --- Preload Data from Google API ---
   initGooglePlaceAutocomplete();
+
+  // --- Play Video
+  heroVideo();
 
   // --- Menu on Scroll
   window.onscroll = () => {
@@ -17,6 +21,22 @@ $(document).ready(() => {
       }
     }
   };
+
+  // --- Scroll Disabler
+  let scrollPosition;
+  let menuOpen = false;
+
+  const disableScroll = () => {
+    if (!menuOpen) {
+      scrollPosition = $(window).scrollTop();
+      $('html, body').scrollTop(0).addClass('overflow-hidden');
+    } else {
+      $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+    }
+    menuOpen = !menuOpen;
+  };
+
+  $('.n_navbar-hamburger').on('click', disableScroll);
 
   // -- Menu dropdown
   let backBtn = $('.n_navbar-back');
@@ -39,7 +59,6 @@ $(document).ready(() => {
       setTimeout(function () {
         let openDropdown = $('.w-dropdown-toggle.w--open');
         if (!openDropdown.length) {
-          switchNav(false, true);
           openDropdown.trigger('click');
         }
       }, 20);
@@ -162,9 +181,76 @@ $(document).ready(() => {
     }
   });
 
-  // --- Case Study Section
+  // --- Features Swiper
+  let featureSection = '.n_section-hp-slider';
+  let progressBar = $('.hp-slider_nav-progress');
+  const duration = 5000;
+  let progress = true;
+  let isInView = false;
+
+  if ($(featureSection)) {
+    // Set the Slider when it gets into view
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach((entry) => {
+        if (entry.target === $(featureSection)[0]) {
+          if (entry.isIntersecting) {
+            createSwiper(featureSection, '.hp-slider_slider', 'hp-features', {
+              slidersPerView: 'auto',
+              spaceBetween: -160,
+              loop: true,
+              autoplay: {
+                delay: duration,
+              },
+              on: {
+                init: function () {
+                  initProgressBar();
+                },
+                slideChange: function () {
+                  updateTitle(this);
+                  progressBar.stop().css('width', '0%');
+                },
+                slideChangeTransitionStart: function () {
+                  initProgressBar();
+                },
+              },
+            });
+
+            isInView = true;
+
+            // Disconnect the observer after the first intersection
+            observer.disconnect();
+          }
+        }
+      });
+    });
+
+    // Observe the featureSlider element
+    observer.observe($(featureSection)[0]);
+
+    let featuresSliders = null; // Will be set when the slider is created and initialized
+
+    function updateTitle(swiperInstance) {
+      let activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
+      let title = $(activeSlide).find('.hp-slider_slide').attr('data-title');
+
+      $('.hp-slider_nav-box_inner [data-title]').text(title);
+    }
+
+    // Progress Bar
+    function stopProgressBar() {
+      progress = false;
+      progressBar.stop();
+    }
+
+    function initProgressBar() {
+      if (progress) {
+        progressBar.stop().animate({ width: '100%' }, duration);
+      }
+    }
+  }
+
+  // --- Case Study Swiper
   let csSlider = $('.n_section-cs');
-  console.log(csSlider);
   if (csSlider) {
     console.log('Init');
     createSwiper(csSlider, '.swiper.n_case-studies', 'case-study-slider', {
@@ -172,4 +258,43 @@ $(document).ready(() => {
       spaceBetween: 48,
     });
   }
+
+  var mySwiper3 = new Swiper('.n_team-swiper', {
+    mousewheel: {
+      invert: true,
+      forceToAxis: true,
+    },
+    spaceBetween: 32,
+    slidesPerView: 5,
+    slidesPerGroup: 1,
+    loop: false,
+    speed: 1200,
+    centeredSlides: false,
+    lazy: true,
+    navigation: {
+      nextEl: '.swiper_arrow.next.n_team-arrow',
+      prevEl: '.swiper_arrow.prev.n_team-arrow',
+    },
+    keyboard: {
+      enabled: true,
+    },
+    breakpoints: {
+      0: {
+        slidesPerView: 1.25,
+        spaceBetween: 16,
+      },
+      480: {
+        slidesPerView: 2.25,
+        spaceBetween: 16,
+      },
+      768: {
+        slidesPerView: 4,
+        spaceBetween: 20,
+      },
+      992: {
+        slidesPerView: 5,
+        spaceBetween: 32,
+      },
+    },
+  });
 });
