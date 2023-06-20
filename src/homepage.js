@@ -2,8 +2,6 @@ import { heroVideo } from '$utils/globals';
 import { createSwiper, swipers } from '$utils/swipers';
 
 $(document).ready(() => {
-  // --- Hero Video
-  heroVideo();
 
   // // --- Hero Slider
   // createSwiper('.n_testimonials', '.n_testimonials-content', 'hp-testimonials', {

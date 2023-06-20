@@ -73,6 +73,7 @@ if (blogDetail) {
     swiperMode();
   });
 }
+
 // Filters
 $('.n_blog-radio-field').on('click', function () {
   if ($(this).is('[fs-cmsfilter-element="clear"]')) {
