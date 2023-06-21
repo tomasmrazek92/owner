@@ -1,1 +1,1 @@
-"use strict";(()=>{$(document).ready(()=>{});})();
+"use strict";(()=>{})();

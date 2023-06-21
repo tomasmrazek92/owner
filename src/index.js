@@ -184,68 +184,43 @@ $(document).ready(() => {
   // --- Features Swiper
   let featureSection = '.n_section-hp-slider';
   let progressBar = $('.hp-slider_nav-progress');
-  const duration = 5000;
-  let progress = true;
-  let isInView = false;
 
   if ($(featureSection)) {
-    // Set the Slider when it gets into view
-    const observer = new IntersectionObserver((entries) => {
-      entries.forEach((entry) => {
-        if (entry.target === $(featureSection)[0]) {
-          if (entry.isIntersecting) {
-            createSwiper(featureSection, '.hp-slider_slider', 'hp-features', {
-              slidersPerView: 'auto',
-              spaceBetween: -160,
-              loop: true,
-              autoplay: {
-                delay: duration,
-              },
-              on: {
-                init: function () {
-                  initProgressBar();
-                },
-                slideChange: function () {
-                  updateTitle(this);
-                  progressBar.stop().css('width', '0%');
-                },
-                slideChangeTransitionStart: function () {
-                  initProgressBar();
-                },
-              },
-            });
+    let visuals = $('.hp-slider_visuals-item');
+    let listItems = $('.hp-slider_list-item');
+    let slides = $('.swiper-slide.n_hp-slider');
+    createSwiper(featureSection, '.hp-slider_slider', 'hp-slider', {
+      slidesPerView: 1,
+      autoHeight: true,
+      slideToClickedSlide: true,
+      on: {
+        beforeTransitionStart: (swiper) => {
+          let index = swiper.realIndex;
 
-            isInView = true;
+          /* Visuals */
+          crossfade(visuals, index);
 
-            // Disconnect the observer after the first intersection
-            observer.disconnect();
-          }
-        }
-      });
+          /* List */
+          crossfade(listItems, index);
+        },
+      },
     });
 
-    // Observe the featureSlider element
-    observer.observe($(featureSection)[0]);
-
-    let featuresSliders = null; // Will be set when the slider is created and initialized
-
-    function updateTitle(swiperInstance) {
-      let activeSlide = swiperInstance.slides[swiperInstance.activeIndex];
-      let title = $(activeSlide).find('.hp-slider_slide').attr('data-title');
-
-      $('.hp-slider_nav-box_inner [data-title]').text(title);
-    }
-
-    // Progress Bar
-    function stopProgressBar() {
-      progress = false;
-      progressBar.stop();
-    }
-
-    function initProgressBar() {
-      if (progress) {
-        progressBar.stop().animate({ width: '100%' }, duration);
-      }
+    function crossfade(elements, index) {
+      elements
+        .filter(':visible')
+        .css('position', 'absolute')
+        .stop()
+        .animate({ opacity: 0 }, 'fast', function () {
+          $(this).hide();
+        });
+      elements
+        .eq(index)
+        .css('position', 'relative')
+        .css('opacity', 0)
+        .show()
+        .stop()
+        .animate({ opacity: 1 }, 'fast');
     }
   }
 
