@@ -180,6 +180,9 @@ $(document).ready(() => {
           $(mask).height('auto');
         }
       );
+      visualRe.stop().css('height', 'auto');
+
+      /*
       visualRe.stop().animate(
         {
           height: visualsHeight,
@@ -189,8 +192,10 @@ $(document).ready(() => {
           $(this).height('auto');
         }
       );
+      */
     }
   });
+  alert(visualsHeight);
 
   // --- Features Swiper
   let featureSection = '.n_section-hp-slider';
