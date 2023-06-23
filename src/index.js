@@ -91,13 +91,12 @@ $(document).ready(() => {
     let visuals = $(this).find('.n_feature-tab_visual').find('.n_feature-tab_visual-inner');
     let actionsMask = $(this).find('.n_feature-tab_list-item_actions');
     let visualReMask = $(this).find('.n_feature-tab_visual_r');
+    visualsHeight = visualReMask.height();
 
     items.on('click', function () {
       // Define
       let self = $(this);
       let index = self.index();
-
-      console.log(visuals);
 
       // Check if clicked element is already opened
       if (!self.hasClass(openClass)) {
@@ -163,9 +162,6 @@ $(document).ready(() => {
       // Handle respo
       if (window.innerWidth < 991) {
         $(visualReMask).show();
-        if (firstClick) {
-          visualsHeight = visualRe.height();
-        }
       } else {
         $(visualReMask).hide();
       }
