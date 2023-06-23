@@ -49,7 +49,9 @@ $(document).ready(() => {
 
   // Show Back on Click
   $('.n_navbar-dropdown').on('click', function () {
-    switchNav(true, false);
+    if ($(window).width() < 992) {
+      switchNav(true, false);
+    }
   });
 
   // Check if we should hide "Back"
@@ -78,26 +80,29 @@ $(document).ready(() => {
   });
 
   // --- Tabs
+  // --- Tabs
   let tabs = $('.n_feature-tab');
   let openClass = 'current';
-  let visualReHeight;
   let firstClick = true;
+  let visualsHeight;
 
   tabs.each(function () {
     let items = $(this).find('.n_feature-tab_list-item');
     let visuals = $(this).find('.n_feature-tab_visual').find('.n_feature-tab_visual-inner');
     let actionsMask = $(this).find('.n_feature-tab_list-item_actions');
-    let visualsRe = $(this).find('.n_feature-tab_visual_r');
-    let visualReHeight = visualsRe.height();
+    let visualReMask = $(this).find('.n_feature-tab_visual_r');
 
     items.on('click', function () {
       // Define
       let self = $(this);
       let index = self.index();
 
+      console.log(visuals);
+
       // Check if clicked element is already opened
       if (!self.hasClass(openClass)) {
         // Reveal clicked class
+        self.addClass(openClass);
         revealTab(self);
 
         // Get all opened items except the clicked one
@@ -138,8 +143,7 @@ $(document).ready(() => {
       resizeTimeout = setTimeout(() => {
         const currentWindowWidth = window.innerWidth;
         if (currentWindowWidth !== windowWidth) {
-          visualReHeight = $(visualsRe).css('height', 'auto').height();
-          console.log(visualReHeight);
+          visualsHeight = $(visualReMask).css('height', 'auto').height();
           items.removeClass(openClass);
           triggerItemClick();
           windowWidth = currentWindowWidth;
@@ -148,48 +152,47 @@ $(document).ready(() => {
     });
 
     // Functions
+
     function revealTab(elem) {
-      const mask = $(elem).find(actionsMask);
+      // Animated Items
+      let mask = $(elem).find(actionsMask);
+      let visualRe = $(elem).find(visualReMask);
 
-      const currentVisual = $(elem).find(visualsRe);
-      currentVisual.find('img').removeAttr('loading');
+      let allItems = $(actionsMask).add(visualReMask);
 
-      // Handle responsive behavior
+      // Handle respo
       if (window.innerWidth < 991) {
-        currentVisual.show();
+        $(visualReMask).show();
+        if (firstClick) {
+          visualsHeight = visualRe.height();
+        }
       } else {
-        currentVisual.hide();
+        $(visualReMask).hide();
       }
 
       // Hide others
-      const allItems = $(actionsMask).add(visualsRe);
-      allItems
-        .not(mask)
-        .not(currentVisual)
-        .animate({ height: 0 }, { duration: firstClick ? 0 : 400, queue: false });
+      allItems.animate({ height: 0 }, { duration: firstClick ? 0 : 400, queue: false });
 
-      // Show current
-      $(elem).addClass(openClass);
-      mask
-        .stop()
-        .animate(
-          { height: mask[0].scrollHeight },
-          { duration: firstClick ? 0 : 400, queue: false },
-          function () {
-            console.log('Fire');
-            mask.css('height', 'auto');
-          }
-        );
-
-      currentVisual
-        .stop()
-        .animate(
-          { height: visualReHeight },
-          { duration: firstClick ? 0 : 400, queue: false },
-          function () {
-            currentVisual.css('height', 'auto');
-          }
-        );
+      // Show Current
+      mask.stop().animate(
+        {
+          height: mask.get(0).scrollHeight,
+        },
+        { duration: firstClick ? 0 : 400, queue: false },
+        function () {
+          console.log('fire');
+          $(mask).height('auto');
+        }
+      );
+      visualRe.stop().animate(
+        {
+          height: visualsHeight,
+        },
+        { duration: firstClick ? 0 : 400, queue: false },
+        function () {
+          $(this).height('auto');
+        }
+      );
     }
   });
 
