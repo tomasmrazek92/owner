@@ -216,6 +216,17 @@ $(document).ready(() => {
           /* List */
           crossfade(listItems, index);
         },
+        slideChange: (swiper) => {
+          console.log('cool');
+          let index = swiper.realIndex;
+          slides.each(function () {
+            if ($(this).index() < index) {
+              $(this).find('.hp-slider_slide').addClass('offset');
+            } else {
+              $(this).find('.hp-slider_slide').removeClass('offset');
+            }
+          });
+        },
       },
       breakpoints: {
         0: { autoHeight: true },
