@@ -13,7 +13,6 @@ const ENTRY_POINTS = [
   'src/homepage.js',
   'src/demo.js',
   'src/blog.js',
-  'src/press.js',
   'src/careers.js',
   'src/story.js',
 ];

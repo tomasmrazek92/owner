@@ -80,13 +80,15 @@ $(document).ready(() => {
   // --- Tabs
   let tabs = $('.n_feature-tab');
   let openClass = 'current';
+  let visualReHeight;
   let firstClick = true;
 
   tabs.each(function () {
     let items = $(this).find('.n_feature-tab_list-item');
     let visuals = $(this).find('.n_feature-tab_visual').find('.n_feature-tab_visual-inner');
     let actionsMask = $(this).find('.n_feature-tab_list-item_actions');
-    let visualReMask = $(this).find('.n_feature-tab_visual_r');
+    let visualsRe = $(this).find('.n_feature-tab_visual_r');
+    let visualReHeight = visualsRe.height();
 
     items.on('click', function () {
       // Define
@@ -136,6 +138,8 @@ $(document).ready(() => {
       resizeTimeout = setTimeout(() => {
         const currentWindowWidth = window.innerWidth;
         if (currentWindowWidth !== windowWidth) {
+          visualReHeight = $(visualsRe).css('height', 'auto').height();
+          console.log(visualReHeight);
           items.removeClass(openClass);
           triggerItemClick();
           windowWidth = currentWindowWidth;
@@ -145,45 +149,52 @@ $(document).ready(() => {
 
     // Functions
     function revealTab(elem) {
-      // Animated Items
-      let mask = $(elem).find(actionsMask);
-      let visualRe = $(elem).find(visualReMask);
+      const mask = $(elem).find(actionsMask);
 
-      let visibleItems = mask.add(visualRe);
-      let allItems = $(actionsMask).add(visualReMask);
+      const currentVisual = $(elem).find(visualsRe);
+      currentVisual.find('img').removeAttr('loading');
 
-      // Handle respo
+      // Handle responsive behavior
       if (window.innerWidth < 991) {
-        $(visualReMask).show();
+        currentVisual.show();
       } else {
-        $(visualReMask).hide();
+        currentVisual.hide();
       }
 
       // Hide others
-      allItems.animate({ height: 0 }, { duration: firstClick ? 0 : 400, queue: false });
+      const allItems = $(actionsMask).add(visualsRe);
+      allItems
+        .not(mask)
+        .not(currentVisual)
+        .animate({ height: 0 }, { duration: firstClick ? 0 : 400, queue: false });
 
-      // Show Current
+      // Show current
       $(elem).addClass(openClass);
-      mask.animate(
-        { height: mask.get(0).scrollHeight },
-        { duration: firstClick ? 0 : 400, queue: false },
-        function () {
-          $(this).height('auto');
-        }
-      );
-      visualRe.animate(
-        { height: visualRe.get(0).scrollHeight },
-        { duration: firstClick ? 0 : 400, queue: false },
-        function () {
-          $(this).height('auto');
-        }
-      );
+      mask
+        .stop()
+        .animate(
+          { height: mask[0].scrollHeight },
+          { duration: firstClick ? 0 : 400, queue: false },
+          function () {
+            console.log('Fire');
+            mask.css('height', 'auto');
+          }
+        );
+
+      currentVisual
+        .stop()
+        .animate(
+          { height: visualReHeight },
+          { duration: firstClick ? 0 : 400, queue: false },
+          function () {
+            currentVisual.css('height', 'auto');
+          }
+        );
     }
   });
 
   // --- Features Swiper
   let featureSection = '.n_section-hp-slider';
-  let progressBar = $('.hp-slider_nav-progress');
 
   if ($(featureSection)) {
     let visuals = $('.hp-slider_visuals-item');
@@ -193,6 +204,8 @@ $(document).ready(() => {
       slidesPerView: 1,
       autoHeight: true,
       slideToClickedSlide: true,
+      observer: true,
+      observeParents: true,
       on: {
         beforeTransitionStart: (swiper) => {
           let index = swiper.realIndex;
@@ -203,6 +216,12 @@ $(document).ready(() => {
           /* List */
           crossfade(listItems, index);
         },
+      },
+      breakpoints: {
+        0: { autoHeight: true },
+        480: { autoHeight: true },
+        768: { autoHeight: true },
+        992: { autoHeight: true },
       },
     });
 
