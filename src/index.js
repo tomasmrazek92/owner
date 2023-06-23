@@ -195,7 +195,6 @@ $(document).ready(() => {
       */
     }
   });
-  alert(visualsHeight);
 
   // --- Features Swiper
   let featureSection = '.n_section-hp-slider';
