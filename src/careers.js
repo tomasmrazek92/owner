@@ -1,10 +1,6 @@
-import { heroVideo } from '$utils/globals';
 import { createSwiper } from '$utils/swipers';
 
 gsap.registerPlugin(ScrollTrigger);
-
-// --- Hero Video
-heroVideo();
 
 // --- Hero Slider
 let careerSlider = $('.n_section-career-team');
@@ -24,7 +20,6 @@ let heroParallax = gsap.timeline({
     start: 'top top',
     end: 'bottom top',
     scrub: 1,
-    markers: true,
   },
 });
 
