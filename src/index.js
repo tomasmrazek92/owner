@@ -1,4 +1,4 @@
-import { videoPlay } from '$utils/globals';
+import { heroVideo, videoPlay } from '$utils/globals';
 import { initGooglePlaceAutocomplete } from '$utils/googlePlace';
 import { createSwiper } from '$utils/swipers';
 
@@ -8,6 +8,7 @@ $(document).ready(() => {
 
   // --- Play Video
   videoPlay();
+  heroVideo();
 
   // --- Menu on Scroll
   window.onscroll = () => {

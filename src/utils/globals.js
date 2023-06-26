@@ -2,7 +2,7 @@ export const setInputElementValue = (elementName, value) => {
   $(`input[name=${elementName}]`).val(value);
 };
 
-// --- Hero Video
+// --- VideoPlay
 
 export const videoPlay = () => {
   const vimeoboxes = $('[vimeo-btn]');
@@ -46,4 +46,15 @@ export const videoPlay = () => {
 
     modal.children().not('.w-embed').on('click', cleanupPlayer);
   }
+};
+
+export const heroVideo = () => {
+  $('[hero-video-thumb]').click(function (e) {
+    let video = $(this).closest('[hero-video-box]').find('[hero-video]')[0];
+    e.stopPropagation(); // Prevent event propagation to avoid conflicts
+    if (video.paused) {
+      video.play();
+    }
+    $('[hero-video-thumb]').hide();
+  });
 };
