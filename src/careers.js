@@ -3,14 +3,6 @@ import { createSwiper } from '$utils/swipers';
 gsap.registerPlugin(ScrollTrigger);
 
 // --- Hero Slider
-let careerSlider = $('.n_section-career-team');
-
-if (careerSlider) {
-  createSwiper(careerSlider, '.swiper.n_team-swiper', 'career-slider', {
-    slidesPerView: 'auto',
-    spaceBetween: 32,
-  });
-}
 
 // --- Hero Parallax
 let distance;

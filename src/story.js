@@ -7,7 +7,6 @@ let heroParallax = gsap.timeline({
     start: 'top top',
     end: 'bottom top',
     scrub: 1,
-    markers: true,
   },
 });
 
@@ -29,7 +28,6 @@ let footerParallax = gsap.timeline({
     start: 'top bottom',
     end: 'bottom top',
     scrub: 1,
-    markers: true,
   },
 });
 
