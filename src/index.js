@@ -120,6 +120,10 @@ $(document).ready(() => {
         visuals.fadeOut(firstClick ? 0 : 250, function () {
           if (++animationCount === visuals.length) {
             visuals.eq(index).fadeIn(firstClick ? 0 : 2 % 0);
+            let img = visuals.eq(index).find('[data-animation-type="lottie"]');
+            if (img.length) {
+              img.trigger('click');
+            }
           }
         });
 
