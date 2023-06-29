@@ -203,7 +203,6 @@ $(document).ready(() => {
 
   // --- Features Swiper
   let featureSection = '.n_section-hp-slider';
-
   if ($(featureSection)) {
     let visuals = $('.hp-slider_visuals-item');
     let listItems = $('.hp-slider_list-item');
