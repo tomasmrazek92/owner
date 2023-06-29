@@ -267,43 +267,4 @@ $(document).ready(() => {
       spaceBetween: 48,
     });
   }
-
-  var mySwiper3 = new Swiper('.n_team-swiper', {
-    mousewheel: {
-      invert: true,
-      forceToAxis: true,
-    },
-    spaceBetween: 32,
-    slidesPerView: 5,
-    slidesPerGroup: 1,
-    loop: false,
-    speed: 1200,
-    centeredSlides: false,
-    lazy: true,
-    navigation: {
-      nextEl: '.swiper_arrow.next.n_team-arrow',
-      prevEl: '.swiper_arrow.prev.n_team-arrow',
-    },
-    keyboard: {
-      enabled: true,
-    },
-    breakpoints: {
-      0: {
-        slidesPerView: 1.25,
-        spaceBetween: 16,
-      },
-      480: {
-        slidesPerView: 2.25,
-        spaceBetween: 16,
-      },
-      768: {
-        slidesPerView: 4,
-        spaceBetween: 20,
-      },
-      992: {
-        slidesPerView: 5,
-        spaceBetween: 32,
-      },
-    },
-  });
 });
