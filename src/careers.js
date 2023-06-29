@@ -1,8 +1,4 @@
-import { createSwiper } from '$utils/swipers';
-
 gsap.registerPlugin(ScrollTrigger);
-
-// --- Hero Slider
 
 // --- Hero Parallax
 let distance;
