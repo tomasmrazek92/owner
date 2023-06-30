@@ -2,7 +2,7 @@ import { validateInput } from '$utils/formValidations';
 import { restaurantObject } from '$utils/googlePlace';
 import { getItem } from '$utils/localStorage';
 
-const OWNER_API = 'https://api.owner.com/';
+const OWNER_API = 'https://api.owner.com';
 
 // Elements
 const main = $('.main-wrapper');
