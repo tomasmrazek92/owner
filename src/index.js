@@ -81,7 +81,6 @@ $(document).ready(() => {
   });
 
   // --- Tabs
-  // --- Tabs
   let tabs = $('.n_feature-tab');
   let openClass = 'current';
   let firstClick = true;
@@ -175,17 +174,21 @@ $(document).ready(() => {
       allItems.animate({ height: 0 }, { duration: firstClick ? 0 : 400, queue: false });
 
       // Show Current
-      mask.stop().animate(
-        {
-          height: mask.get(0).scrollHeight,
-        },
-        { duration: firstClick ? 0 : 400, queue: false },
-        function () {
-          console.log('fire');
-          $(mask).height('auto');
-        }
-      );
-      visualRe.stop().css('height', 'auto');
+      if (mask.length) {
+        mask.stop().animate(
+          {
+            height: mask.get(0).scrollHeight,
+          },
+          { duration: firstClick ? 0 : 400, queue: false },
+          function () {
+            console.log('fire');
+            $(mask).height('auto');
+          }
+        );
+      }
+      if (visualRe.length) {
+        visualRe.stop().css('height', 'auto');
+      }
 
       /*
       visualRe.stop().animate(
@@ -224,7 +227,6 @@ $(document).ready(() => {
           crossfade(listItems, index);
         },
         slideChange: (swiper) => {
-          console.log('cool');
           let index = swiper.realIndex;
           slides.each(function () {
             if ($(this).index() < index) {
@@ -257,14 +259,18 @@ $(document).ready(() => {
         .css('opacity', 0)
         .show()
         .stop()
-        .animate({ opacity: 1 }, 'fast');
+        .animate({ opacity: 1 }, 'fast', function () {
+          let lottie = elements.eq(index).find('[data-animation-type="lottie"]');
+          if (lottie.length) {
+            lottie.trigger('click');
+          }
+        });
     }
   }
 
   // --- Case Study Swiper
   let csSlider = $('.n_section-cs');
   if (csSlider) {
-    console.log('Init');
     createSwiper(csSlider, '.swiper.n_case-studies', 'case-study-slider', {
       slidesPerView: 1,
       spaceBetween: 48,

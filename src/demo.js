@@ -1,4 +1,5 @@
 import { validateInput } from '$utils/formValidations';
+import { setInputElementValue } from '$utils/globals';
 import { fillHubSpot, mirrorHS, onFormReadyCallback, waitForFormReady } from '$utils/hubspotLogic';
 
 $(document).ready(() => {
@@ -121,6 +122,7 @@ $(document).ready(() => {
     });
 
     if (isValid) {
+      setInputElementValue('page_url', window.location.pathname);
       fillHubSpot(wfForm, hsForm, inputMapping);
       checkHubspotErrors(hsForm);
     }

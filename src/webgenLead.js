@@ -1,8 +1,10 @@
 import { validateInput } from '$utils/formValidations';
 import { restaurantObject } from '$utils/googlePlace';
 import { getItem } from '$utils/localStorage';
+const OWNER_API =
+  typeof devEnv !== 'undefined' && devEnv ? 'http://dev-api.owner.com' : 'https://api.owner.com';
 
-const OWNER_API = 'https://api.owner.com';
+console.log(OWNER_API);
 
 // Elements
 const main = $('.main-wrapper');
