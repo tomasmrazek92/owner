@@ -2,7 +2,7 @@ import { validateInput } from '$utils/formValidations';
 import { restaurantObject } from '$utils/googlePlace';
 import { getItem } from '$utils/localStorage';
 const OWNER_API =
-  typeof devEnv !== 'undefined' && devEnv ? 'http://dev-api.owner.com' : 'https://api.owner.com';
+  typeof devEnv !== 'undefined' && devEnv ? 'https://dev-api.owner.com' : 'https://api.owner.com';
 
 console.log(OWNER_API);
 
@@ -122,7 +122,9 @@ function logEvent(status, place_id, errorMessage) {
   const eventStatus = status;
   const eventVars = { location: { place_id } };
   if (errorMessage) eventVars.location.errorMessage = errorMessage;
-  FS.event(eventStatus, FS.setUserVars(eventVars));
+  if (typeof FS !== 'undefined' && FS) {
+    FS.event(eventStatus, FS.setUserVars(eventVars));
+  }
 }
 
 // Handlers
