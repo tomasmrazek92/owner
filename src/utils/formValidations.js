@@ -1,34 +1,4 @@
 import { checkIfRestaurant } from '$utils/googlePlace';
-// Input Validation
-export const validateInput = (element) => {
-  let input = element;
-  let isValidAll = true;
-
-  if ($(input).prop('required')) {
-    if ($(input).val()) {
-      if ($(input).is('[type="email"]')) {
-        isValidAll = validateEmail(input);
-      } else if ($(input).attr('name') === 'restaurant-name') {
-        isValidAll = validateGooglePlace(input);
-      } else if ($(input).is('select')) {
-        isValidAll = validateSelect(input);
-      } else {
-        isValidAll = validateOtherInputs(input);
-      }
-    } else {
-      isValidAll = handleEmptyRequiredInput(input);
-    }
-  }
-  if (!isValidAll) {
-    $(input).addClass('error');
-    console.log($(input));
-    console.log($(input).val());
-  } else {
-    toggleValidationMsg($(input), false);
-  }
-
-  return isValidAll;
-};
 
 // Email Validation
 function validateEmail(input) {
@@ -119,12 +89,41 @@ function handleEmptyRequiredInput(input) {
   return false;
 }
 
+// Input Validation
+export const validateInput = (element) => {
+  let input = element;
+  let isValidAll = true;
+
+  if ($(input).prop('required')) {
+    if ($(input).val()) {
+      if ($(input).is('[type="email"]')) {
+        isValidAll = validateEmail(input);
+      } else if ($(input).attr('name') === 'restaurant-name') {
+        isValidAll = validateGooglePlace(input);
+      } else if ($(input).is('select')) {
+        isValidAll = validateSelect(input);
+      } else {
+        isValidAll = validateOtherInputs(input);
+      }
+    } else {
+      isValidAll = handleEmptyRequiredInput(input);
+    }
+  }
+  if (!isValidAll) {
+    $(input).addClass('error');
+  } else {
+    toggleValidationMsg($(input), false);
+  }
+
+  return isValidAll;
+};
+
 // Show/Hide Validation Message
 export const toggleValidationMsg = (element, condition, msg) => {
   const validation = $(element)
     .closest('.form-field-wrapper, [field-wrapper]')
     .find('.field-validation, [field-validation]');
-  const formField = $(element).closest('.form-field');
+  const formField = $(element).closest('.form-field, [form-field]');
 
   formField.toggleClass('error', condition);
   validation.toggle(condition);

@@ -1,6 +1,11 @@
 import { validateInput } from '$utils/formValidations';
 import { setInputElementValue } from '$utils/globals';
-import { fillHubSpot, mirrorHS, onFormReadyCallback, waitForFormReady } from '$utils/hubspotLogic';
+import {
+  fillHubSpot,
+  handleHubspotForm,
+  onFormReadyCallback,
+  waitForFormReady,
+} from '$utils/hubspotLogic';
 
 $(document).ready(() => {
   // Custom Select
@@ -11,53 +16,6 @@ $(document).ready(() => {
   // -- Forms
   let wfForm = $('#demo-form');
   let hsForm;
-
-  // Check for erros inside Hubspot Form
-  const checkHubspotErrors = (form) => {
-    // Elems
-    const button = $('[data-form="submit-btn"]');
-    const initText = button.text();
-
-    // Validation
-    let isError;
-
-    // Submitting animation
-    let animationStep = 0;
-    const animationFrames = ['.', '..', '...'];
-
-    const updateButtonText = () => {
-      const buttonText = `Submitting${animationFrames[animationStep]}`;
-      console.log(buttonText);
-      button.text(buttonText);
-      animationStep = (animationStep + 1) % animationFrames.length;
-    };
-
-    // Button States
-    const disableButton = () => {
-      button.addClass('disabled');
-    };
-
-    const enableButton = () => {
-      button.removeClass('disabled').text(initText);
-    };
-
-    disableButton();
-
-    const intervalId = setInterval(updateButtonText, 500);
-
-    // Fallback for Hubspot Validation to happen
-    setTimeout(() => {
-      // Run the Validation and stop the animation
-      isError = mirrorHS(form);
-      clearInterval(intervalId);
-      enableButton();
-
-      // Check condition and submit the form otherwise
-      if (!isError) {
-        hsForm.find('input[type=submit]').trigger('click');
-      }
-    }, 3000);
-  };
 
   // Handle Submit
   const successSubmit = () => {
@@ -124,7 +82,7 @@ $(document).ready(() => {
     if (isValid) {
       setInputElementValue('page_url', window.location.pathname);
       fillHubSpot(wfForm, hsForm, inputMapping);
-      checkHubspotErrors(hsForm);
+      handleHubspotForm(hsForm);
     }
   });
 });

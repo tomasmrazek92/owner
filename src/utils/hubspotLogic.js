@@ -1,10 +1,7 @@
-import { toggleValidationMsg } from '$utils/formValidations';
-
 // --- Fill HubSpot Forms
 export const fillHubSpot = (formElement, hsform, mapping) => {
   var $form = $(formElement);
   var hsform = $(hsform);
-  console.log(hsform);
 
   // Collect data from the form
   Object.keys(mapping).forEach(function (sourceInputName) {
@@ -94,6 +91,54 @@ export function waitForFormReady() {
     formReadyPromiseResolver = resolve;
   });
 }
+
+// Hahdle Errors and submit form
+export const handleHubspotForm = (form) => {
+  // Check for erros inside Hubspot Form
+
+  // Elems
+  const button = $('[data-form="submit-btn"]');
+  const initText = button.text();
+
+  // Validation
+  let isError;
+
+  // Submitting animation
+  let animationStep = 0;
+  const animationFrames = ['.', '..', '...'];
+
+  const updateButtonText = () => {
+    const buttonText = `Submitting${animationFrames[animationStep]}`;
+    button.text(buttonText);
+    animationStep = (animationStep + 1) % animationFrames.length;
+  };
+
+  // Button States
+  const disableButton = () => {
+    button.addClass('disabled');
+  };
+
+  const enableButton = () => {
+    button.removeClass('disabled').text(initText);
+  };
+
+  disableButton();
+
+  const intervalId = setInterval(updateButtonText, 500);
+
+  // Fallback for Hubspot Validation to happen
+  setTimeout(() => {
+    // Run the Validation and stop the animation
+    isError = mirrorHS(form);
+    clearInterval(intervalId);
+    enableButton();
+
+    // Check condition and submit the form otherwise
+    if (!isError) {
+      form.find('input[type=submit]').trigger('click');
+    }
+  }, 3000);
+};
 
 // Declare formReadyPromiseResolver variable
 let formReadyPromiseResolver;
