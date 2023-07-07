@@ -166,6 +166,10 @@ $(document).ready(() => {
     }
   }
 
+  // -- Forms
+  let wfForm = $('#growth-form');
+  let hsForm;
+
   // Handle Submit
   const successSubmit = () => {
     // Update FS event
@@ -174,13 +178,13 @@ $(document).ready(() => {
       userId,
       {
         displayName:
-          wfForm.find($('input[name=first-name]').text()) +
+          wfForm.find($('input[name=first-name]')).val() +
           ' ' +
-          wfForm.find($('input[name=last-name]').text()),
-        email: wfForm.find($('input[name=email]').text()),
-        firstName: wfForm.find($('input[name=first-name]').text()),
-        lastName: wfForm.find($('input[name=last-name]').text()),
-        phone: wfForm.find($('input[name=cellphone]').text()),
+          wfForm.find($('input[name=last-name]')).val(),
+        email: wfForm.find($('input[name=email]')).val(),
+        firstName: wfForm.find($('input[name=first-name]')).val(),
+        lastName: wfForm.find($('input[name=last-name]')).val(),
+        phone: wfForm.find($('input[name=cellphone]')).val(),
       },
       'User clicked "Get Results"'
     );
@@ -206,10 +210,6 @@ $(document).ready(() => {
       $(growthForm).fadeIn(400);
     });
   });
-
-  // -- Forms
-  let wfForm = $('#growth-form');
-  let hsForm;
 
   // Initialize the HubSpot form
   hbspt.forms.create({
