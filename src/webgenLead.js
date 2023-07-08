@@ -136,8 +136,15 @@ $(document).ready(() => {
   // Handlers
   function handleSuccess(response, requestBody) {
     console.log('Success:', response);
-    logEvent(userId, { location: { requestBody } }, 'Website Generation Successful');
-    window.location.href = response.redirectUri + '&fsUserId=' + userId;
+
+    let finalURL = response.redirectUri + '&fsUserId=' + userId;
+    logEvent(
+      userId,
+      { location: { requestBody }, generatedUrl: finalURL },
+      'Website Generation Successful'
+    );
+
+    window.location.href = finalURL;
   }
 
   function handleError(response, requestBody) {
@@ -204,7 +211,7 @@ $(document).ready(() => {
 
     // Start the FS journey
     let requestBody = getPlaceIdFromObject(restaurantObject);
-    logEvent(userId, { location: { requestBody } }, 'User clicked "See a free preview"');
+    logEvent(userId, { location: { requestBody } }, 'Enter Contact Information Successful');
 
     // Show the Form
     $(main).fadeOut(500, function () {
