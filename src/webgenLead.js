@@ -126,6 +126,7 @@ $(document).ready(() => {
   // Logs
   function logEvent(personID, dataObject, status, errorMessage) {
     const eventVars = dataObject;
+    console.log(eventVars);
     if (errorMessage) eventVars.location.errorMessage = errorMessage;
     if (typeof FS !== 'undefined' && FS) {
       FS.event(status, FS.identify(personID, eventVars));
@@ -214,7 +215,7 @@ $(document).ready(() => {
   // Initialize the HubSpot form
   hbspt.forms.create({
     portalId: '6449395',
-    formId: 'b855c0bc-befa-48a3-97a8-008570dfce2f',
+    formId: 'f3807262-aed3-4b9c-93a3-247ad4c55e60',
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
     onFormSubmitted: successSubmit,
