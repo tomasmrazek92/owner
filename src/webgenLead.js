@@ -99,9 +99,6 @@ $(document).ready(() => {
 
       if (!id) throw new Error('Invalid ID received from POST request');
 
-      console.log('Website Generation Started');
-      logEvent(userId, { location: { place_id } }, 'Website Generation Started');
-
       return new Promise((resolve, reject) => {
         const intervalId = setInterval(async () => {
           const generationData = await getGenerationData(id);
@@ -138,13 +135,17 @@ $(document).ready(() => {
     console.log('Success:', response);
 
     let finalURL = response.redirectUri + '&fsUserId=' + userId;
+
     logEvent(
       userId,
       { location: { requestBody }, generatedUrl: finalURL },
       'Website Generation Successful'
     );
 
-    window.location.href = finalURL;
+    // Fix for LogEvent
+    setTimeout(() => {
+      window.location.href = finalURL;
+    }, 250);
   }
 
   function handleError(response, requestBody) {
@@ -194,7 +195,7 @@ $(document).ready(() => {
         lastName: wfForm.find($('input[name=last-name]')).val(),
         phone: wfForm.find($('input[name=cellphone]')).val(),
       },
-      'User clicked "Get Results"'
+      'Enter Contact Information Successful'
     );
 
     let requestBody = getPlaceIdFromObject(restaurantObject);
@@ -211,7 +212,7 @@ $(document).ready(() => {
 
     // Start the FS journey
     let requestBody = getPlaceIdFromObject(restaurantObject);
-    logEvent(userId, { location: { requestBody } }, 'Enter Contact Information Successful');
+    logEvent(userId, { location: { requestBody } }, 'Website Generation Started');
 
     // Show the Form
     $(main).fadeOut(500, function () {
