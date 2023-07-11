@@ -259,12 +259,11 @@ $(document).ready(() => {
         .css('opacity', 0)
         .show()
         .stop()
-        .animate({ opacity: 1 }, 'fast', function () {
-          let lottie = elements.eq(index).find('[data-animation-type="lottie"]');
-          if (lottie.length) {
-            lottie.trigger('click');
-          }
-        });
+        .animate({ opacity: 1 }, 'fast');
+      let lottie = elements.eq(index).find('[data-animation-type="lottie"]');
+      if (lottie.length) {
+        lottie.trigger('click');
+      }
     }
   }
 
