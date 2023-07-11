@@ -32,9 +32,12 @@ $(document).ready(() => {
 
   function showLoading() {
     // Hide Rest
-    $(main, growthError, growthForm).fadeOut(500, function () {
-      $(growthLoading).fadeIn(400);
-    });
+    $(main)
+      .add(growthError)
+      .add(growthForm)
+      .fadeOut(500, function () {
+        $(growthLoading).fadeIn(400);
+      });
 
     // Get steps
     let steps = $('.growth-loading_step');
