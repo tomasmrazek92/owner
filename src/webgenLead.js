@@ -12,12 +12,14 @@ import {
 import { getItem, setItem } from '$utils/localStorage';
 
 $(document).ready(() => {
+  // Internal Flow Variables
   const OWNER_API =
     typeof devEnv !== 'undefined' && devEnv ? 'https://dev-api.owner.com' : 'https://api.owner.com';
 
+  const salesPage = typeof salesEnv !== 'undefined' && salesEnv ? true : false;
+
   // check local storage for an existing user ID
   let userId = getItem('userId');
-
   // if none exists, generate a new one and save it
   if (!userId) {
     userId = uuidv4();
@@ -35,6 +37,7 @@ $(document).ready(() => {
     $(main)
       .add(growthError)
       .add(growthForm)
+      .stop()
       .fadeOut(500, function () {
         $(growthLoading).fadeIn(400);
       });
@@ -59,8 +62,8 @@ $(document).ready(() => {
   }
 
   function showError() {
-    $(main).add(growthLoading).add(growthForm).hide();
-    $(growthError).fadeIn();
+    $(main).add(growthLoading).add(growthForm).stop().hide();
+    $(growthError).stop().fadeIn();
   }
 
   function getPlaceIdFromObject(object) {
@@ -137,7 +140,7 @@ $(document).ready(() => {
   function handleSuccess(response, requestBody) {
     console.log('Success:', response);
 
-    let finalURL = response.redirectUri + '&fsUserId=' + userId;
+    let finalURL = response.redirectUri + (salesPage ? '' : '&fsUserId=' + userId);
 
     logEvent(
       userId,
@@ -212,6 +215,13 @@ $(document).ready(() => {
 
     // Show erorr if not
     if (!isValid) return console.log('Validation Invalid');
+
+    // Check for sales page
+    if (salesPage) {
+      let requestBody = getPlaceIdFromObject(restaurantObject);
+      handleAPIcall(requestBody);
+      return;
+    }
 
     // Start the FS journey
     let requestBody = getPlaceIdFromObject(restaurantObject);
