@@ -16,7 +16,7 @@ $(document).ready(() => {
   const OWNER_API =
     typeof devEnv !== 'undefined' && devEnv ? 'https://dev-api.owner.com' : 'https://api.owner.com';
 
-  const salesPage = typeof salesEnv !== 'undefined' && salesEnv ? true : false;
+  const devPage = typeof devEnv !== 'undefined' && devEnv ? true : false;
 
   // check local storage for an existing user ID
   let userId = getItem('userId');
@@ -140,7 +140,7 @@ $(document).ready(() => {
   function handleSuccess(response, requestBody) {
     console.log('Success:', response);
 
-    let finalURL = response.redirectUri + (salesPage ? '' : '&fsUserId=' + userId);
+    let finalURL = response.redirectUri + (devPage ? '' : '&fsUserId=' + userId);
 
     logEvent(
       userId,
@@ -216,8 +216,8 @@ $(document).ready(() => {
     // Show erorr if not
     if (!isValid) return console.log('Validation Invalid');
 
-    // Check for sales page
-    if (salesPage) {
+    // Check for dev page
+    if (devPage) {
       let requestBody = getPlaceIdFromObject(restaurantObject);
       handleAPIcall(requestBody);
       return;
