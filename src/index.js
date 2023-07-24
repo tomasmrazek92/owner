@@ -3,6 +3,8 @@ import { initGooglePlaceAutocomplete } from '$utils/googlePlace';
 import { createSwiper } from '$utils/swipers';
 
 $(document).ready(() => {
+  gsap.registerPlugin(ScrollTrigger);
+
   // --- Preload Data from Google API ---
   initGooglePlaceAutocomplete();
 
@@ -48,6 +50,116 @@ $(document).ready(() => {
     navBrand.toggle(nav);
   };
 
+  // Stripe Dropdown
+  let movingDiv = document.querySelector('.n_navbar-dropdown-bg');
+  let dropdowns = document.querySelectorAll('.n_navbar-dropdown');
+  let arrow = document.querySelector('.n_navbar-arrow');
+  let divIsActive = false;
+  let leaveTimeout;
+  let duration = 0.3;
+  let lastIndex;
+
+  const moveDiv = (element) => {
+    if (leaveTimeout) clearTimeout(leaveTimeout); // Clear any previous timeout if a new dropdown is hovered
+    let submenu = element.querySelector('.n_navbar-dropdown_wrap');
+    let menuBox = element.querySelectorAll('.n_navbar-dropdown_wrap-inner');
+
+    let rect = submenu.getBoundingClientRect();
+    let tl = gsap.timeline({ defaults: { ease: Circ.easeOut } });
+
+    // Get positon for the arrow
+    let rectX = element.getBoundingClientRect();
+    let centerX = rectX.width / 2;
+
+    if (!divIsActive) {
+      tl.set(movingDiv, {
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+      });
+      tl.set(arrow, {
+        x: `${centerX}px`,
+        yPercent: 100,
+      });
+      tl.to(movingDiv, { autoAlpha: 1, duration: duration });
+      tl.to(arrow, { yPercent: 0, duration: 0.15 }, '<0.1');
+      divIsActive = true;
+    } else {
+      tl.to(movingDiv, {
+        top: `${rect.top}px`,
+        left: `${rect.left}px`,
+        width: `${rect.width}px`,
+        height: `${rect.height}px`,
+        duration: duration,
+      });
+      tl.to(
+        arrow,
+        {
+          duration: 0.25,
+          x: `${centerX}px`,
+        },
+        '<'
+      );
+      if (lastIndex < element.index) {
+        tl.fromTo(
+          menuBox,
+          {
+            xPercent: 5,
+          },
+          {
+            xPercent: 0,
+            duration: 0.2,
+          },
+          '<'
+        );
+      } else if (lastIndex > element.index) {
+        tl.fromTo(
+          menuBox,
+          {
+            xPercent: -5,
+          },
+          {
+            xPercent: 0,
+            duration: 0.2,
+          },
+          '<'
+        );
+      }
+    }
+
+    // Update direction
+    lastIndex = element.index;
+  };
+
+  const delayedHideDiv = () => {
+    leaveTimeout = setTimeout(hideDiv, 10); // Start a timeout when a dropdown is left
+  };
+
+  const hideDiv = () => {
+    gsap.to(movingDiv, { duration: duration, autoAlpha: 0 });
+    divIsActive = false;
+  };
+
+  window.addEventListener('resize', hideDiv);
+
+  ScrollTrigger.matchMedia({
+    // large
+    '(min-width: 992px)': function () {
+      dropdowns.forEach((dropdown, index) => {
+        dropdown.index = index;
+        dropdown.addEventListener('mouseenter', () => moveDiv(dropdown));
+        dropdown.addEventListener('mouseleave', delayedHideDiv);
+
+        window.addEventListener('resize', () => {
+          if (dropdown.matches(':hover')) {
+            moveDiv(dropdown);
+          }
+        });
+      });
+    },
+  });
+
   // Show Back on Click
   $('.n_navbar-dropdown').on('click', function () {
     if ($(window).width() < 992) {
@@ -62,9 +174,18 @@ $(document).ready(() => {
       setTimeout(function () {
         let openDropdown = $('.w-dropdown-toggle.w--open');
         if (!openDropdown.length) {
-          openDropdown.trigger('click');
+          switchNav(false, true);
+        } else {
+          console.log('False');
         }
-      }, 20);
+      }, 170);
+    }
+  });
+
+  // Hide the back button on resize
+  $(window).on('resize', function () {
+    if ($(window).width() > 991) {
+      switchNav(false, true);
     }
   });
 
