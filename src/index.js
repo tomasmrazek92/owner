@@ -13,6 +13,7 @@ $(document).ready(() => {
   heroVideo();
 
   // --- Menu on Scroll
+  // Highlight Button
   window.onscroll = () => {
     let navbar = $('.n_nav-wrapper');
     let scrollHeight = $(navbar).height();
@@ -24,6 +25,36 @@ $(document).ready(() => {
       }
     }
   };
+
+  // Show button on responsive
+  function checkVisibility() {
+    if (window.innerWidth <= 991) {
+      let button = $('.main-wrapper .n_button[href="/demo"]').first();
+      let navButton = $('.n_navbar_actions .n_button');
+
+      if (button.length) {
+        if (!isInViewport(button)) {
+          navButton.fadeIn();
+        } else {
+          navButton.fadeOut();
+        }
+      }
+    }
+  }
+
+  window.onscroll = checkVisibility;
+
+  $(window).on('load', checkVisibility);
+
+  function isInViewport(element) {
+    var rect = element.get(0).getBoundingClientRect();
+    return (
+      rect.top >= 0 &&
+      rect.left >= 0 &&
+      rect.bottom <= (window.innerHeight || document.documentElement.clientHeight) &&
+      rect.right <= (window.innerWidth || document.documentElement.clientWidth)
+    );
+  }
 
   // --- Scroll Disabler
   let scrollPosition;
