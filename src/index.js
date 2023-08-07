@@ -494,8 +494,13 @@ $(document).ready(() => {
   });
 
   // Resize
+  var windowWidth = window.innerWidth;
+
   window.addEventListener('resize', function () {
-    swiperMode();
+    if (window.innerWidth !== windowWidth) {
+      windowWidth = window.innerWidth;
+      swiperMode();
+    }
   });
 
   // --- Case Study Swiper
