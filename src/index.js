@@ -371,6 +371,12 @@ $(document).ready(() => {
     let slides = $('.hp-slider_slider._1').find('.swiper-slide.n_hp-slider');
 
     // Disable (for desktop)
+    visuals.find('video').each(function () {
+      let video = $(this)[0];
+      video.pause();
+      video.currentTime = 0;
+    });
+
     if (desktop.matches) {
       if (init) {
         swiper.destroy(true, true);
@@ -450,13 +456,11 @@ $(document).ready(() => {
         on: {
           beforeTransitionStart: (swiper) => {
             let index = reVisuals.realIndex;
-            let lottie = $('.hp-slider_visuals-box._2')
+            let video = $('.hp-slider_visuals-box._2')
               .find('.swiper-slide')
               .eq(index)
-              .find('[data-animation-type="lottie"]');
-            if (lottie.length) {
-              lottie.trigger('click');
-            }
+              .find('video')[0];
+            playVideo(video);
           },
         },
       });
@@ -482,11 +486,62 @@ $(document).ready(() => {
       .show()
       .stop()
       .animate({ opacity: 1 }, 'fast');
-    let lottie = elements.eq(index).find('[data-animation-type="lottie"]');
-    if (lottie.length) {
-      lottie.trigger('click');
+    let video = elements.eq(index).find('video');
+    playVideo(video);
+  }
+
+  let currentPlayingVideo = null;
+
+  function playVideo(video) {
+    // Stop and reset all videos
+    $('.hp-slider_slider')
+      .find('video')
+      .each(function () {
+        this.pause();
+        this.currentTime = 0;
+      });
+
+    if (video.length > 0) {
+      // Mark this video as the current one
+      currentPlayingVideo = video[0];
+
+      video[0].addEventListener('ended', function (e) {
+        if (e.target === currentPlayingVideo) {
+          // Check if this is the current video
+          handleVideoEnd();
+        }
+      });
+
+      // Start playing the video
+      video[0].currentTime = 0;
+      video[0].play();
     }
   }
+
+  function handleVideoEnd() {
+    const index = swiper.realIndex;
+    const nextIndex = (index + 1) % swiper.slides.length; // Loop back to first slide if it's the last one
+    swiper.slideTo(nextIndex);
+  }
+
+  // Play on scroll
+  // Initialize Intersection Observer
+  let observer = new IntersectionObserver(
+    (entries, observer) => {
+      entries.forEach((entry) => {
+        if (entry.isIntersecting) {
+          // Play the video corresponding to the current index
+          let video = $('.hp-slider_visuals').find('video').eq(0);
+          console.log(video);
+          playVideo(video);
+        }
+      });
+    },
+    { threshold: 0.5 }
+  ); // 50% of the element should be in view
+
+  // Observe the .hp-slider_inner element
+  observer.observe(document.querySelector('.hp-slider_inner'));
 
   // Load
   window.addEventListener('load', function () {
