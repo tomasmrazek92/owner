@@ -439,6 +439,17 @@ $(document).ready(() => {
         slideToClickedSlide: true,
         observer: true,
         observeParents: true,
+        on: {
+          slideChange: (swiper) => {
+            let index = swiper.realIndex;
+            let video = $('.hp-slider_visuals-box._2')
+              .find('.swiper-slide')
+              .eq(index)
+              .find('video');
+            console.log(video);
+            playVideo(video);
+          },
+        },
         breakpoints: {
           0: { autoHeight: true },
           480: { autoHeight: true },
@@ -453,16 +464,6 @@ $(document).ready(() => {
         slideToClickedSlide: true,
         observer: true,
         observeParents: true,
-        on: {
-          beforeTransitionStart: (swiper) => {
-            let index = reVisuals.realIndex;
-            let video = $('.hp-slider_visuals-box._2')
-              .find('.swiper-slide')
-              .eq(index)
-              .find('video')[0];
-            playVideo(video);
-          },
-        },
       });
 
       swiper.controller.control = reVisuals;
@@ -494,7 +495,7 @@ $(document).ready(() => {
 
   function playVideo(video) {
     // Stop and reset all videos
-    $('.hp-slider_slider')
+    $('.hp-slider_inner')
       .find('video')
       .each(function () {
         this.pause();
@@ -531,7 +532,12 @@ $(document).ready(() => {
       entries.forEach((entry) => {
         if (entry.isIntersecting) {
           // Play the video corresponding to the current index
-          let video = $('.hp-slider_visuals').find('video').eq(0);
+          let video;
+          if ($(window).width() >= 992) {
+            video = $('.hp-slider_visuals').find('video').eq(0);
+          } else {
+            video = $('.hp-slider_visuals-box._2').find('video').eq(0);
+          }
           console.log(video);
           playVideo(video);
         }
