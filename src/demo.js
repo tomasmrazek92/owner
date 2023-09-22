@@ -60,8 +60,10 @@ $(document).ready(() => {
     place_types: ['place_types_contact', '0-2/place_types'],
     rating: 'place_rating',
     user_ratings_total: 'user_ratings_total',
+    'number-of-locations': 'of_locations_number',
     hear: 'how_did_you_hear_about_us',
     page_url: 'last_pdf_download',
+    page_lang: 'page_lang',
 
     // ...
   };
@@ -80,9 +82,21 @@ $(document).ready(() => {
     });
 
     if (isValid) {
+      // Custom Inputs
       setInputElementValue('page_url', window.location.pathname);
+      setInputElementValue('page_lang', $('html').attr('lang'));
       fillHubSpot(wfForm, hsForm, inputMapping);
       handleHubspotForm(hsForm);
+    }
+  });
+
+  // Condition Logic
+  $('select[name="person-type"]').on('change', function () {
+    let val = $(this).val();
+    if (val === "I'm a restaurant owner or manager") {
+      $('#locations-wrap').show();
+    } else {
+      $('#locations-wrap').hide();
     }
   });
 });
