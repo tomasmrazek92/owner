@@ -386,8 +386,12 @@ $(document).ready(() => {
 
     if (desktop.matches) {
       if (init) {
-        swiper.destroy(true, true);
-        reVisuals.destroy(true, true);
+        if (swiper) {
+          swiper.destroy(true, true);
+        }
+        if (reVisuals) {
+          reVisuals.destroy(true, true);
+        }
         init = false;
       }
       swiper = new Swiper('.hp-slider_slider._1', {
@@ -440,7 +444,9 @@ $(document).ready(() => {
           playVideo(pendingVideo);
           pendingVideo = null; // Reset the pending video
         }
-        swiper.destroy(true, true);
+        if (swiper) {
+          swiper.destroy(true, true);
+        }
         init = false;
       }
       swiper = new Swiper('.hp-slider_slider._2', {
