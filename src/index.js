@@ -360,6 +360,7 @@ $(document).ready(() => {
   let swiper;
   let reVisuals;
   let init = false;
+  let pendingVideo = null;
 
   function swiperMode() {
     const mobile = window.matchMedia('(min-width: 0px) and (max-width: 991px)');
@@ -377,10 +378,17 @@ $(document).ready(() => {
       video.currentTime = 0;
     });
 
+    // If there's a pending video play, execute it here.
+    if (pendingVideo) {
+      playVideo(pendingVideo);
+      pendingVideo = null; // Reset the pending video
+    }
+
     if (desktop.matches) {
       if (init) {
         swiper.destroy(true, true);
         reVisuals.destroy(true, true);
+        init = false;
       }
       swiper = new Swiper('.hp-slider_slider._1', {
         slidesPerView: 1,
@@ -398,7 +406,7 @@ $(document).ready(() => {
             let index = swiper.realIndex;
 
             /* Visuals */
-            crossfade(visuals, index);
+            crossfade(visuals, index, true);
 
             /* List */
             crossfade(listItems, index);
@@ -421,12 +429,19 @@ $(document).ready(() => {
           992: { autoHeight: true },
         },
       });
+      init = true;
     }
 
     // Enable (for Mobile)
     else if (mobile.matches) {
       if (init) {
+        // If there's a pending video play, execute it here.
+        if (pendingVideo) {
+          playVideo(pendingVideo);
+          pendingVideo = null; // Reset the pending video
+        }
         swiper.destroy(true, true);
+        init = false;
       }
       swiper = new Swiper('.hp-slider_slider._2', {
         slidesPerView: 1,
@@ -472,12 +487,12 @@ $(document).ready(() => {
     }
   }
 
-  function crossfade(elements, index) {
+  function crossfade(elements, index, instant) {
     elements
       .filter(':visible')
       .css('position', 'absolute')
       .stop()
-      .animate({ opacity: 0 }, 'fast', function () {
+      .animate({ opacity: 0 }, instant ? 0 : 'fast', function () {
         $(this).hide();
       });
     elements
@@ -486,7 +501,7 @@ $(document).ready(() => {
       .css('opacity', 0)
       .show()
       .stop()
-      .animate({ opacity: 1 }, 'fast');
+      .animate({ opacity: 1 }, instant ? 0 : 'fast');
     let video = elements.eq(index).find('video');
     playVideo(video);
   }
@@ -515,7 +530,15 @@ $(document).ready(() => {
 
       // Start playing the video
       video[0].currentTime = 0;
-      video[0].play();
+      video[0].addEventListener(
+        'canplay',
+        function () {
+          this.play().catch((error) => {
+            console.log('Play failed: ', error);
+          });
+        },
+        { once: true }
+      );
     }
   }
 
@@ -526,28 +549,43 @@ $(document).ready(() => {
   }
 
   // Play on scroll
-  // Initialize Intersection Observer
-  let observer = new IntersectionObserver(
-    (entries, observer) => {
-      entries.forEach((entry) => {
-        if (entry.isIntersecting) {
-          // Play the video corresponding to the current index
-          let video;
-          if ($(window).width() >= 992) {
-            video = $('.hp-slider_visuals').find('video').eq(0);
-          } else {
-            video = $('.hp-slider_visuals-box._2').find('video').eq(0);
-          }
-          console.log(video);
-          playVideo(video);
-        }
-      });
-    },
-    { threshold: 0.5 }
-  ); // 50% of the element should be in view
+  let hasRun = { desktop: false, mobile: false }; // Initialize flags
 
-  // Observe the .hp-slider_inner element
-  observer.observe(document.querySelector('.hp-slider_inner'));
+  // Your original observer code should be removed and replaced with this:
+  $(window)
+    .on('resize', function () {
+      let screenWidth = $(window).width();
+
+      let observer = new IntersectionObserver(
+        (entries, observer) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              let video, key;
+              if (screenWidth >= 992) {
+                video = $('.hp-slider_visuals').find('video').eq(0);
+                key = 'desktop';
+              } else {
+                video = $('.hp-slider_visuals-box._2').find('video').eq(0);
+                key = 'mobile';
+              }
+
+              if (!hasRun[key]) {
+                if (init) {
+                  playVideo(video);
+                  hasRun[key] = true; // Update flag
+                } else {
+                  pendingVideo = video;
+                }
+              }
+            }
+          });
+        },
+        { threshold: 0.5 }
+      );
+
+      observer.observe(document.querySelector('.hp-slider_inner'));
+    })
+    .trigger('resize'); // Trigger the event initially to set up the observer
 
   // Load
   window.addEventListener('load', function () {
