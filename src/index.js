@@ -556,6 +556,8 @@ $(document).ready(() => {
         this.play().catch((error) => {
           console.log('Play failed: ', error);
         });
+        console.log('play');
+        video[0].currentTime = 0;
       });
     }
   }
