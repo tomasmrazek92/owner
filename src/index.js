@@ -382,14 +382,6 @@ $(document).ready(() => {
 
     if (desktop.matches) {
       if (init) {
-        // Disable (for desktop)
-        visuals.find('video').each(function () {
-          let video = $(this)[0];
-          video.load();
-          video.pause();
-          video.currentTime = 0;
-        });
-
         // Update this part for destroying Swiper
         if (swiper && swiper.destroyed === false) {
           swiper.destroy(true, true);
@@ -444,16 +436,6 @@ $(document).ready(() => {
 
     // Enable (for Mobile)
     else if (mobile.matches) {
-      // Disable (for desktop)
-      $('.hp-slider_visuals-box._2')
-        .find('video')
-        .each(function () {
-          let video = $(this)[0];
-          video.load();
-          video.pause();
-          video.currentTime = 0;
-        });
-
       if (init) {
         // If there's a pending video play, execute it here.
         if (pendingVideo) {
@@ -477,14 +459,7 @@ $(document).ready(() => {
         observer: true,
         observeParents: true,
         on: {
-          slideChange: (swiper) => {
-            let index = swiper.realIndex;
-            let video = $('.hp-slider_visuals-box._2')
-              .find('.swiper-slide')
-              .eq(index)
-              .find('video');
-            playSliderVideo(video);
-          },
+          slideChange: (swiper) => {},
         },
         breakpoints: {
           0: { autoHeight: true },
@@ -529,11 +504,13 @@ $(document).ready(() => {
 
   let currentPlayingVideo = null;
 
+  /*
   function playSliderVideo(video) {
     // Stop and reset all videos
     $('.hp-slider_inner')
       .find('video')
       .each(function () {
+        this.load();
         this.pause();
         this.currentTime = 0;
       });
@@ -556,8 +533,6 @@ $(document).ready(() => {
         this.play().catch((error) => {
           console.log('Play failed: ', error);
         });
-        console.log('play');
-        video[0].currentTime = 0;
       });
     }
   }
@@ -567,47 +542,14 @@ $(document).ready(() => {
     const nextIndex = (index + 1) % swiper.slides.length; // Loop back to first slide if it's the last one
     swiper.slideTo(nextIndex);
   }
+  */
 
-  // Play on scroll
-  let hasRun = { desktop: false, mobile: false }; // Initialize flags
-
-  // Your original observer code should be removed and replaced with this:
-  $(window)
-    .on('resize', function () {
-      let screenWidth = $(window).width();
-
-      let observer = new IntersectionObserver(
-        (entries, observer) => {
-          entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-              let video, key;
-              if (screenWidth >= 992) {
-                video = $('.hp-slider_visuals').find('video').eq(0);
-                key = 'desktop';
-              } else {
-                video = $('.hp-slider_visuals-box._2').find('video').eq(0);
-                key = 'mobile';
-              }
-
-              if (!hasRun[key]) {
-                playSliderVideo(video);
-              }
-            }
-          });
-        },
-        { threshold: 0.5 }
-      );
-
-      observer.observe(document.querySelector('.hp-slider_inner'));
-    })
-    .trigger('resize'); // Trigger the event initially to set up the observer
-
-  // Load
+  // Swiper Load
   window.addEventListener('load', function () {
     swiperMode();
   });
 
-  // Resize
+  // Swiper Resize
   var windowWidth = window.innerWidth;
 
   window.addEventListener('resize', function () {
@@ -615,6 +557,46 @@ $(document).ready(() => {
       windowWidth = window.innerWidth;
       swiperMode();
     }
+  });
+
+  // Swiper Scroll Observer
+  let observer;
+
+  function initializeObserver() {
+    if (observer) {
+      observer.disconnect();
+    }
+
+    observer = new IntersectionObserver(
+      (entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) {
+            const visibleVideo = $(entry.target).find('video:visible')[0];
+            if (visibleVideo) {
+              visibleVideo.play();
+            }
+          }
+        });
+      },
+      {
+        threshold: 0.5,
+      }
+    );
+
+    observer.observe($('.hp-slider_inner')[0]);
+  }
+
+  $(document).ready(function () {
+    if ($(window).width() >= 992) {
+      initializeObserver();
+    }
+
+    $(window).resize(() => {
+      const windowWidth = $(window).width();
+      if (windowWidth >= 992 || windowWidth <= 991) {
+        initializeObserver();
+      }
+    });
   });
 
   // --- Case Study Swiper
