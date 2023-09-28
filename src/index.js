@@ -380,12 +380,6 @@ $(document).ready(() => {
     let listItems = $('.hp-slider_content-inner._1').find('.hp-slider_list-item');
     let slides = $('.hp-slider_slider._1').find('.swiper-slide.n_hp-slider');
 
-    // If there's a pending video play, execute it here.
-    if (pendingVideo) {
-      playSliderVideo(pendingVideo);
-      pendingVideo = null; // Reset the pending video
-    }
-
     if (desktop.matches) {
       if (init) {
         // Disable (for desktop)
@@ -395,6 +389,7 @@ $(document).ready(() => {
           video.pause();
           video.currentTime = 0;
         });
+
         // Update this part for destroying Swiper
         if (swiper && swiper.destroyed === false) {
           swiper.destroy(true, true);
@@ -458,6 +453,7 @@ $(document).ready(() => {
           video.pause();
           video.currentTime = 0;
         });
+
       if (init) {
         // If there's a pending video play, execute it here.
         if (pendingVideo) {
@@ -592,12 +588,7 @@ $(document).ready(() => {
               }
 
               if (!hasRun[key]) {
-                if (init) {
-                  playSliderVideo(video);
-                  hasRun[key] = true; // Update flag
-                } else {
-                  pendingVideo = video;
-                }
+                playSliderVideo(video);
               }
             }
           });
