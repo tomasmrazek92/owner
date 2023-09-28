@@ -396,10 +396,12 @@ $(document).ready(() => {
 
     if (desktop.matches) {
       if (init) {
-        if (swiper) {
+        // Update this part for destroying Swiper
+        if (swiper && swiper.destroyed === false) {
           swiper.destroy(true, true);
         }
-        if (reVisuals) {
+
+        if (reVisuals && reVisuals.destroyed === false) {
           reVisuals.destroy(true, true);
         }
         init = false;
@@ -477,7 +479,6 @@ $(document).ready(() => {
               .find('.swiper-slide')
               .eq(index)
               .find('video');
-            console.log(video);
             playSliderVideo(video);
           },
         },
@@ -547,15 +548,12 @@ $(document).ready(() => {
 
       // Start playing the video
       video[0].currentTime = 0;
-      video[0].addEventListener(
-        'canplay',
-        function () {
-          this.play().catch((error) => {
-            console.log('Play failed: ', error);
-          });
-        },
-        { once: true }
-      );
+      // Start playing the video
+      video[0].addEventListener('canplaythrough', function () {
+        this.play().catch((error) => {
+          console.log('Play failed: ', error);
+        });
+      });
     }
   }
 
