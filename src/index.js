@@ -437,11 +437,6 @@ $(document).ready(() => {
     // Enable (for Mobile)
     else if (mobile.matches) {
       if (init) {
-        // If there's a pending video play, execute it here.
-        if (pendingVideo) {
-          playSliderVideo(pendingVideo);
-          pendingVideo = null; // Reset the pending video
-        }
         if (swiper) {
           swiper.destroy(true, true);
         }
@@ -498,43 +493,31 @@ $(document).ready(() => {
       .show()
       .stop()
       .animate({ opacity: 1 }, instant ? 0 : 'fast');
-    let video = elements.eq(index).find('video');
-    playSliderVideo(video);
+    let video = elements.eq(index).find('video:visible')[0];
+
+    if (video) {
+      playSliderVideo(video);
+    }
   }
 
   let currentPlayingVideo = null;
 
-  /*
-  function playSliderVideo(video) {
-    // Stop and reset all videos
-    $('.hp-slider_inner')
-      .find('video')
-      .each(function () {
-        this.load();
-        this.pause();
-        this.currentTime = 0;
-      });
+  function playSliderVideo(el) {
+    // Load and pause all the videos
+    loadAndPauseVideos();
 
-    if (video.length > 0) {
-      // Mark this video as the current one
-      currentPlayingVideo = video[0];
+    // Mark this video as the current one
+    currentPlayingVideo = el;
 
-      video[0].addEventListener('ended', function (e) {
-        if (e.target === currentPlayingVideo) {
-          // Check if this is the current video
-          handleVideoEnd();
-        }
-      });
+    // Play the video
+    el.play();
 
-      // Start playing the video
-      video[0].currentTime = 0;
-      // Start playing the video
-      video[0].addEventListener('canplaythrough', function () {
-        this.play().catch((error) => {
-          console.log('Play failed: ', error);
-        });
-      });
-    }
+    // Update Swiper when it ends
+    el.addEventListener('ended', (e) => {
+      if (e.target === currentPlayingVideo) {
+        handleVideoEnd();
+      }
+    });
   }
 
   function handleVideoEnd() {
@@ -542,7 +525,31 @@ $(document).ready(() => {
     const nextIndex = (index + 1) % swiper.slides.length; // Loop back to first slide if it's the last one
     swiper.slideTo(nextIndex);
   }
-  */
+
+  function loadAndPauseVideos() {
+    // Determine the selector based on screen width
+    const mediaQuery = window.matchMedia('(min-width: 922px)');
+    let selector;
+
+    if (mediaQuery.matches) {
+      selector = '.hp-slider_visuals-item video';
+    } else {
+      selector = '.hp-slider_visuals-box._2 video';
+    }
+
+    // Load, reset, and pause videos based on the selector
+    $(selector).each(function () {
+      let video = $(this)[0];
+
+      if (!video.hasAttribute('data-loaded')) {
+        video.load();
+        video.setAttribute('data-loaded', 'true');
+      }
+
+      video.currentTime = 0;
+      video.pause();
+    });
+  }
 
   // Swiper Load
   window.addEventListener('load', function () {
@@ -573,7 +580,8 @@ $(document).ready(() => {
           if (entry.isIntersecting) {
             const visibleVideo = $(entry.target).find('video:visible')[0];
             if (visibleVideo) {
-              visibleVideo.play();
+              playSliderVideo(visibleVideo);
+              observer.disconnect();
             }
           }
         });
@@ -587,16 +595,7 @@ $(document).ready(() => {
   }
 
   $(document).ready(function () {
-    if ($(window).width() >= 992) {
-      initializeObserver();
-    }
-
-    $(window).resize(() => {
-      const windowWidth = $(window).width();
-      if (windowWidth >= 992 || windowWidth <= 991) {
-        initializeObserver();
-      }
-    });
+    initializeObserver();
   });
 
   // --- Case Study Swiper
