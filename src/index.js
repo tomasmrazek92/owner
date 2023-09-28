@@ -271,9 +271,19 @@ $(document).ready(() => {
         visuals.fadeOut(firstClick ? 0 : 250, function () {
           if (++animationCount === visuals.length) {
             visuals.eq(index).fadeIn(firstClick ? 0 : 2 % 0);
-            let img = visuals.eq(index).find('[data-animation-type="lottie"]');
-            if (img.length) {
-              img.trigger('click');
+            visuals.find('video').each(function () {
+              let allVideo = $(this)[0];
+              allVideo.currentItem = 0;
+              allVideo.pause();
+            });
+
+            let video = visuals.eq(index).find('video')[0];
+            if (video) {
+              video.load();
+              video.currentTime = 0;
+              video.addEventListener('canplaythrough', function () {
+                video.play();
+              });
             }
           }
         });
@@ -380,7 +390,7 @@ $(document).ready(() => {
 
     // If there's a pending video play, execute it here.
     if (pendingVideo) {
-      playVideo(pendingVideo);
+      playSliderVideo(pendingVideo);
       pendingVideo = null; // Reset the pending video
     }
 
@@ -441,7 +451,7 @@ $(document).ready(() => {
       if (init) {
         // If there's a pending video play, execute it here.
         if (pendingVideo) {
-          playVideo(pendingVideo);
+          playSliderVideo(pendingVideo);
           pendingVideo = null; // Reset the pending video
         }
         if (swiper) {
@@ -468,7 +478,7 @@ $(document).ready(() => {
               .eq(index)
               .find('video');
             console.log(video);
-            playVideo(video);
+            playSliderVideo(video);
           },
         },
         breakpoints: {
@@ -509,16 +519,17 @@ $(document).ready(() => {
       .stop()
       .animate({ opacity: 1 }, instant ? 0 : 'fast');
     let video = elements.eq(index).find('video');
-    playVideo(video);
+    playSliderVideo(video);
   }
 
   let currentPlayingVideo = null;
 
-  function playVideo(video) {
+  function playSliderVideo(video) {
     // Stop and reset all videos
     $('.hp-slider_inner')
       .find('video')
       .each(function () {
+        this.load();
         this.pause();
         this.currentTime = 0;
       });
@@ -577,7 +588,7 @@ $(document).ready(() => {
 
               if (!hasRun[key]) {
                 if (init) {
-                  playVideo(video);
+                  playSliderVideo(video);
                   hasRun[key] = true; // Update flag
                 } else {
                   pendingVideo = video;
