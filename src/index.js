@@ -279,7 +279,6 @@ $(document).ready(() => {
 
             let video = visuals.eq(index).find('video')[0];
             if (video) {
-              video.load();
               video.currentTime = 0;
               video.addEventListener('canplaythrough', function () {
                 video.play();
@@ -381,13 +380,6 @@ $(document).ready(() => {
     let listItems = $('.hp-slider_content-inner._1').find('.hp-slider_list-item');
     let slides = $('.hp-slider_slider._1').find('.swiper-slide.n_hp-slider');
 
-    // Disable (for desktop)
-    visuals.find('video').each(function () {
-      let video = $(this)[0];
-      video.pause();
-      video.currentTime = 0;
-    });
-
     // If there's a pending video play, execute it here.
     if (pendingVideo) {
       playSliderVideo(pendingVideo);
@@ -396,6 +388,13 @@ $(document).ready(() => {
 
     if (desktop.matches) {
       if (init) {
+        // Disable (for desktop)
+        visuals.find('video').each(function () {
+          let video = $(this)[0];
+          video.load();
+          video.pause();
+          video.currentTime = 0;
+        });
         // Update this part for destroying Swiper
         if (swiper && swiper.destroyed === false) {
           swiper.destroy(true, true);
@@ -450,6 +449,15 @@ $(document).ready(() => {
 
     // Enable (for Mobile)
     else if (mobile.matches) {
+      // Disable (for desktop)
+      $('.hp-slider_visuals-box._2')
+        .find('video')
+        .each(function () {
+          let video = $(this)[0];
+          video.load();
+          video.pause();
+          video.currentTime = 0;
+        });
       if (init) {
         // If there's a pending video play, execute it here.
         if (pendingVideo) {
@@ -530,7 +538,6 @@ $(document).ready(() => {
     $('.hp-slider_inner')
       .find('video')
       .each(function () {
-        this.load();
         this.pause();
         this.currentTime = 0;
       });
