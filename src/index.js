@@ -454,7 +454,9 @@ $(document).ready(() => {
         observer: true,
         observeParents: true,
         on: {
-          slideChange: (swiper) => {},
+          slideChange: (swiper) => {
+            playSliderVideo($('.hp-slider_visuals-box._2').find('video').eq(swiper.realIndex)[0]);
+          },
         },
         breakpoints: {
           0: { autoHeight: true },
