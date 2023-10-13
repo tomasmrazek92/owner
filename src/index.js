@@ -504,15 +504,25 @@ $(document).ready(() => {
 
   let currentPlayingVideo = null;
 
-  function playSliderVideo(el) {
+  async function playSliderVideo(el) {
     // Load and pause all the videos
-    loadAndPauseVideos();
+    await loadAndPauseVideos(el);
 
     // Mark this video as the current one
     currentPlayingVideo = el;
 
     // Play the video
-    el.play();
+    let playPromise = el.play();
+
+    if (playPromise !== undefined) {
+      playPromise
+        .then(() => {
+          // Playback started successfully
+        })
+        .catch((error) => {
+          console.log('Error during playback:', error);
+        });
+    }
 
     // Update Swiper when it ends
     el.addEventListener('ended', (e) => {
@@ -528,28 +538,47 @@ $(document).ready(() => {
     swiper.slideTo(nextIndex);
   }
 
-  function loadAndPauseVideos() {
-    // Determine the selector based on screen width
-    const mediaQuery = window.matchMedia('(min-width: 922px)');
-    let selector;
+  function loadAndPauseVideos(skipPauseForVideo) {
+    return new Promise((resolve) => {
+      // Determine the selector based on screen width
+      const mediaQuery = window.matchMedia('(min-width: 922px)');
+      let selector;
 
-    if (mediaQuery.matches) {
-      selector = '.hp-slider_visuals-item video';
-    } else {
-      selector = '.hp-slider_visuals-box._2 video';
-    }
-
-    // Load, reset, and pause videos based on the selector
-    $(selector).each(function () {
-      let video = $(this)[0];
-
-      if (!video.hasAttribute('data-loaded')) {
-        video.load();
-        video.setAttribute('data-loaded', 'true');
+      if (mediaQuery.matches) {
+        selector = '.hp-slider_visuals-item video';
+      } else {
+        selector = '.hp-slider_visuals-box._2 video';
       }
 
-      video.currentTime = 0;
-      video.pause();
+      // Load, reset, and pause videos based on the selector
+      let pausePromises = [];
+      $(selector).each(function () {
+        let video = $(this)[0];
+
+        if (video !== skipPauseForVideo) {
+          video.currentTime = 0;
+          if (!video.paused) {
+            pausePromises.push(
+              new Promise((resolve) => {
+                video.addEventListener('pause', resolve, { once: true });
+                video.pause();
+              })
+            );
+          }
+        } else {
+          // if this is the video to play, just reset its time
+          video.currentTime = 0;
+        }
+
+        if (!video.hasAttribute('data-loaded')) {
+          video.load();
+          video.setAttribute('data-loaded', 'true');
+        }
+      });
+
+      Promise.all(pausePromises).then(() => {
+        resolve();
+      });
     });
   }
 
