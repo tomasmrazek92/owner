@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
-
 import { validateInput } from '$utils/formValidations';
 import { setInputElementValue } from '$utils/globals';
 import { restaurantObject } from '$utils/googlePlace';
