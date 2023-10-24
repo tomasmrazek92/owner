@@ -18,9 +18,10 @@ $(document).ready(() => {
 
   // check local storage for an existing user ID
   let userId = getItem('userId');
+
   // if none exists, generate a new one and save it
   if (!userId) {
-    userId = uuidv4();
+    userId = 1111;
     setItem('userId', userId);
   }
 
