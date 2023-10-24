@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 import { validateInput } from '$utils/formValidations';
 import { setInputElementValue } from '$utils/globals';
 import { restaurantObject } from '$utils/googlePlace';
@@ -21,7 +23,7 @@ $(document).ready(() => {
 
   // if none exists, generate a new one and save it
   if (!userId) {
-    userId = 1111;
+    userId = uuidv4();
     setItem('userId', userId);
   }
 

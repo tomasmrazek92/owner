@@ -364,262 +364,264 @@ $(document).ready(() => {
   });
 
   // --- Features Swiper
-  let swiper;
-  let reVisuals;
-  let init = false;
-  let pendingVideo = null;
+  if ($('.n_section-hp-slider').length) {
+    let swiper;
+    let reVisuals;
+    let init = false;
+    let pendingVideo = null;
 
-  function swiperMode() {
-    const mobile = window.matchMedia('(min-width: 0px) and (max-width: 991px)');
-    const desktop = window.matchMedia('(min-width: 992px)');
+    function swiperMode() {
+      const mobile = window.matchMedia('(min-width: 0px) and (max-width: 991px)');
+      const desktop = window.matchMedia('(min-width: 992px)');
 
-    // Desktop
-    let visuals = $('.hp-slider_visuals._1').find('.hp-slider_visuals-item');
-    let listItems = $('.hp-slider_content-inner._1').find('.hp-slider_list-item');
-    let slides = $('.hp-slider_slider._1').find('.swiper-slide.n_hp-slider');
+      // Desktop
+      let visuals = $('.hp-slider_visuals._1').find('.hp-slider_visuals-item');
+      let listItems = $('.hp-slider_content-inner._1').find('.hp-slider_list-item');
+      let slides = $('.hp-slider_slider._1').find('.swiper-slide.n_hp-slider');
 
-    if (desktop.matches) {
-      if (init) {
-        // Update this part for destroying Swiper
-        if (swiper && swiper.destroyed === false) {
-          swiper.destroy(true, true);
-        }
-
-        if (reVisuals && reVisuals.destroyed === false) {
-          reVisuals.destroy(true, true);
-        }
-        init = false;
-      }
-      swiper = new Swiper('.hp-slider_slider._1', {
-        slidesPerView: 1,
-        speed: 250,
-        navigation: {
-          prevEl: `.swiper_arrow.prev.n_hp-slider`,
-          nextEl: `.swiper_arrow.next.n_hp-slider`,
-        },
-        autoHeight: true,
-        slideToClickedSlide: true,
-        observer: true,
-        observeParents: true,
-        on: {
-          beforeTransitionStart: (swiper) => {
-            let index = swiper.realIndex;
-
-            /* Visuals */
-            crossfade(visuals, index, true);
-
-            /* List */
-            crossfade(listItems, index);
-          },
-          slideChange: (swiper) => {
-            let index = swiper.realIndex;
-            slides.each(function () {
-              if ($(this).index() < index) {
-                $(this).find('.hp-slider_slide').addClass('offset');
-              } else {
-                $(this).find('.hp-slider_slide').removeClass('offset');
-              }
-            });
-          },
-        },
-        breakpoints: {
-          0: { autoHeight: true },
-          480: { autoHeight: true },
-          768: { autoHeight: true },
-          992: { autoHeight: true },
-        },
-      });
-      init = true;
-    }
-
-    // Enable (for Mobile)
-    else if (mobile.matches) {
-      if (init) {
-        if (swiper) {
-          swiper.destroy(true, true);
-        }
-        init = false;
-      }
-      swiper = new Swiper('.hp-slider_slider._2', {
-        slidesPerView: 1,
-        speed: 250,
-        navigation: {
-          prevEl: `.swiper_arrow.prev.n_hp-slider`,
-          nextEl: `.swiper_arrow.next.n_hp-slider`,
-        },
-        autoHeight: true,
-        slideToClickedSlide: true,
-        observer: true,
-        observeParents: true,
-        on: {
-          slideChange: (swiper) => {
-            playSliderVideo($('.hp-slider_visuals-box._2').find('video').eq(swiper.realIndex)[0]);
-          },
-        },
-        breakpoints: {
-          0: { autoHeight: true },
-          480: { autoHeight: true },
-          768: { autoHeight: true },
-          992: { autoHeight: true },
-        },
-      });
-      reVisuals = new Swiper('.hp-slider_visuals-box._2', {
-        slidesPerView: 1,
-        speed: 250,
-        autoHeight: true,
-        slideToClickedSlide: true,
-        observer: true,
-        observeParents: true,
-      });
-
-      swiper.controller.control = reVisuals;
-      reVisuals.controller.control = swiper;
-      init = true;
-    }
-  }
-
-  function crossfade(elements, index, instant) {
-    elements
-      .filter(':visible')
-      .css('position', 'absolute')
-      .stop()
-      .animate({ opacity: 0 }, instant ? 0 : 'fast', function () {
-        $(this).hide();
-      });
-    elements
-      .eq(index)
-      .css('position', 'relative')
-      .css('opacity', 0)
-      .show()
-      .stop()
-      .animate({ opacity: 1 }, instant ? 0 : 'fast');
-
-    const mediaQuery = window.matchMedia('(min-width: 922px)');
-    let selector;
-
-    if (mediaQuery.matches) {
-      selector = '.hp-slider_visuals-item video';
-    } else {
-      selector = '.hp-slider_visuals-box._2 video';
-    }
-
-    let video = $(selector).eq(index)[0];
-
-    if (video) {
-      playSliderVideo(video);
-    }
-  }
-
-  let currentPlayingVideo = null;
-
-  function handleVideoEvent(e) {
-    if (e.target === currentPlayingVideo) {
-      const index = swiper.realIndex;
-      const nextIndex = (index + 1) % swiper.slides.length; // Loop back to first slide if it's the last one
-      swiper.slideTo(nextIndex);
-    } else {
-    }
-  }
-
-  function playSliderVideo(el) {
-    const mediaQuery = window.matchMedia('(min-width: 922px)');
-    let selector;
-
-    if (mediaQuery.matches) {
-      selector = '.hp-slider_visuals-item video';
-    } else {
-      selector = '.hp-slider_visuals-box._2 video';
-    }
-
-    const videos = document.querySelectorAll(selector);
-
-    // Remove event listeners from the previous video
-    if (currentPlayingVideo) {
-      currentPlayingVideo.removeEventListener('ended', handleVideoEvent);
-    }
-
-    // Set the new video as the current one
-    currentPlayingVideo = el;
-    currentPlayingVideo.addEventListener('ended', handleVideoEvent);
-
-    // Pause all videos and reset currentTime
-    videos.forEach((video) => {
-      if (video !== el) {
-        video.pause();
-        video.currentTime = 0;
-      }
-    });
-
-    // Wait a bit for pause operations to complete
-    setTimeout(() => {
-      // Play the current video
-      const playPromise = currentPlayingVideo.play();
-
-      if (playPromise) {
-        playPromise
-          .then(() => {
-            console.log('Playback started');
-          })
-          .catch((err) => {
-            console.log('Playback failed', err);
-          });
-      }
-    }, 100);
-  }
-
-  // Swiper Load
-  window.addEventListener('load', function () {
-    swiperMode();
-  });
-
-  // Swiper Resize
-  var windowWidth = window.innerWidth;
-
-  window.addEventListener('resize', function () {
-    if (window.innerWidth !== windowWidth) {
-      windowWidth = window.innerWidth;
-      swiperMode();
-    }
-  });
-
-  // Swiper Scroll Observer
-  let observer;
-
-  function initializeObserver() {
-    if (observer) {
-      observer.disconnect();
-    }
-
-    observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          if (entry.isIntersecting) {
-            const visibleVideo = $(entry.target).find('video:visible')[0];
-            if (visibleVideo) {
-              playSliderVideo(visibleVideo);
-              observer.disconnect();
-            }
+      if (desktop.matches) {
+        if (init) {
+          // Update this part for destroying Swiper
+          if (swiper && swiper.destroyed === false) {
+            swiper.destroy(true, true);
           }
+
+          if (reVisuals && reVisuals.destroyed === false) {
+            reVisuals.destroy(true, true);
+          }
+          init = false;
+        }
+        swiper = new Swiper('.hp-slider_slider._1', {
+          slidesPerView: 1,
+          speed: 250,
+          navigation: {
+            prevEl: `.swiper_arrow.prev.n_hp-slider`,
+            nextEl: `.swiper_arrow.next.n_hp-slider`,
+          },
+          autoHeight: true,
+          slideToClickedSlide: true,
+          observer: true,
+          observeParents: true,
+          on: {
+            beforeTransitionStart: (swiper) => {
+              let index = swiper.realIndex;
+
+              /* Visuals */
+              crossfade(visuals, index, true);
+
+              /* List */
+              crossfade(listItems, index);
+            },
+            slideChange: (swiper) => {
+              let index = swiper.realIndex;
+              slides.each(function () {
+                if ($(this).index() < index) {
+                  $(this).find('.hp-slider_slide').addClass('offset');
+                } else {
+                  $(this).find('.hp-slider_slide').removeClass('offset');
+                }
+              });
+            },
+          },
+          breakpoints: {
+            0: { autoHeight: true },
+            480: { autoHeight: true },
+            768: { autoHeight: true },
+            992: { autoHeight: true },
+          },
         });
-      },
-      {
-        threshold: 0.5,
+        init = true;
       }
-    );
 
-    observer.observe($('.hp-slider_inner')[0]);
-  }
+      // Enable (for Mobile)
+      else if (mobile.matches) {
+        if (init) {
+          if (swiper) {
+            swiper.destroy(true, true);
+          }
+          init = false;
+        }
+        swiper = new Swiper('.hp-slider_slider._2', {
+          slidesPerView: 1,
+          speed: 250,
+          navigation: {
+            prevEl: `.swiper_arrow.prev.n_hp-slider`,
+            nextEl: `.swiper_arrow.next.n_hp-slider`,
+          },
+          autoHeight: true,
+          slideToClickedSlide: true,
+          observer: true,
+          observeParents: true,
+          on: {
+            slideChange: (swiper) => {
+              playSliderVideo($('.hp-slider_visuals-box._2').find('video').eq(swiper.realIndex)[0]);
+            },
+          },
+          breakpoints: {
+            0: { autoHeight: true },
+            480: { autoHeight: true },
+            768: { autoHeight: true },
+            992: { autoHeight: true },
+          },
+        });
+        reVisuals = new Swiper('.hp-slider_visuals-box._2', {
+          slidesPerView: 1,
+          speed: 250,
+          autoHeight: true,
+          slideToClickedSlide: true,
+          observer: true,
+          observeParents: true,
+        });
 
-  $(document).ready(function () {
-    initializeObserver();
-  });
+        swiper.controller.control = reVisuals;
+        reVisuals.controller.control = swiper;
+        init = true;
+      }
+    }
 
-  // --- Case Study Swiper
-  let csSlider = $('.n_section-cs');
-  if (csSlider) {
-    createSwiper(csSlider, '.swiper.n_case-studies', 'case-study-slider', {
-      slidesPerView: 1,
-      spaceBetween: 48,
+    function crossfade(elements, index, instant) {
+      elements
+        .filter(':visible')
+        .css('position', 'absolute')
+        .stop()
+        .animate({ opacity: 0 }, instant ? 0 : 'fast', function () {
+          $(this).hide();
+        });
+      elements
+        .eq(index)
+        .css('position', 'relative')
+        .css('opacity', 0)
+        .show()
+        .stop()
+        .animate({ opacity: 1 }, instant ? 0 : 'fast');
+
+      const mediaQuery = window.matchMedia('(min-width: 922px)');
+      let selector;
+
+      if (mediaQuery.matches) {
+        selector = '.hp-slider_visuals-item video';
+      } else {
+        selector = '.hp-slider_visuals-box._2 video';
+      }
+
+      let video = $(selector).eq(index)[0];
+
+      if (video) {
+        playSliderVideo(video);
+      }
+    }
+
+    let currentPlayingVideo = null;
+
+    function handleVideoEvent(e) {
+      if (e.target === currentPlayingVideo) {
+        const index = swiper.realIndex;
+        const nextIndex = (index + 1) % swiper.slides.length; // Loop back to first slide if it's the last one
+        swiper.slideTo(nextIndex);
+      } else {
+      }
+    }
+
+    function playSliderVideo(el) {
+      const mediaQuery = window.matchMedia('(min-width: 922px)');
+      let selector;
+
+      if (mediaQuery.matches) {
+        selector = '.hp-slider_visuals-item video';
+      } else {
+        selector = '.hp-slider_visuals-box._2 video';
+      }
+
+      const videos = document.querySelectorAll(selector);
+
+      // Remove event listeners from the previous video
+      if (currentPlayingVideo) {
+        currentPlayingVideo.removeEventListener('ended', handleVideoEvent);
+      }
+
+      // Set the new video as the current one
+      currentPlayingVideo = el;
+      currentPlayingVideo.addEventListener('ended', handleVideoEvent);
+
+      // Pause all videos and reset currentTime
+      videos.forEach((video) => {
+        if (video !== el) {
+          video.pause();
+          video.currentTime = 0;
+        }
+      });
+
+      // Wait a bit for pause operations to complete
+      setTimeout(() => {
+        // Play the current video
+        const playPromise = currentPlayingVideo.play();
+
+        if (playPromise) {
+          playPromise
+            .then(() => {
+              console.log('Playback started');
+            })
+            .catch((err) => {
+              console.log('Playback failed', err);
+            });
+        }
+      }, 100);
+    }
+
+    // Swiper Load
+    window.addEventListener('load', function () {
+      swiperMode();
     });
+
+    // Swiper Resize
+    var windowWidth = window.innerWidth;
+
+    window.addEventListener('resize', function () {
+      if (window.innerWidth !== windowWidth) {
+        windowWidth = window.innerWidth;
+        swiperMode();
+      }
+    });
+
+    // Swiper Scroll Observer
+    let observer;
+
+    function initializeObserver() {
+      if (observer) {
+        observer.disconnect();
+      }
+
+      observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              const visibleVideo = $(entry.target).find('video:visible')[0];
+              if (visibleVideo) {
+                playSliderVideo(visibleVideo);
+                observer.disconnect();
+              }
+            }
+          });
+        },
+        {
+          threshold: 0.5,
+        }
+      );
+
+      observer.observe($('.hp-slider_inner')[0]);
+    }
+
+    $(document).ready(function () {
+      initializeObserver();
+    });
+
+    // --- Case Study Swiper
+    let csSlider = $('.n_section-cs');
+    if (csSlider) {
+      createSwiper(csSlider, '.swiper.n_case-studies', 'case-study-slider', {
+        slidesPerView: 1,
+        spaceBetween: 48,
+      });
+    }
   }
 });
