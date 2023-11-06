@@ -315,7 +315,6 @@ $(document).ready(() => {
     });
 
     // Functions
-
     function revealTab(elem) {
       // Animated Items
       let mask = $(elem).find(actionsMask);

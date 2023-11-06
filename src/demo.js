@@ -19,11 +19,6 @@ $(document).ready(() => {
 
   // Handle Submit
   const successSubmit = () => {
-    gtag('event', 'ecap', {
-      event_category: 'lead',
-      event_label: 'ecap',
-      value: 1,
-    });
     window.location.href = 'https://www.owner.com/funnel-demo-requested';
   };
 
