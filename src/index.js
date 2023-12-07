@@ -613,14 +613,14 @@ $(document).ready(() => {
     $(document).ready(function () {
       initializeObserver();
     });
+  }
 
-    // --- Case Study Swiper
-    let csSlider = $('.n_section-cs');
-    if (csSlider) {
-      createSwiper(csSlider, '.swiper.n_case-studies', 'case-study-slider', {
-        slidesPerView: 1,
-        spaceBetween: 48,
-      });
-    }
+  // --- Case Study Swiper
+  let csSlider = $('.n_section-cs');
+  if (csSlider) {
+    createSwiper(csSlider, '.swiper.n_case-studies', 'case-study-slider', {
+      slidesPerView: 1,
+      spaceBetween: 48,
+    });
   }
 });

@@ -6,6 +6,7 @@ import {
   onFormReadyCallback,
   waitForFormReady,
 } from '$utils/hubspotLogic';
+import { getItem, setItem } from '$utils/localStorage';
 
 $(document).ready(() => {
   // Custom Select
@@ -52,6 +53,7 @@ $(document).ready(() => {
     'person-type': 'lead_person_type',
     website: 'website',
     place_id: 'place_id',
+    url: 'place_cid',
     place_types: ['place_types_contact', '0-2/place_types'],
     rating: 'place_rating',
     user_ratings_total: 'user_ratings_total',
@@ -80,6 +82,16 @@ $(document).ready(() => {
       // Custom Inputs
       setInputElementValue('page_url', window.location.pathname);
       setInputElementValue('page_lang', $('html').attr('lang'));
+      setInputElementValue(
+        'url',
+        (() => {
+          // Splitting the URL at 'cid=' and taking the second part
+          var restaurant = getItem('restaurant');
+          var cidLink = restaurant.url;
+          console.log(cidLink);
+          return cidLink.split('cid=')[1];
+        })()
+      );
       fillHubSpot(wfForm, hsForm, inputMapping);
       handleHubspotForm(hsForm);
     }

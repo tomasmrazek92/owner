@@ -1,4 +1,5 @@
 export const setInputElementValue = (elementName, value) => {
+  console.log(value);
   $(`input[name=${elementName}]`).val(value);
 };
 

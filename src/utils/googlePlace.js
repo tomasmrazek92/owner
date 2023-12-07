@@ -45,6 +45,7 @@ const setGooglePlaceDataToForm = (googlePlace) => {
     international_phone_number: '',
     website: '',
     place_id: '',
+    url: '',
     rating: '',
     user_ratings_total: '',
     address_components: {
