@@ -1,8 +1,10 @@
 export const setInputElementValue = (elementName, value) => {
-  console.log(value);
   $(`input[name=${elementName}]`).val(value);
 };
 
+export const getInputElementValue = (elementName) => {
+  return $(`input[name=${elementName}]`).val();
+};
 // --- VideoPlay
 
 export const videoPlay = () => {

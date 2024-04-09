@@ -15,6 +15,7 @@ const ENTRY_POINTS = [
   'src/blog.js',
   'src/careers.js',
   'src/story.js',
+  'src/lottie.js',
 ];
 
 // Config dev serving
