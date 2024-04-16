@@ -4,6 +4,7 @@ import {
   fillHubSpot,
   handleHubspotForm,
   onFormReadyCallback,
+  toggleLoader,
   waitForFormReady,
 } from '$utils/hubspotLogic';
 import { getItem, setItem } from '$utils/localStorage';
@@ -209,29 +210,18 @@ $(document).ready(() => {
   }
 
   const successSubmit = () => {
+    const success = $('.n_demo-form_success');
+
     // Toggle Loading
     toggleLoader(false);
+    wfForm.hide();
+    success.show();
 
     // Success State flow
     window.location.href = qualified
       ? 'https://meetings.salesloft.com/ownercom/inbound-demo'
       : 'https://www.owner.com/funnel-demo-requested';
   };
-
-  // Loader
-  function toggleLoader(condition) {
-    const loader = $('.n_demo-form_loading');
-    const success = $('.n_demo-form_success');
-
-    if (condition) {
-      loader.find('[data-animation-type="lottie"]').trigger('click');
-      loader.fadeIn();
-    } else {
-      loader.hide();
-      wfForm.hide();
-      success.show();
-    }
-  }
 
   // #endregion
 
