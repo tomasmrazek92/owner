@@ -129,8 +129,7 @@ $(document).ready(() => {
         }
       });
     } else {
-      $(brizo_id).val(new Date().getTime());
-      setInputElementValue('inbound_add_to_cadence', 'false');
+      fillStaticAPIFields(false);
     }
   }
 
@@ -149,6 +148,19 @@ $(document).ready(() => {
   }
 
   // Fill Custom Fields
+  function fillStaticAPIFields(type) {
+    setInputElementValue('base_enrich_date', new Date().getTime());
+    setInputElementValue('inbound_add_to_cadence', 'true');
+    // Inputs for insta Disqualification
+    if (type === false) {
+      setInputElementValue('execution_time_seconds', 0);
+    }
+    // Inputs for insta Qualifiation
+    if (type === true) {
+      setInputElementValue('auto_dq_reason', 'none');
+    }
+  }
+
   function fillCustomFields() {
     // Some quick input filling
     setInputElementValue('page_url', window.location.pathname);
@@ -191,6 +203,7 @@ $(document).ready(() => {
             qualified = false;
             fillFormWithMatchingData(result, false);
           }
+        } else if (qualified === false) {
         }
       } catch (error) {
         qualified = false;
