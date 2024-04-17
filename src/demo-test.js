@@ -214,7 +214,7 @@ $(document).ready(() => {
       // Proceed
       fillCustomFields();
       fillHubSpot(wfForm, hsForm, inputMapping);
-      // handleHubspotForm(hsForm);
+      handleHubspotForm(hsForm);
     }
   }
 
