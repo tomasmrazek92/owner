@@ -149,10 +149,10 @@ $(document).ready(() => {
 
   // Fill Custom Fields
   function fillStaticAPIFields(type) {
-    setInputElementValue('base_enrich_date', new Date().getTime());
+    setInputElementValue('base_enrich_date', new Date().toISOString().slice(0, 10));
     setInputElementValue('inbound_add_to_cadence', 'true');
     // Inputs for insta Disqualification
-    if (type === false) {
+    if (type) {
       setInputElementValue('execution_time_seconds', 0);
     }
     // Inputs for insta Qualifiation
@@ -203,7 +203,8 @@ $(document).ready(() => {
             qualified = false;
             fillFormWithMatchingData(result, false);
           }
-        } else if (qualified === false) {
+        } else {
+          fillStaticAPIFields(qualified);
         }
       } catch (error) {
         qualified = false;
@@ -213,7 +214,7 @@ $(document).ready(() => {
       // Proceed
       fillCustomFields();
       fillHubSpot(wfForm, hsForm, inputMapping);
-      handleHubspotForm(hsForm);
+      // handleHubspotForm(hsForm);
     }
   }
 
@@ -283,7 +284,7 @@ $(document).ready(() => {
     page_url: 'last_pdf_download',
     page_lang: 'page_lang',
     brizo_id: ['brizo_id', '0-2/brizo_id_account'],
-    auto_enrich_date: ['auto_enrich_date', '0-2/auto_enrich_date_company'],
+    base_enrich_date: ['auto_enrich_date', '0-2/auto_enrich_date_company'],
     inbound_add_to_cadence: 'inbound_add_to_cadence',
     execution_time_seconds: 'auto_enrich_time',
     auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
