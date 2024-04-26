@@ -1,0 +1,242 @@
+@mixin tablet {
+    @media (min-width: 768px) {
+      @content;
+    }
+}
+
+@mixin desktop {
+    @media (min-width: 992px) {
+      @content;
+    }
+}
+
+@mixin wide {
+    @media (min-width: 1440px) {
+      @content;
+    }
+}
+
+#profit-margin-calculator {
+    padding: 30px;
+    box-shadow: 0 0 15px 5px rgba(0 0 0 / 5%);
+    border-radius: 16px;
+    width: 100%;
+    --red: #EA1010;
+
+    .calc--title {
+        font-size: 3.4rem;
+        font-weight: 500;
+
+        @include desktop() {
+            font-size: 4.25rem;
+        }
+        @include wide() {
+            font-size: 3.4rem;
+        }
+    }
+
+    .wrapper--row {
+        .wrapper--input {
+            margin-top: 30px;
+        }
+
+        @include tablet {
+            display: flex;
+            column-gap: 30px;
+            width: 100%;
+
+            .wrapper--input, .wrapper--output {
+                flex: 1;
+            }
+        }
+    }
+
+    .label-with-tooltip {
+        display: flex;
+        column-gap: 8px;
+        align-items: center;
+
+        svg {
+            --sym1-disp: 1;
+            --sym2-disp: 0;
+
+            &:hover, &:focus {
+                --sym1-disp: 0;
+                --sym2-disp: 1;
+            }
+        }
+    }
+
+    label.label-with-tooltip {
+        color: var(--neutral-500);
+        margin-bottom: 10px;
+        font-size: 2rem;
+
+        @include desktop() {
+            font-size: 2.5rem;
+        }
+        @include wide() {
+            font-size: 2rem;
+        }
+    }
+
+    .w-input, .w-select {
+        padding: 12px 16px 12px calc(20px + 1ch);
+        font-size: 2rem;
+        line-height: normal;
+        height: auto;
+        border-radius: 8px;
+        font-weight: 600;
+
+        &:focus {
+            background-color: rgba(0, 68, 253, 0.10);
+            border-color: var(--color--brand--main);
+        }
+
+        &:invalid {
+            border-color: #EA1010;
+
+            + .error-text {
+                display: block;
+            }
+        }
+
+        @include desktop() {
+            font-size: 2.5rem;
+        }
+        @include wide() {
+            font-size: 2rem;
+        }
+    }
+
+    .w-select {
+        padding: 12px 16px;
+        background-color: #fff;
+
+        .current {
+            color: var(--off-black);
+        }
+    }
+
+    .currency {
+        position: relative;
+
+        .dollar-symbol {
+            position: absolute;
+            top: 50%;
+            left: 15px;
+            transform: translateY(-50%);
+            font-size: 2rem;
+            font-weight: 600;
+        }
+    }
+
+    #form--calculator {
+        &:invalid {
+            #btn--calculate {
+                background-color: #B3C7FF;
+                cursor: not-allowed;
+            }
+        }
+    }
+
+    #btn--calculate {
+        font-size: 2rem;
+
+        &:hover, &:focus {
+            background-color: var(--off-black);
+        }
+
+        @include desktop() {
+            font-size: 2.5rem;
+        }
+        @include wide() {
+            font-size: 2rem;
+        }
+    }
+
+    .btn--plain {
+        background-color: transparent;
+        text-decoration: underline;
+        margin-top: 15px;
+        font-size: 1.8rem;
+
+        @include desktop() {
+            font-size: 2rem;
+        }
+        @include wide() {
+            font-size: 1.8rem;
+        }
+    }
+
+    .wrapper--buttons {
+        margin-top: 30px;
+        margin-bottom: 40px;
+    }
+
+    output {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        background-color: #F2F5FF;
+        padding: 50px 30px;
+
+        .label-with-tooltip {
+            font-size: 2rem;
+            font-weight: 500;
+
+            @include desktop() {
+                font-size: 2.5rem;
+            }
+            @include wide() {
+                font-size: 2rem;
+            }
+        }
+
+        .output--value {
+            font-size: 4rem;
+            color: var(--color--brand--main);
+            font-weight: bold;
+            margin-bottom: 30px;
+
+            @include desktop() {
+                font-size: 5rem;
+            }
+            @include wide() {
+                font-size: 4rem;
+            }
+        }
+
+        #output--message {
+            font-size: 2.2rem;
+            font-weight: 600;
+            text-align: center;
+
+            @include desktop() {
+                font-size: 2.75rem;
+            }
+            @include wide() {
+                font-size: 2.2rem;
+            }
+        }
+    }
+
+    .tippy-box {
+        text-align: center;
+        background-color: var(--off-black);
+        padding: 15px;
+        text-wrap: balance;
+
+        .tippy-content {
+            font-size: 1.6rem;
+
+            @include desktop() {
+                font-size: 2rem;
+            }
+            @include wide() {
+                font-size: 1.6rem;
+            }
+        }
+    }
+}
