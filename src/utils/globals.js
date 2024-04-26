@@ -53,11 +53,18 @@ export const videoPlay = () => {
 
 export const heroVideo = () => {
   $('[hero-video-thumb]').click(function (e) {
+    let allVideos = $('[hero-video]');
     let video = $(this).closest('[hero-video-box]').find('[hero-video]')[0];
-    e.stopPropagation(); // Prevent event propagation to avoid conflicts
+    e.stopPropagation();
+
+    // Pause all expect the new one
+    allVideos.not(video).each(function () {
+      $(this)[0].pause();
+    });
+
     if (video.paused) {
       video.play();
     }
-    $('[hero-video-thumb]').hide();
+    $(this).hide();
   });
 };

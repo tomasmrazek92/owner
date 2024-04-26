@@ -28,6 +28,9 @@ $(document).ready(() => {
       try {
         let restaurant = getRestaurant();
 
+        // Resetting the flag
+        qualified = undefined;
+
         // Conditions
         let isOwner = $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
         let multipleLocations = $('input[name="number-of-locations"]').val() > 1;

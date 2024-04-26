@@ -64,8 +64,10 @@ $(document).ready(() => {
     if (!menuOpen) {
       scrollPosition = $(window).scrollTop();
       $('html, body').scrollTop(0).addClass('overflow-hidden');
+      lenis.stop();
     } else {
       $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+      lenis.start();
     }
     menuOpen = !menuOpen;
   };
