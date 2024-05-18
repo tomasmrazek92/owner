@@ -69,7 +69,7 @@ $(document).ready(() => {
     function callApi(data) {
       return new Promise((resolve, reject) => {
         $.ajax({
-          url: 'https://owner-ops.net/business-info',
+          url: 'https://owner-ops.net/business-info/',
           type: 'POST',
           contentType: 'application/json',
           dataType: 'json',
@@ -96,7 +96,7 @@ $(document).ready(() => {
     // Usage
     return callApi(data)
       .then((response) => {
-        // You might want to assign the response to a variable if needed here
+        console.log(response);
         return response[0]; // Return the response directly
       })
       .catch((error) => {
@@ -113,11 +113,13 @@ $(document).ready(() => {
       'base_enrich_date',
       'inbound_add_to_cadence',
       'execution_time_seconds',
+      'auto_dq_flag',
       'auto_dq_reason',
       'gmv_pred',
       'inbound_add_to_cadence',
     ];
 
+    // Flag = We run this only when the apiCall runned
     if (flag) {
       inputs.each(function () {
         const inputName = $(this).attr('name');
@@ -150,17 +152,19 @@ $(document).ready(() => {
     return isValid;
   }
 
-  // Fill Custom Fields
+  // Fill Custom Fields for the insta flow
   function fillStaticAPIFields(type) {
     setInputElementValue('base_enrich_date', new Date().toISOString().slice(0, 10));
     setInputElementValue('inbound_add_to_cadence', 'true');
     // Inputs for insta Disqualification
     if (type) {
       setInputElementValue('execution_time_seconds', 0);
+      setInputElementValue('auto_dq_flags', 'true');
     }
     // Inputs for insta Qualifiation
     if (type === true) {
       setInputElementValue('auto_dq_reason', 'none');
+      setInputElementValue('auto_dq_flags', 'false');
     }
   }
 
@@ -236,7 +240,7 @@ $(document).ready(() => {
 
     // Success State flow
     window.location.href = qualified
-      ? 'https://meetings.salesloft.com/ownercom/inbound-demo'
+      ? 'https://meetings.hubspot.com/brandon767/sales-inbound-round-robin'
       : 'https://www.owner.com/funnel-demo-requested';
   };
 
@@ -290,6 +294,7 @@ $(document).ready(() => {
     base_enrich_date: ['auto_enrich_date', '0-2/auto_enrich_date_company'],
     inbound_add_to_cadence: 'inbound_add_to_cadence',
     execution_time_seconds: 'auto_enrich_time',
+    auto_dq_flag: 'auto_dq_static',
     auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
     gmv_pred: ['pred_gmv', '0-2/pred_gmv_company'],
 
