@@ -24,15 +24,55 @@ $(document).ready(() => {
     userId = uuidv4();
     setItem('userId', userId);
   }
-  console.log(userId);
 
   // #region Functions
-  function logEvent(personID, dataObject, status, errorMessage) {
-    const eventVars = dataObject;
-    console.log(eventVars);
-    if (errorMessage) eventVars.location.errorMessage = errorMessage;
+  function logFullstory(status) {
+    // Device Data
+    function getBrowserAndDeviceInfo() {
+      const { userAgent } = navigator;
+      const browser = navigator.appName;
+      const { platform } = navigator;
+      const { language } = navigator; // This gives the language of the OS
+
+      return {
+        userAgent,
+        browser,
+        platform,
+        language,
+      };
+    }
+    const userInfo = getBrowserAndDeviceInfo();
+
+    const firstName = wfForm.find($('input[name=first-name]')).val();
+    const lastName = wfForm.find($('input[name=last-name]')).val();
+    const restaurantName = wfForm.find($('input[name=name]')).val();
+    const phone = wfForm.find($('input[name=cellphone]')).val();
+    const email = wfForm.find($('input[name=email]')).val();
+
+    const eventVars = {
+      displayName: firstName + ' ' + lastName,
+      restaurantName: restaurantName,
+      phone: phone,
+      email: email,
+      firstName: firstName,
+      lastName: lastName,
+      ...userInfo,
+    };
+
     if (typeof FS !== 'undefined' && FS) {
-      FS.event(status, FS.identify(personID, eventVars));
+      FS.event(status, FS.identify(userId, eventVars));
+    }
+  }
+
+  function logPartnerStack() {
+    if (typeof growsumo !== 'undefined' && growsumo) {
+      // 1. Populate the growsumo.data object
+      growsumo.data.name = wfForm.find('input[name="name"]').val();
+      growsumo.data.email = wfForm.find('input[name="email"]').val();
+      growsumo.data.customer_key = wfForm.find('input[name="email"]').val();
+
+      // Register the signup with PartnerStack
+      growsumo.createSignup();
     }
   }
 
@@ -247,6 +287,7 @@ $(document).ready(() => {
       // Proceed
       fillCustomFields();
       fillHubSpot(wfForm, hsForm, inputMapping);
+      logFullstory('Form Button Clicked');
       handleHubspotForm(hsForm);
     }
   }
@@ -284,16 +325,18 @@ $(document).ready(() => {
     formId: 'f3807262-aed3-4b9c-93a3-247ad4c55e60',
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
-    onFormSubmit: () => {
-      // 1. Populate the growsumo.data object
-      growsumo.data.name = wfForm.find('input[name="name"]').val();
-      growsumo.data.email = wfForm.find('input[name="email"]').val();
-      growsumo.data.customer_key = wfForm.find('input[name="email"]').val();
-
-      // Register the signup with PartnerStack
-      growsumo.createSignup();
+    onFormSubmit: function () {
+      console.log('Submit');
+      logPartnerStack();
+      logFullstory('Form Submission Sent');
     },
-    onFormSubmitted: successSubmit,
+    onFormSubmitted: () => {
+      logPartnerStack();
+      logFullstory('Form Submission Sent');
+      setTimeout(() => {
+        successSubmit();
+      }, 200);
+    },
   });
 
   // 3. Wait for hsform to be ready so we can refference it
