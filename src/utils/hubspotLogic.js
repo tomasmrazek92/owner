@@ -6,9 +6,11 @@ export const fillHubSpot = (formElement, hsform, mapping) => {
   // Collect data from the form
   Object.keys(mapping).forEach(function (sourceInputName) {
     var targetInputNames = mapping[sourceInputName];
+    // Look for Input
     var $sourceInput = $form.find(
       'input[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
     );
+    // Otherwise look for select
     if ($sourceInput.length === 0) {
       $sourceInput = $form.find(
         'select[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
@@ -27,11 +29,22 @@ export const fillHubSpot = (formElement, hsform, mapping) => {
         'input[name=' + targetInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + ']'
       );
 
-      targetInput.val(inputValue);
+      // Check if Checkbox
+      if (targetInput.attr('type') === 'checkbox') {
+        if (String(inputValue).toLowerCase() === 'true') {
+          targetInput.prop('checked', true);
+        } else {
+          targetInput.prop('checked', false);
+        }
+      } else if (hasMatchingSibling(targetInput, '.hs-datepicker')) {
+        targetInput.siblings('input[readonly]').val(inputValue).change();
+      } else {
+        targetInput.val(inputValue);
+      }
 
-      // Perform focus and blur actions only for matched target input names
-      if (['phone', 'mobilephone', 'email'].includes(targetInputName)) {
-        targetInput.get(0).focus();
+      // Perform focus and blur actions for required items
+      if (['phone', 'mobilephone', 'email', 'pred_gmv'].includes(targetInputName)) {
+        targetInput.get(0).focus({ preventScrol: true });
         targetInput.get(0).blur();
       }
     });
@@ -94,51 +107,65 @@ export function waitForFormReady() {
 
 // Hahdle Errors and submit form
 export const handleHubspotForm = (form) => {
-  // Check for erros inside Hubspot Form
-
   // Elems
   const button = $('[data-form="submit-btn"]');
-  const initText = button.text();
 
   // Validation
   let isError;
-
-  // Submitting animation
-  let animationStep = 0;
-  const animationFrames = ['.', '..', '...'];
-
-  const updateButtonText = () => {
-    const buttonText = `Submitting${animationFrames[animationStep]}`;
-    button.text(buttonText);
-    animationStep = (animationStep + 1) % animationFrames.length;
-  };
 
   // Button States
   const disableButton = () => {
     button.addClass('disabled');
   };
-
   const enableButton = () => {
-    button.removeClass('disabled').text(initText);
+    button.removeClass('disabled');
   };
 
+  toggleLoader(true);
   disableButton();
-
-  const intervalId = setInterval(updateButtonText, 500);
 
   // Fallback for Hubspot Validation to happen
   setTimeout(() => {
     // Run the Validation and stop the animation
     isError = mirrorHS(form);
-    clearInterval(intervalId);
     enableButton();
 
     // Check condition and submit the form otherwise
     if (!isError) {
       form.find('input[type=submit]').trigger('click');
+    } else {
+      toggleLoader(false);
     }
   }, 3000);
 };
 
+// Show loading state
+export function toggleLoader(condition) {
+  const loader = $('.n_demo-form_loading');
+
+  if (condition) {
+    loader.find('[data-animation-type="lottie"]').trigger('click');
+    loader.fadeIn();
+  } else {
+    loader.hide();
+  }
+}
+
 // Declare formReadyPromiseResolver variable
 let formReadyPromiseResolver;
+
+// Check for sibling
+function hasMatchingSibling(inputElement, selector) {
+  // Ensure inputElement is a jQuery object and extract the first DOM element
+  const domElement = inputElement[0] || inputElement.get(0);
+  if (!domElement) {
+    return false;
+  }
+
+  const { parentNode } = domElement;
+  if (!parentNode) {
+    return false;
+  }
+
+  return Array.from(parentNode.children).some((sib) => sib !== domElement && sib.matches(selector));
+}

@@ -1,3 +1,5 @@
+import { v4 as uuidv4 } from 'uuid';
+
 import { validateInput } from '$utils/formValidations';
 import { getInputElementValue, setInputElementValue } from '$utils/globals';
 import {
@@ -13,7 +15,26 @@ $(document).ready(() => {
   // Qualification Variable
   let qualified;
 
+  // FullStory ID
+  // check local storage for an existing user ID
+  let userId = getItem('userId');
+
+  // if none exists, generate a new one and save it
+  if (!userId) {
+    userId = uuidv4();
+    setItem('userId', userId);
+  }
+  console.log(userId);
+
   // #region Functions
+  function logEvent(personID, dataObject, status, errorMessage) {
+    const eventVars = dataObject;
+    console.log(eventVars);
+    if (errorMessage) eventVars.location.errorMessage = errorMessage;
+    if (typeof FS !== 'undefined' && FS) {
+      FS.event(status, FS.identify(personID, eventVars));
+    }
+  }
 
   // store Restaurant
   const getRestaurant = () => {
@@ -26,25 +47,30 @@ $(document).ready(() => {
   function checkQualification() {
     return new Promise((resolve, reject) => {
       try {
-        let restaurant = getRestaurant();
+        /* !! UCOMMENT WHEN API FLOW READY !!
+      let restaurant = getRestaurant();
 
-        // Resetting the flag
-        qualified = undefined;
+      // Resetting the flag
+      qualified = undefined;
 
-        // Conditions
-        let isOwner = $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
-        let multipleLocations = $('input[name="number-of-locations"]').val() > 1;
-        let isUS = restaurant.address_components.some((component) => component.short_name === 'US');
+      // Conditions
+      let isOwner = $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
+      let multipleLocations = $('input[name="number-of-locations"]').val() > 1;
+      let isUS = restaurant.address_components.some((component) => component.short_name === 'US');
 
-        // Action A - Instantly follow to the meeting link - Qualified
-        if (isOwner && multipleLocations) {
-          qualified = true;
-        }
+      // Action A - Instantly follow to the meeting link - Qualified
+      if (isOwner && multipleLocations) {
+        qualified = true;
+      }
 
-        // Action B - Instantly follow to success link - Unqualified
-        if (!isOwner || !isUS) {
-          qualified = false;
-        }
+      // Action B - Instantly follow to success link - Unqualified
+      if (!isOwner || !isUS) {
+        qualified = false;
+      }
+
+      */
+        // temp for static purpose
+        qualified = false;
 
         resolve(); // Resolve the promise after evaluation
       } catch (error) {
@@ -211,7 +237,7 @@ $(document).ready(() => {
             fillFormWithMatchingData(result, false);
           }
         } else {
-          fillStaticAPIFields(qualified);
+          // !! UNCOMMENT WHEN API FLOW READY !! fillStaticAPIFields(qualified);
         }
       } catch (error) {
         qualified = false;
@@ -258,6 +284,15 @@ $(document).ready(() => {
     formId: 'f3807262-aed3-4b9c-93a3-247ad4c55e60',
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
+    onFormSubmit: () => {
+      // 1. Populate the growsumo.data object
+      growsumo.data.name = wfForm.find('input[name="name"]').val();
+      growsumo.data.email = wfForm.find('input[name="email"]').val();
+      growsumo.data.customer_key = wfForm.find('input[name="email"]').val();
+
+      // Register the signup with PartnerStack
+      growsumo.createSignup();
+    },
     onFormSubmitted: successSubmit,
   });
 
