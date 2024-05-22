@@ -132,7 +132,7 @@ export const handleHubspotForm = (form) => {
 
     // Check condition and submit the form otherwise
     if (!isError) {
-      form.find('input[type=submit]').trigger('click');
+      form[0].submit();
     } else {
       toggleLoader(false);
     }

@@ -1,1 +1,539 @@
-"use strict";(()=>{var x,M=new Uint8Array(16);function F(){if(!x&&(x=typeof crypto!="undefined"&&crypto.getRandomValues&&crypto.getRandomValues.bind(crypto),!x))throw new Error("crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported");return x(M)}var s=[];for(let e=0;e<256;++e)s.push((e+256).toString(16).slice(1));function C(e,t=0){return(s[e[t+0]]+s[e[t+1]]+s[e[t+2]]+s[e[t+3]]+"-"+s[e[t+4]]+s[e[t+5]]+"-"+s[e[t+6]]+s[e[t+7]]+"-"+s[e[t+8]]+s[e[t+9]]+"-"+s[e[t+10]]+s[e[t+11]]+s[e[t+12]]+s[e[t+13]]+s[e[t+14]]+s[e[t+15]]).toLowerCase()}var J=typeof crypto!="undefined"&&crypto.randomUUID&&crypto.randomUUID.bind(crypto),V={randomUUID:J};function Q(e,t,o){if(V.randomUUID&&!t&&!e)return V.randomUUID();e=e||{};let n=e.random||(e.rng||F)();if(n[6]=n[6]&15|64,n[8]=n[8]&63|128,t){o=o||0;for(let r=0;r<16;++r)t[o+r]=n[r];return t}return C(n)}var k=Q;var c=(e,t)=>{$(`input[name=${e}]`).val(t)};var I=e=>{let t=localStorage.getItem(e);try{return JSON.parse(t)}catch{return t}},E=(e,t)=>{let o=typeof t=="object"?JSON.stringify(t):t;localStorage.setItem(e,o)};var B="restaurant";var A=()=>{let e=JSON.parse(localStorage.getItem(B)),t=["bar","cafe","bakery","food","restaurant"];for(let o=0;o<t.length;o++)if(e.types.includes(t[o]))return!0;return!1};function W(e){let o=/^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/.test($(e).val());return m($(e),!o,"Please fill correct email address."),o}function X(e){let t=!0;return t=K(e),t}var P=!1;function K(e){if(P)return P=!1,!0;let t=A();return t?m($(e),!1):m($(e),!0,"Are you sure this is correct? Please update your entry to a recognized restaurant."),P=!0,t}function Y(e){let t,o=$(e).siblings(".select2"),n=$(e).siblings(".nice-select");o?t=o.find(".select2-selection--single"):n?t=$(n):t=$(e);let r=!0;return $(e).val()===""?(validArr.push(selectVal),$(t).addClass("is-invalid"),r=!1):$(t).removeClass("is-invalid"),r}function Z(e){return m($(e),!1),!0}function ee(e){return $(e).attr("name")==="restaurant-name"&&m($(e),!0,"Please select a business location from the search results."),m($(e),!0),!1}var O=e=>{let t=e,o=!0;return $(t).prop("required")&&($(t).val()?$(t).is('[type="email"]')?o=W(t):$(t).attr("name")==="restaurant-name"?o=X(t):$(t).is("select")?o=Y(t):o=Z(t):o=ee(t)),o?m($(t),!1):$(t).addClass("error"),o},m=(e,t,o)=>{let n=$(e).closest(".form-field-wrapper, [field-wrapper]").find(".field-validation, [field-validation]");$(e).closest(".form-field, [form-field]").toggleClass("error",t),n.toggle(t),o&&n.text(o)};var N=(e,r,o)=>{var n=$(e),r=$(r);Object.keys(o).forEach(function(d){var p=o[d],y=n.find('input[name="'+d.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&")+'"]');y.length===0&&(y=n.find('select[name="'+d.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&")+'"]'));var v=y.val();Array.isArray(p)||(p=[p]),p.forEach(function(w){var u=r.find("input[name="+w.replace(/[-/\\^$*+?.()|[\]{}]/g,"\\$&")+"]");u.attr("type")==="checkbox"?String(v).toLowerCase()==="true"?u.prop("checked",!0):u.prop("checked",!1):oe(u,".hs-datepicker")?u.siblings("input[readonly]").val(v).change():u.val(v),["phone","mobilephone","email","pred_gmv"].includes(w)&&(u.get(0).focus({preventScrol:!0}),u.get(0).blur())})})},te=e=>{let t=!1;var o=e.find("input[name=mobilephone]").parent().siblings(".hs-error-msgs").find(".hs-error-msg").text(),n=$('input[name="cellphone"]').closest("[field-wrapper]").find("[field-validation]");o?(t=!0,n.text(o),n.show()):n.hide();var r=e.find("input[name=email]").closest(".hs-fieldtype-text").find(".hs-error-msgs").find(".hs-error-msg").text(),d=$('input[name="email"]').closest("[field-wrapper]").find("[field-validation]");return r?(d.text(r),d.show(),t=!0):d.hide(),t};function U(e){L(e)}function j(){return new Promise(function(e){L=e})}var T=e=>{let t=$('[data-form="submit-btn"]'),o,n=()=>{t.addClass("disabled")},r=()=>{t.removeClass("disabled")};b(!0),n(),setTimeout(()=>{o=te(e),r(),o?b(!1):e.find("input[type=submit]").trigger("click")},3e3)};function b(e){let t=$(".n_demo-form_loading");e?(t.find('[data-animation-type="lottie"]').trigger("click"),t.fadeIn()):t.hide()}var L;function oe(e,t){let o=e[0]||e.get(0);if(!o)return!1;let{parentNode:n}=o;return n?Array.from(n.children).some(r=>r!==o&&r.matches(t)):!1}$(document).ready(()=>{let e,t=I("userId");t||(t=k(),E("userId",t)),console.log(t);function o(a,i,_,g){let l=i;console.log(l),g&&(l.location.errorMessage=g),typeof FS!="undefined"&&FS&&FS.event(_,FS.identify(a,l))}let n=()=>I("restaurant");function r(){return new Promise((a,i)=>{try{e=!1,a()}catch(_){i(_)}})}function d(){let a=n(),i={name:a.name,address:a.formatted_address,website:a.website,email:"jonathan@owner.com",token:"AJXuyxPXgGF68NMv",sfdc_id:"None"},_;function g(l){return new Promise((f,ne)=>{$.ajax({url:"https://owner-ops.net/business-info/",type:"POST",contentType:"application/json",dataType:"json",data:JSON.stringify(l),timeout:15e3,success:function(R){f(R)},error:function(R,H,q){H==="timeout"?(console.log("Error occurred:",q),c("execution_time_seconds",15),c("gmv_pred",0),f("")):(console.log("Error occurred:",q),f(""))}})})}return g(i).then(l=>(console.log(l),l[0])).catch(l=>(console.error("Error:",l),!1))}function p(a,i){let _=$("#demo-form input"),g=["brizo_id","base_enrich_date","inbound_add_to_cadence","execution_time_seconds","auto_dq_flag","auto_dq_reason","gmv_pred","inbound_add_to_cadence"];i?_.each(function(){let l=$(this).attr("name");if(g.includes(l)&&a.hasOwnProperty(l)){var f=a[l];typeof f=="number"||!isNaN(f)&&!isNaN(parseFloat(f))?$(this).val(Number(f).toFixed(2)):$(this).val(f)}}):v(!1)}function y(){let a=!0;return h.find(":input:visible, select").each(function(){let i=O($(this));a=a&&i}),a}function v(a){c("base_enrich_date",new Date().toISOString().slice(0,10)),c("inbound_add_to_cadence","true"),a&&(c("execution_time_seconds",0),c("auto_dq_flags","true")),a===!0&&(c("auto_dq_reason","none"),c("auto_dq_flags","false"))}function w(){c("page_url",window.location.pathname),c("page_lang",$("html").attr("lang")),c("url",(()=>{var a=n(),i=a.url;return i.split("cid=")[1]})())}async function u(){if(y()){b(!0);try{if(await r(),typeof e!="boolean"){let i=await d();typeof i.auto_dq_flag=="string"?(e=i.auto_dq_flag!=="True",p(i,!0)):(e=!1,p(i,!1))}}catch(i){e=!1,console.log("Qualification check or call failed:",i)}w(),N(h,S,G),T(S)}}function z(){u()}let D=()=>{let a=$(".n_demo-form_success");b(!1),h.hide(),a.show(),window.location.href=e?"https://meetings.hubspot.com/brandon767/sales-inbound-round-robin":"https://www.owner.com/funnel-demo-requested"},h=$("#demo-form"),S;hbspt.forms.create({portalId:"6449395",formId:"f3807262-aed3-4b9c-93a3-247ad4c55e60",target:"#hbst-form",onFormReady:U,onFormSubmit:()=>{growsumo.data.name=h.find('input[name="name"]').val(),growsumo.data.email=h.find('input[name="email"]').val(),growsumo.data.customer_key=h.find('input[name="email"]').val(),growsumo.createSignup()},onFormSubmitted:D}),j().then(function(a){S=$(a)});let G={name:["company","0-2/name"],international_phone_number:["phone","0-2/phone"],"restaurant-address":["address","0-2/address"],locality:["city","0-2/city"],administrative_area_level_1:["state","0-2/state"],postal_code:["zip","0-2/zip"],country:["country","0-2/country"],"first-name":"firstname","last-name":"lastname",cellphone:"mobilephone",email:"email","person-type":"lead_person_type",website:"website",place_id:"place_id",url:"place_cid",place_types:["place_types_contact","0-2/place_types"],rating:"place_rating",user_ratings_total:"user_ratings_total","number-of-locations":"of_locations_number",hear:"how_did_you_hear_about_us",page_url:"last_pdf_download",page_lang:"page_lang",brizo_id:["brizo_id","0-2/brizo_id_account"],base_enrich_date:["auto_enrich_date","0-2/auto_enrich_date_company"],inbound_add_to_cadence:"inbound_add_to_cadence",execution_time_seconds:"auto_enrich_time",auto_dq_flag:"auto_dq_static",auto_dq_reason:["auto_dq_reason","0-2/auto_dq_reason_company"],gmv_pred:["pred_gmv","0-2/pred_gmv_company"]};$("[data-form=submit-btn]").on("click",z),$(".nice-select li").on("click",function(){$(".nice-select .current").css("color","white")}),$('select[name="person-type"]').on("change",function(){$(this).val()==="I'm a restaurant owner or manager"?$("#locations-wrap").show():$("#locations-wrap").hide()})});})();
+"use strict";
+(() => {
+  // bin/live-reload.js
+  new EventSource(`${"http://localhost:3000"}/esbuild`).addEventListener("change", () => location.reload());
+
+  // node_modules/.pnpm/uuid@9.0.0/node_modules/uuid/dist/esm-browser/rng.js
+  var getRandomValues;
+  var rnds8 = new Uint8Array(16);
+  function rng() {
+    if (!getRandomValues) {
+      getRandomValues = typeof crypto !== "undefined" && crypto.getRandomValues && crypto.getRandomValues.bind(crypto);
+      if (!getRandomValues) {
+        throw new Error("crypto.getRandomValues() not supported. See https://github.com/uuidjs/uuid#getrandomvalues-not-supported");
+      }
+    }
+    return getRandomValues(rnds8);
+  }
+
+  // node_modules/.pnpm/uuid@9.0.0/node_modules/uuid/dist/esm-browser/stringify.js
+  var byteToHex = [];
+  for (let i = 0; i < 256; ++i) {
+    byteToHex.push((i + 256).toString(16).slice(1));
+  }
+  function unsafeStringify(arr, offset = 0) {
+    return (byteToHex[arr[offset + 0]] + byteToHex[arr[offset + 1]] + byteToHex[arr[offset + 2]] + byteToHex[arr[offset + 3]] + "-" + byteToHex[arr[offset + 4]] + byteToHex[arr[offset + 5]] + "-" + byteToHex[arr[offset + 6]] + byteToHex[arr[offset + 7]] + "-" + byteToHex[arr[offset + 8]] + byteToHex[arr[offset + 9]] + "-" + byteToHex[arr[offset + 10]] + byteToHex[arr[offset + 11]] + byteToHex[arr[offset + 12]] + byteToHex[arr[offset + 13]] + byteToHex[arr[offset + 14]] + byteToHex[arr[offset + 15]]).toLowerCase();
+  }
+
+  // node_modules/.pnpm/uuid@9.0.0/node_modules/uuid/dist/esm-browser/native.js
+  var randomUUID = typeof crypto !== "undefined" && crypto.randomUUID && crypto.randomUUID.bind(crypto);
+  var native_default = {
+    randomUUID
+  };
+
+  // node_modules/.pnpm/uuid@9.0.0/node_modules/uuid/dist/esm-browser/v4.js
+  function v4(options, buf, offset) {
+    if (native_default.randomUUID && !buf && !options) {
+      return native_default.randomUUID();
+    }
+    options = options || {};
+    const rnds = options.random || (options.rng || rng)();
+    rnds[6] = rnds[6] & 15 | 64;
+    rnds[8] = rnds[8] & 63 | 128;
+    if (buf) {
+      offset = offset || 0;
+      for (let i = 0; i < 16; ++i) {
+        buf[offset + i] = rnds[i];
+      }
+      return buf;
+    }
+    return unsafeStringify(rnds);
+  }
+  var v4_default = v4;
+
+  // src/utils/globals.js
+  var setInputElementValue = (elementName, value) => {
+    $(`input[name=${elementName}]`).val(value);
+  };
+
+  // src/utils/localStorage.js
+  var getItem = (key) => {
+    const value = localStorage.getItem(key);
+    try {
+      return JSON.parse(value);
+    } catch (error) {
+      return value;
+    }
+  };
+  var setItem = (key, value) => {
+    const serializedValue = typeof value === "object" ? JSON.stringify(value) : value;
+    localStorage.setItem(key, serializedValue);
+  };
+
+  // src/utils/googlePlace.js
+  var restaurantObject = "restaurant";
+  var checkIfRestaurant = () => {
+    const placeObject = JSON.parse(localStorage.getItem(restaurantObject));
+    const validTypes = ["bar", "cafe", "bakery", "food", "restaurant"];
+    for (let i = 0; i < validTypes.length; i++) {
+      if (placeObject.types.includes(validTypes[i])) {
+        return true;
+      }
+    }
+    return false;
+  };
+
+  // src/utils/formValidations.js
+  function validateEmail(input) {
+    const emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+    const isValid = emailReg.test($(input).val());
+    toggleValidationMsg($(input), !isValid, "Please fill correct email address.");
+    return isValid;
+  }
+  function validateGooglePlace(input) {
+    let isValid = true;
+    isValid = checkPlaceType(input);
+    return isValid;
+  }
+  var hasRun = false;
+  function checkPlaceType(input) {
+    if (hasRun) {
+      hasRun = false;
+      return true;
+    }
+    let isValid = checkIfRestaurant();
+    if (!isValid) {
+      toggleValidationMsg(
+        $(input),
+        true,
+        "Are you sure this is correct? Please update your entry to a recognized restaurant."
+      );
+    } else {
+      toggleValidationMsg($(input), false);
+    }
+    hasRun = true;
+    return isValid;
+  }
+  function validateSelect(input) {
+    let select;
+    let searchSelect = $(input).siblings(".select2");
+    let niceSelect = $(input).siblings(".nice-select");
+    if (searchSelect) {
+      select = searchSelect.find(".select2-selection--single");
+    } else if (niceSelect) {
+      select = $(niceSelect);
+    } else {
+      select = $(input);
+    }
+    let isValid = true;
+    if ($(input).val() === "") {
+      validArr.push(selectVal);
+      $(select).addClass("is-invalid");
+      isValid = false;
+    } else {
+      $(select).removeClass("is-invalid");
+    }
+    return isValid;
+  }
+  function validateOtherInputs(input) {
+    toggleValidationMsg($(input), false);
+    return true;
+  }
+  function handleEmptyRequiredInput(input) {
+    if ($(input).attr("name") === "restaurant-name") {
+      toggleValidationMsg(
+        $(input),
+        true,
+        "Please select a business location from the search results."
+      );
+    }
+    toggleValidationMsg($(input), true);
+    return false;
+  }
+  var validateInput = (element) => {
+    let input = element;
+    let isValidAll = true;
+    if ($(input).prop("required")) {
+      if ($(input).val()) {
+        if ($(input).is('[type="email"]')) {
+          isValidAll = validateEmail(input);
+        } else if ($(input).attr("name") === "restaurant-name") {
+          isValidAll = validateGooglePlace(input);
+        } else if ($(input).is("select")) {
+          isValidAll = validateSelect(input);
+        } else {
+          isValidAll = validateOtherInputs(input);
+        }
+      } else {
+        isValidAll = handleEmptyRequiredInput(input);
+      }
+    }
+    if (!isValidAll) {
+      $(input).addClass("error");
+    } else {
+      toggleValidationMsg($(input), false);
+    }
+    return isValidAll;
+  };
+  var toggleValidationMsg = (element, condition, msg) => {
+    const validation = $(element).closest(".form-field-wrapper, [field-wrapper]").find(".field-validation, [field-validation]");
+    const formField = $(element).closest(".form-field, [form-field]");
+    formField.toggleClass("error", condition);
+    validation.toggle(condition);
+    if (msg) {
+      validation.text(msg);
+    }
+  };
+
+  // src/utils/hubspotLogic.js
+  var fillHubSpot = (formElement, hsform, mapping) => {
+    var $form = $(formElement);
+    var hsform = $(hsform);
+    Object.keys(mapping).forEach(function(sourceInputName) {
+      var targetInputNames = mapping[sourceInputName];
+      var $sourceInput = $form.find(
+        'input[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + '"]'
+      );
+      if ($sourceInput.length === 0) {
+        $sourceInput = $form.find(
+          'select[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + '"]'
+        );
+      }
+      var inputValue = $sourceInput.val();
+      if (!Array.isArray(targetInputNames)) {
+        targetInputNames = [targetInputNames];
+      }
+      targetInputNames.forEach(function(targetInputName) {
+        var targetInput = hsform.find(
+          "input[name=" + targetInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, "\\$&") + "]"
+        );
+        if (targetInput.attr("type") === "checkbox") {
+          if (String(inputValue).toLowerCase() === "true") {
+            targetInput.prop("checked", true);
+          } else {
+            targetInput.prop("checked", false);
+          }
+        } else if (hasMatchingSibling(targetInput, ".hs-datepicker")) {
+          targetInput.siblings("input[readonly]").val(inputValue).change();
+        } else {
+          targetInput.val(inputValue);
+        }
+        if (["phone", "mobilephone", "email", "pred_gmv"].includes(targetInputName)) {
+          targetInput.get(0).focus({ preventScrol: true });
+          targetInput.get(0).blur();
+        }
+      });
+    });
+  };
+  var mirrorHS = (hsform) => {
+    let isError = false;
+    var hsPhoneVal = hsform.find("input[name=mobilephone]").parent().siblings(".hs-error-msgs").find(".hs-error-msg").text();
+    var gtPhoneVal = $('input[name="cellphone"]').closest("[field-wrapper]").find("[field-validation]");
+    if (hsPhoneVal) {
+      isError = true;
+      gtPhoneVal.text(hsPhoneVal);
+      gtPhoneVal.show();
+    } else {
+      gtPhoneVal.hide();
+    }
+    var hsEmailVal = hsform.find("input[name=email]").closest(".hs-fieldtype-text").find(".hs-error-msgs").find(".hs-error-msg").text();
+    var gtEmail = $('input[name="email"]').closest("[field-wrapper]").find("[field-validation]");
+    if (hsEmailVal) {
+      gtEmail.text(hsEmailVal);
+      gtEmail.show();
+      isError = true;
+    } else {
+      gtEmail.hide();
+    }
+    return isError;
+  };
+  function onFormReadyCallback(form) {
+    formReadyPromiseResolver(form);
+  }
+  function waitForFormReady() {
+    return new Promise(function(resolve) {
+      formReadyPromiseResolver = resolve;
+    });
+  }
+  var handleHubspotForm = (form) => {
+    const button = $('[data-form="submit-btn"]');
+    let isError;
+    const disableButton = () => {
+      button.addClass("disabled");
+    };
+    const enableButton = () => {
+      button.removeClass("disabled");
+    };
+    toggleLoader(true);
+    disableButton();
+    setTimeout(() => {
+      isError = mirrorHS(form);
+      enableButton();
+      if (!isError) {
+        form[0].submit();
+      } else {
+        toggleLoader(false);
+      }
+    }, 3e3);
+  };
+  function toggleLoader(condition) {
+    const loader = $(".n_demo-form_loading");
+    if (condition) {
+      loader.find('[data-animation-type="lottie"]').trigger("click");
+      loader.fadeIn();
+    } else {
+      loader.hide();
+    }
+  }
+  var formReadyPromiseResolver;
+  function hasMatchingSibling(inputElement, selector) {
+    const domElement = inputElement[0] || inputElement.get(0);
+    if (!domElement) {
+      return false;
+    }
+    const { parentNode } = domElement;
+    if (!parentNode) {
+      return false;
+    }
+    return Array.from(parentNode.children).some((sib) => sib !== domElement && sib.matches(selector));
+  }
+
+  // src/demo-test.js
+  $(document).ready(() => {
+    let qualified;
+    let userId = getItem("userId");
+    if (!userId) {
+      userId = v4_default();
+      setItem("userId", userId);
+    }
+    console.log(userId);
+    function logEvent(personID, dataObject, status, errorMessage) {
+      const eventVars = dataObject;
+      console.log(eventVars);
+      if (errorMessage)
+        eventVars.location.errorMessage = errorMessage;
+      if (typeof FS !== "undefined" && FS) {
+        FS.event(status, FS.identify(personID, eventVars));
+      }
+    }
+    const getRestaurant = () => {
+      let restaurant = getItem("restaurant");
+      return restaurant;
+    };
+    function checkQualification() {
+      return new Promise((resolve, reject) => {
+        try {
+          qualified = false;
+          resolve();
+        } catch (error) {
+          reject(error);
+        }
+      });
+    }
+    function callQualification() {
+      let restaurant = getRestaurant();
+      let data = {
+        name: restaurant.name,
+        address: restaurant.formatted_address,
+        website: restaurant.website,
+        email: "jonathan@owner.com",
+        token: "AJXuyxPXgGF68NMv",
+        sfdc_id: "None"
+      };
+      let response;
+      function callApi(data2) {
+        return new Promise((resolve, reject) => {
+          $.ajax({
+            url: "https://owner-ops.net/business-info/",
+            type: "POST",
+            contentType: "application/json",
+            dataType: "json",
+            data: JSON.stringify(data2),
+            timeout: 15e3,
+            success: function(response2) {
+              resolve(response2);
+            },
+            error: function(xhr, status, error) {
+              if (status === "timeout") {
+                console.log("Error occurred:", error);
+                setInputElementValue("execution_time_seconds", 15);
+                setInputElementValue("gmv_pred", 0);
+                resolve("");
+              } else {
+                console.log("Error occurred:", error);
+                resolve("");
+              }
+            }
+          });
+        });
+      }
+      return callApi(data).then((response2) => {
+        console.log(response2);
+        return response2[0];
+      }).catch((error) => {
+        console.error("Error:", error);
+        return false;
+      });
+    }
+    function fillFormWithMatchingData(apiData, flag) {
+      const inputs = $("#demo-form input");
+      const allowedKeys = [
+        "brizo_id",
+        "base_enrich_date",
+        "inbound_add_to_cadence",
+        "execution_time_seconds",
+        "auto_dq_flag",
+        "auto_dq_reason",
+        "gmv_pred",
+        "inbound_add_to_cadence"
+      ];
+      if (flag) {
+        inputs.each(function() {
+          const inputName = $(this).attr("name");
+          if (allowedKeys.includes(inputName) && apiData.hasOwnProperty(inputName)) {
+            var value = apiData[inputName];
+            if (typeof value === "number" || !isNaN(value) && !isNaN(parseFloat(value))) {
+              $(this).val(Number(value).toFixed(2));
+            } else {
+              $(this).val(value);
+            }
+          }
+        });
+      } else {
+        fillStaticAPIFields(false);
+      }
+    }
+    function internalValidation() {
+      let isValid = true;
+      wfForm.find(":input:visible, select").each(function() {
+        let validate = validateInput($(this));
+        isValid = isValid && validate;
+      });
+      return isValid;
+    }
+    function fillStaticAPIFields(type) {
+      setInputElementValue("base_enrich_date", (/* @__PURE__ */ new Date()).toISOString().slice(0, 10));
+      setInputElementValue("inbound_add_to_cadence", "true");
+      if (type) {
+        setInputElementValue("execution_time_seconds", 0);
+        setInputElementValue("auto_dq_flags", "true");
+      }
+      if (type === true) {
+        setInputElementValue("auto_dq_reason", "none");
+        setInputElementValue("auto_dq_flags", "false");
+      }
+    }
+    function fillCustomFields() {
+      setInputElementValue("page_url", window.location.pathname);
+      setInputElementValue("page_lang", $("html").attr("lang"));
+      setInputElementValue(
+        "url",
+        (() => {
+          var restaurant = getRestaurant();
+          var cidLink = restaurant.url;
+          return cidLink.split("cid=")[1];
+        })()
+      );
+    }
+    async function processQualificationAndForm() {
+      let validation = internalValidation();
+      if (validation) {
+        toggleLoader(true);
+        try {
+          await checkQualification();
+          if (typeof qualified !== "boolean") {
+            const result = await callQualification();
+            const dqFlag = result.auto_dq_flag;
+            if (typeof dqFlag === "string") {
+              qualified = result.auto_dq_flag === "True" ? false : true;
+              fillFormWithMatchingData(result, true);
+            } else {
+              qualified = false;
+              fillFormWithMatchingData(result, false);
+            }
+          } else {
+          }
+        } catch (error) {
+          qualified = false;
+          console.log("Qualification check or call failed:", error);
+        }
+        fillCustomFields();
+        fillHubSpot(wfForm, hsForm, inputMapping);
+        handleHubspotForm(hsForm);
+      }
+    }
+    function fireSubmit() {
+      processQualificationAndForm();
+    }
+    const successSubmit = () => {
+      const success = $(".n_demo-form_success");
+      toggleLoader(false);
+      wfForm.hide();
+      success.show();
+      window.location.href = qualified ? "https://meetings.hubspot.com/brandon767/sales-inbound-round-robin" : "https://www.owner.com/funnel-demo-requested";
+    };
+    let wfForm = $("#demo-form");
+    let hsForm;
+    hbspt.forms.create({
+      portalId: "6449395",
+      formId: "f3807262-aed3-4b9c-93a3-247ad4c55e60",
+      target: "#hbst-form",
+      onFormReady: onFormReadyCallback,
+      onFormSubmit: () => {
+        growsumo.data.name = wfForm.find('input[name="name"]').val();
+        growsumo.data.email = wfForm.find('input[name="email"]').val();
+        growsumo.data.customer_key = wfForm.find('input[name="email"]').val();
+        growsumo.createSignup();
+      },
+      onFormSubmitted: successSubmit
+    });
+    waitForFormReady().then(function(form) {
+      hsForm = $(form);
+    });
+    const inputMapping = {
+      name: ["company", "0-2/name"],
+      international_phone_number: ["phone", "0-2/phone"],
+      "restaurant-address": ["address", "0-2/address"],
+      locality: ["city", "0-2/city"],
+      administrative_area_level_1: ["state", "0-2/state"],
+      postal_code: ["zip", "0-2/zip"],
+      country: ["country", "0-2/country"],
+      "first-name": "firstname",
+      "last-name": "lastname",
+      cellphone: "mobilephone",
+      email: "email",
+      "person-type": "lead_person_type",
+      website: "website",
+      place_id: "place_id",
+      url: "place_cid",
+      place_types: ["place_types_contact", "0-2/place_types"],
+      rating: "place_rating",
+      user_ratings_total: "user_ratings_total",
+      "number-of-locations": "of_locations_number",
+      hear: "how_did_you_hear_about_us",
+      page_url: "last_pdf_download",
+      page_lang: "page_lang",
+      brizo_id: ["brizo_id", "0-2/brizo_id_account"],
+      base_enrich_date: ["auto_enrich_date", "0-2/auto_enrich_date_company"],
+      inbound_add_to_cadence: "inbound_add_to_cadence",
+      execution_time_seconds: "auto_enrich_time",
+      auto_dq_flag: "auto_dq_static",
+      auto_dq_reason: ["auto_dq_reason", "0-2/auto_dq_reason_company"],
+      gmv_pred: ["pred_gmv", "0-2/pred_gmv_company"]
+      // ...
+    };
+    $("[data-form=submit-btn]").on("click", fireSubmit);
+    $(".nice-select li").on("click", function() {
+      $(".nice-select .current").css("color", "white");
+    });
+    $('select[name="person-type"]').on("change", function() {
+      let val = $(this).val();
+      if (val === "I'm a restaurant owner or manager") {
+        $("#locations-wrap").show();
+      } else {
+        $("#locations-wrap").hide();
+      }
+    });
+  });
+})();
+//# sourceMappingURL=demo-test.js.map
