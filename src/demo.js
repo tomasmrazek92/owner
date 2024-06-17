@@ -306,9 +306,11 @@ $(document).ready(() => {
     success.show();
 
     // Success State flow
-    window.location.href = qualified
-      ? 'https://meetings.hubspot.com/brandon767/sales-inbound-round-robin'
-      : 'https://www.owner.com/funnel-demo-requested';
+    if (!window.location.href.includes('/blog/')) {
+      window.location.href = qualified
+        ? 'https://meetings.hubspot.com/brandon767/sales-inbound-round-robin'
+        : 'https://www.owner.com/funnel-demo-requested';
+    }
   };
 
   // #endregion
