@@ -64,18 +64,6 @@ $(document).ready(() => {
     }
   }
 
-  function logPartnerStack() {
-    if (typeof growsumo !== 'undefined' && growsumo) {
-      // 1. Populate the growsumo.data object
-      growsumo.data.name = wfForm.find('input[name="name"]').val();
-      growsumo.data.email = wfForm.find('input[name="email"]').val();
-      growsumo.data.customer_key = wfForm.find('input[name="email"]').val();
-
-      // Register the signup with PartnerStack
-      growsumo.createSignup();
-    }
-  }
-
   // store Restaurant
   const getRestaurant = () => {
     let restaurant = getItem('restaurant');
@@ -247,6 +235,20 @@ $(document).ready(() => {
         return cidLink.split('cid=')[1];
       })()
     );
+
+    // Partner Stack Filling
+    function checkAndLogParam(paramName) {
+      let paramValue = new URLSearchParams(window.location.search).get(paramName);
+      if (paramValue) {
+        return paramValue; // Return here ends the function
+      }
+      return null; // It's a good practice to return a default value if nothing is found
+    }
+
+    setInputElementValue('0-2/ps_partner_key', checkAndLogParam('ps_partner_key'));
+    setInputElementValue('0-2/ps_xid', checkAndLogParam('ps_xid'));
+    setInputElementValue('ps_partner_key', checkAndLogParam('ps_partner_key'));
+    setInputElementValue('ps_xid', checkAndLogParam('ps_xid'));
   }
 
   // Run the Qualification Logic
@@ -329,11 +331,9 @@ $(document).ready(() => {
     onFormReady: onFormReadyCallback,
     onFormSubmit: function () {
       console.log('Submit');
-      logPartnerStack();
       logFullstory('Form Submission Sent');
     },
     onFormSubmitted: () => {
-      logPartnerStack();
       logFullstory('Form Submission Sent');
       setTimeout(() => {
         successSubmit();
