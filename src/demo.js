@@ -309,8 +309,8 @@ $(document).ready(() => {
 
     // Success State flow
     if (
-      !window.location.href.includes('/blog/') ||
-      !window.location.href.includes('/resources/') ||
+      !window.location.href.includes('/blog/') &&
+      !window.location.href.includes('/resources/') &&
       !window.location.href.includes('/downloads/')
     ) {
       window.location.href = qualified
