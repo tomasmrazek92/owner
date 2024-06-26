@@ -308,7 +308,11 @@ $(document).ready(() => {
     success.show();
 
     // Success State flow
-    if (!window.location.href.includes('/blog/')) {
+    if (
+      !window.location.href.includes('/blog/') ||
+      !window.location.href.includes('/resources/') ||
+      !window.location.href.includes('/downloads/')
+    ) {
       window.location.href = qualified
         ? 'https://meetings.hubspot.com/brandon767/sales-inbound-round-robin'
         : 'https://www.owner.com/funnel-demo-requested';
