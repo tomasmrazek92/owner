@@ -2,7 +2,7 @@ import { checkIfRestaurant } from '$utils/googlePlace';
 
 // Email Validation
 function validateEmail(input) {
-  const emailReg = /^([\w-\.]+@([\w-]+\.)+[\w-]{2,4})?$/;
+  const emailReg = /^[\w-\.]+@([\w-]+\.)+[\w-]{2,}$/;
   const isValid = emailReg.test($(input).val());
   toggleValidationMsg($(input), !isValid, 'Please fill correct email address.');
 

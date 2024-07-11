@@ -9,7 +9,7 @@ export const getInputElementValue = (elementName) => {
 
 export const videoPlay = () => {
   const vimeoboxes = $('[vimeo-btn]');
-  const modal = $('.n_vimeo-lightbox');
+  const modal = $('[vimeo-modal]');
   const iframe = modal.find('iframe').get(0); // get DOM element from jQuery object
 
   let player = null;
@@ -19,13 +19,19 @@ export const videoPlay = () => {
       player.unload().catch(console.error);
     }
 
-    // Set iframe src
     iframe.src = vimeoLink;
 
-    // Listen for iframe to load
-    iframe.addEventListener('load', function () {
+    const onIframeLoad = () => {
       player = new Vimeo.Player(iframe);
       player.play().catch(console.error);
+      iframe.removeEventListener('load', onIframeLoad); // Clean up the event listener
+    };
+
+    iframe.addEventListener('load', onIframeLoad);
+
+    modal.fadeIn('fast', function () {
+      // Ensure the iframe load event is triggered after modal is shown
+      iframe.src = vimeoLink;
     });
   };
 
@@ -35,7 +41,6 @@ export const videoPlay = () => {
         .pause()
         .then(() => player.unload())
         .catch(console.error);
-      iframe.src = '';
     }
   };
 
@@ -49,6 +54,11 @@ export const videoPlay = () => {
 
     modal.children().not('.w-embed').on('click', cleanupPlayer);
   }
+
+  $('[vimeo-close]').on('click', function () {
+    modal.fadeOut();
+    cleanupPlayer();
+  });
 };
 
 export const heroVideo = () => {

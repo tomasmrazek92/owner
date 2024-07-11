@@ -17,6 +17,7 @@ const ENTRY_POINTS = [
   'src/story.js',
   'src/lottie.js',
   'src/profit-margin-calc.js',
+  'src/index-new.js',
 ];
 
 // Config dev serving

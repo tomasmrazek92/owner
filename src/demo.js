@@ -256,6 +256,8 @@ $(document).ready(() => {
     // Validate Fields
     let validation = internalValidation();
 
+    console.log(validation);
+
     // Proceed only if validation pass
     if (validation) {
       // Show Loader
@@ -300,7 +302,7 @@ $(document).ready(() => {
   }
 
   const successSubmit = () => {
-    const success = $('.n_demo-form_success');
+    const success = $('.demo-form_success');
 
     // Toggle Loading
     toggleLoader(false);
@@ -324,7 +326,7 @@ $(document).ready(() => {
   // #region Flow Logic
 
   // 1. Define Forms
-  let wfForm = $('#demo-form');
+  let wfForm = $('[demo-form]');
   let hsForm;
 
   // 2. Initialize the HubSpot form

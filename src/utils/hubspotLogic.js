@@ -141,7 +141,7 @@ export const handleHubspotForm = (form) => {
 
 // Show loading state
 export function toggleLoader(condition) {
-  const loader = $('.n_demo-form_loading');
+  const loader = $('[form-loader]');
 
   if (condition) {
     loader.find('[data-animation-type="lottie"]').trigger('click');
