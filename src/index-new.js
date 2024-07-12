@@ -136,9 +136,9 @@ function createObserver(targetSelector, callback) {
 // Callbacks for different elements
 function dropdownCallback(targetElement) {
   if ($(targetElement).hasClass('w--open')) {
-    $('.nav').addClass('fixed');
+    $('.nav').addClass('open');
   } else {
-    $('.nav').removeClass('fixed');
+    $('.nav').removeClass('open');
   }
 }
 
@@ -158,15 +158,6 @@ const disableScroll = () => {
   }
   menuOpen = !menuOpen;
 };
-function buttonCallback(targetElement) {
-  if ($(targetElement).hasClass('w--open')) {
-    // Custom logic for button when it opens
-    console.log('Button opened');
-  } else {
-    // Custom logic for button when it closes
-    console.log('Button closed');
-  }
-}
 
 // Create observers for the elements with their respective callbacks
 createObserver('.nav_menu-link.dropdown', dropdownCallback);
