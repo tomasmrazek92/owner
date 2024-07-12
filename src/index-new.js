@@ -81,3 +81,95 @@ $('form[data-submit=prevent]').on('keydown', function (e) {
 });
 
 // #endregion
+
+// #region Nav
+
+// Scroll
+const navbar = $('.nav');
+const scrollHeight = $(navbar).height();
+
+// Create the GSAP timeline animation
+const navbarAnimation = gsap.timeline({ paused: true }).to(
+  navbar,
+  {
+    height: '4.8rem',
+    top: '0.6rem',
+    paddingRight: '1.6rem',
+    paddingLeft: '0.8rem',
+    backgroundColor: 'rgba(255, 255, 255, 0.75)',
+    duration: 0.8,
+    ease: Power1.easeInOut,
+  },
+  '<'
+);
+
+window.onscroll = () => {
+  if (navbar.length) {
+    if (window.scrollY > scrollHeight / 2) {
+      if (!navbar.hasClass('fixed')) {
+        navbar.addClass('fixed');
+      }
+    } else {
+      if (navbar.hasClass('fixed')) {
+        navbar.removeClass('fixed');
+      }
+    }
+  }
+};
+
+// Click
+// Function to create observer and handle class change
+function createObserver(targetSelector, callback) {
+  const targetNode = $(targetSelector)[0];
+  if (targetNode) {
+    const observer = new MutationObserver((mutationsList) => {
+      mutationsList.forEach((mutation) => {
+        if (mutation.type === 'attributes' && mutation.attributeName === 'class') {
+          callback(mutation.target);
+        }
+      });
+    });
+    observer.observe(targetNode, { attributes: true, attributeFilter: ['class'] });
+  }
+}
+
+// Callbacks for different elements
+function dropdownCallback(targetElement) {
+  if ($(targetElement).hasClass('w--open')) {
+    $('.nav').addClass('fixed');
+  } else {
+    $('.nav').removeClass('fixed');
+  }
+}
+
+// Opened Menu
+// --- Scroll Disabler
+let scrollPosition;
+let menuOpen = false;
+
+const disableScroll = () => {
+  if (!menuOpen) {
+    scrollPosition = $(window).scrollTop();
+    $('html, body').scrollTop(0).addClass('overflow-hidden');
+    $('.nav').addClass('open');
+  } else {
+    $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+    $('.nav').removeClass('open');
+  }
+  menuOpen = !menuOpen;
+};
+function buttonCallback(targetElement) {
+  if ($(targetElement).hasClass('w--open')) {
+    // Custom logic for button when it opens
+    console.log('Button opened');
+  } else {
+    // Custom logic for button when it closes
+    console.log('Button closed');
+  }
+}
+
+// Create observers for the elements with their respective callbacks
+createObserver('.nav_menu-link.dropdown', dropdownCallback);
+createObserver('.w-nav-button', disableScroll);
+
+// #endregion
