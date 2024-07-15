@@ -12,8 +12,6 @@ export const videoPlay = () => {
   const modal = $('[vimeo-modal]');
   const videoElement = modal.find('video').get(0); // get DOM element from jQuery object
 
-  const isMobileDevice = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-
   const initializePlayer = (videoLink) => {
     videoElement.src = videoLink;
     videoElement.load();
@@ -21,9 +19,6 @@ export const videoPlay = () => {
 
     modal.fadeIn('fast', () => {
       $('body').addClass('no-animation');
-      if (isMobileDevice()) {
-        videoElement.requestFullscreen().catch(console.error);
-      }
     });
   };
 
