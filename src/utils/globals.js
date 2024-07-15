@@ -8,47 +8,40 @@ export const getInputElementValue = (elementName) => {
 // --- VideoPlay
 
 export const videoPlay = () => {
-  const vimeoboxes = $('[vimeo-btn]');
+  const videoBoxes = $('[vimeo-btn]');
   const modal = $('[vimeo-modal]');
-  const iframe = modal.find('iframe').get(0); // get DOM element from jQuery object
+  const videoElement = modal.find('video').get(0); // get DOM element from jQuery object
 
-  let player = null;
+  const isMobileDevice = () => /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-  const initializePlayer = (vimeoLink) => {
-    if (player) {
-      player.unload().catch(console.error);
-    }
+  const initializePlayer = (videoLink) => {
+    videoElement.src = videoLink;
+    videoElement.load();
+    videoElement.play().catch(console.error);
 
-    iframe.src = vimeoLink;
-
-    const onIframeLoad = () => {
-      player = new Vimeo.Player(iframe);
-      player.play().catch(console.error);
-      iframe.removeEventListener('load', onIframeLoad); // Clean up the event listener
-    };
-
-    iframe.addEventListener('load', onIframeLoad);
-
-    modal.fadeIn('fast', function () {
-      // Ensure the iframe load event is triggered after modal is shown
-      iframe.src = vimeoLink;
+    modal.fadeIn('fast', () => {
+      $('body').addClass('no-animation');
+      if (isMobileDevice()) {
+        videoElement.requestFullscreen().catch(console.error);
+      }
     });
   };
 
   const cleanupPlayer = () => {
-    if (player) {
-      player
-        .pause()
-        .then(() => player.unload())
-        .catch(console.error);
+    if (document.fullscreenElement) {
+      document.exitFullscreen().catch(console.error);
     }
+    videoElement.pause();
+    videoElement.removeAttribute('src'); // Clear the video source
+    $('body').removeClass('no-animation');
   };
 
-  if (vimeoboxes.length > 0) {
-    vimeoboxes.on('click', function () {
-      const vimeoLink = $(this).attr('vimeo-url');
-      if (vimeoLink) {
-        initializePlayer(vimeoLink);
+  if (videoBoxes.length > 0) {
+    videoBoxes.on('click', function () {
+      const videoLink = $(this).attr('vimeo-url');
+      console.log(videoLink);
+      if (videoLink) {
+        initializePlayer(videoLink);
       }
     });
 
