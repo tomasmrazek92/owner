@@ -394,11 +394,6 @@ $(document).ready(() => {
 
   // #region Custom Actions
 
-  // Custom Select
-  $('.nice-select li').on('click', function () {
-    $('.nice-select .current').css('color', 'white');
-  });
-
   // Condition Logic for input
   $('select[name="person-type"]').on('change', function () {
     let val = $(this).val();
@@ -409,6 +404,14 @@ $(document).ready(() => {
     } else {
       $('#locations-wrap').hide();
     }
+  });
+
+  // Format US Phone Number
+  new Cleave('input[name="cellphone"]', {
+    numericOnly: true,
+    blocks: [0, 3, 3, 4, 10],
+    delimiters: ['(', ') ', '-', ' x'],
+    delimiterLazyShow: true,
   });
 
   //#endregion
