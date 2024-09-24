@@ -34,7 +34,6 @@ export const videoPlay = () => {
   if (videoBoxes.length > 0) {
     videoBoxes.on('click', function () {
       const videoLink = $(this).attr('vimeo-url');
-      console.log(videoLink);
       if (videoLink) {
         initializePlayer(videoLink);
       }

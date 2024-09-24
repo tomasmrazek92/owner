@@ -1,9 +1,8 @@
-export const swipers = [];
-
 export const createSwiper = (componentSelector, swiperSelector, classSelector, options) => {
   // Globals
   const arrows = '.swiper_arrow';
   const pagination = '.swiper-navigation';
+
   // For Each
   $(componentSelector).each(function () {
     // Tag Instance

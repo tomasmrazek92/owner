@@ -75,30 +75,35 @@ $(document).ready(() => {
   function checkQualification() {
     return new Promise((resolve, reject) => {
       try {
-        /* !! UCOMMENT WHEN API FLOW READY !!
-      let restaurant = getRestaurant();
+        if (typeof scheduleFlow !== 'undefined' && scheduleFlow) {
+          let restaurant = getRestaurant();
 
-      // Resetting the flag
-      qualified = undefined;
+          // Resetting the flag
+          qualified = undefined;
 
-      // Conditions
-      let isOwner = $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
-      let multipleLocations = $('input[name="number-of-locations"]').val() > 1;
-      let isUS = restaurant.address_components.some((component) => component.short_name === 'US');
+          // Conditions
+          let isOwner =
+            $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
+          let multipleLocations = $('input[name="number-of-locations"]').val() > 1;
+          let isUS = restaurant.address_components.some(
+            (component) => component.short_name === 'US'
+          );
 
-      // Action A - Instantly follow to the meeting link - Qualified
-      if (isOwner && multipleLocations) {
-        qualified = true;
-      }
+          // Action A - Instantly follow to the meeting link - Qualified
+          if (isOwner && multipleLocations) {
+            logFullstory('Submission Qualified');
+            qualified = true;
+          }
 
-      // Action B - Instantly follow to success link - Unqualified
-      if (!isOwner || !isUS) {
-        qualified = false;
-      }
-
-      */
-        // temp for static purpose
-        qualified = false;
+          // Action B - Instantly follow to success link - Unqualified
+          if (!isOwner || !isUS) {
+            logFullstory('Submission Disqualified');
+            qualified = false;
+          }
+        } else {
+          // temp for static purpose
+          qualified = false;
+        }
 
         resolve(); // Resolve the promise after evaluation
       } catch (error) {
@@ -281,7 +286,7 @@ $(document).ready(() => {
             fillFormWithMatchingData(result, false);
           }
         } else {
-          // !! UNCOMMENT WHEN API FLOW READY !! fillStaticAPIFields(qualified);
+          fillStaticAPIFields(qualified);
         }
       } catch (error) {
         qualified = false;
@@ -337,7 +342,7 @@ $(document).ready(() => {
     onFormReady: onFormReadyCallback,
     onFormSubmit: function () {
       console.log('Submit');
-      logFullstory('Form Submission Sent');
+      logFullstory('Form Submission Attempt');
     },
     onFormSubmitted: () => {
       logFullstory('Form Submission Sent');
