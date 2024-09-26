@@ -1,5 +1,11 @@
 export const setInputElementValue = (elementName, value) => {
-  $(`input[name="${elementName}"]`).val(value);
+  const $input = $(`input[name="${elementName}"]`);
+
+  if ($input.attr('type') === 'checkbox') {
+    $input.prop('checked', value);
+  } else {
+    $input.val(value);
+  }
 };
 
 export const getInputElementValue = (elementName) => {

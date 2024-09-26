@@ -222,8 +222,10 @@ $(document).ready(() => {
     }
     // Inputs for insta Qualifiation
     if (type === true) {
+      setInputElementValue('execution_time_seconds', 0);
       setInputElementValue('auto_dq_reason', 'none');
       setInputElementValue('auto_dq_flags', 'false');
+      setInputElementValue('self_service_scheduling_shown', true);
     }
   }
 
@@ -277,13 +279,20 @@ $(document).ready(() => {
           const result = await callQualification();
           const dqFlag = result.auto_dq_flag;
 
-          // dgFlag Logic
+          // We tag all submissions which runned the API
+          setInputElementValue('self_service_enrichment_api_used', true);
+
+          // We check if the returned value contains the dgFlag
           if (typeof dqFlag === 'string') {
-            qualified = result.auto_dq_flag === 'True' ? false : true;
-            fillFormWithMatchingData(result, true);
+            qualified = result.auto_dq_flag === 'True' ? false : true; // if dgFlaq equals true, it means its disqualified.
+            fillFormWithMatchingData(result, true); // We fill the data with API logic
+
+            if (qualified) {
+              setInputElementValue('self_service_scheduling_shown', true); // We tag the checkbox as the final destination is the schedule page
+            }
           } else {
-            qualified = false;
-            fillFormWithMatchingData(result, false);
+            qualified = false; // No API Result so insta disqualified
+            fillFormWithMatchingData(result, false); // We fill the data without API
           }
         } else {
           fillStaticAPIFields(qualified);
@@ -297,7 +306,7 @@ $(document).ready(() => {
       fillCustomFields();
       fillHubSpot(wfForm, hsForm, inputMapping);
       logFullstory('Form Button Clicked');
-      handleHubspotForm(hsForm);
+      // handleHubspotForm(hsForm);
     }
   }
 
