@@ -306,7 +306,7 @@ $(document).ready(() => {
       fillCustomFields();
       fillHubSpot(wfForm, hsForm, inputMapping);
       logFullstory('Form Button Clicked');
-      // handleHubspotForm(hsForm);
+      handleHubspotForm(hsForm);
     }
   }
 
