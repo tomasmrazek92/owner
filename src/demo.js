@@ -84,13 +84,12 @@ $(document).ready(() => {
           // Conditions
           let isOwner =
             $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
-          let multipleLocations = $('input[name="number-of-locations"]').val() > 1;
           let isUS = restaurant.address_components.some(
             (component) => component.short_name === 'US'
           );
 
           // Action A - Instantly follow to the meeting link - Qualified
-          if (isOwner && multipleLocations) {
+          if (isOwner) {
             logFullstory('Submission Qualified');
             qualified = true;
           }
@@ -302,7 +301,7 @@ $(document).ready(() => {
         console.log('Qualification check or call failed:', error);
       }
 
-      // Proceed
+      // Proceed -- DO NOT EDIT !!!!
       fillCustomFields();
       fillHubSpot(wfForm, hsForm, inputMapping);
       logFullstory('Form Button Clicked');
@@ -330,7 +329,7 @@ $(document).ready(() => {
       !window.location.href.includes('/downloads/')
     ) {
       window.location.href = qualified
-        ? 'https://meetings.hubspot.com/brandon767/sales-inbound-round-robin'
+        ? 'https://meetings.hubspot.com/jonathan-shenkman/self-scheduling'
         : 'https://www.owner.com/funnel-demo-requested';
     }
   };
