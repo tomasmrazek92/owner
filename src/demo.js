@@ -324,11 +324,9 @@ $(document).ready(() => {
       !window.location.href.includes('/resources/') &&
       !window.location.href.includes('/downloads/')
     ) {
-      /* window.location.href = qualified
+      window.location.href = qualified
         ? 'https://meetings.hubspot.com/jonathan-shenkman/self-scheduling'
         : 'https://www.owner.com/funnel-demo-requested';
-
-        */
     }
   };
 
