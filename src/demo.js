@@ -88,13 +88,7 @@ $(document).ready(() => {
             (component) => component.short_name === 'US'
           );
 
-          // Action A - Instantly follow to the meeting link - Qualified
-          if (isOwner) {
-            logFullstory('Submission Qualified');
-            qualified = true;
-          }
-
-          // Action B - Instantly follow to success link - Unqualified
+          // Instantly follow to success link - Unqualified
           if (!isOwner || !isUS) {
             logFullstory('Submission Disqualified');
             qualified = false;
@@ -165,7 +159,9 @@ $(document).ready(() => {
 
   // Fill data from API
   function fillFormWithMatchingData(apiData, flag) {
-    const inputs = $('#demo-form input');
+    console.log(apiData);
+    console.log(flag);
+    const inputs = $('[demo-form] input');
     const allowedKeys = [
       'brizo_id',
       'base_enrich_date',
@@ -174,7 +170,6 @@ $(document).ready(() => {
       'auto_dq_flag',
       'auto_dq_reason',
       'gmv_pred',
-      'inbound_add_to_cadence',
     ];
 
     // Flag = We run this only when the apiCall runned
@@ -212,10 +207,11 @@ $(document).ready(() => {
 
   // Fill Custom Fields for the insta flow
   function fillStaticAPIFields(type) {
+    console.log(type);
     setInputElementValue('base_enrich_date', new Date().toISOString().slice(0, 10));
     setInputElementValue('inbound_add_to_cadence', 'true');
     // Inputs for insta Disqualification
-    if (type) {
+    if (type === false) {
       setInputElementValue('execution_time_seconds', 0);
       setInputElementValue('auto_dq_flags', 'true');
     }
@@ -328,9 +324,11 @@ $(document).ready(() => {
       !window.location.href.includes('/resources/') &&
       !window.location.href.includes('/downloads/')
     ) {
-      window.location.href = qualified
+      /* window.location.href = qualified
         ? 'https://meetings.hubspot.com/jonathan-shenkman/self-scheduling'
         : 'https://www.owner.com/funnel-demo-requested';
+
+        */
     }
   };
 
