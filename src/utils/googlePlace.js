@@ -95,16 +95,15 @@ const initGooglePlaceAutocomplete = () => {
 
 const checkIfRestaurant = () => {
   // Parse the localStorage object into a JavaScript object
-  const placeObject = JSON.parse(localStorage.getItem(restaurantObject));
+  const placeObject = JSON.parse(localStorage.getItem('restaurantObject'));
 
-  // Check if the types array includes at least one of the valid types
-  const validTypes = ['bar', 'cafe', 'bakery', 'food', 'restaurant'];
-  for (let i = 0; i < validTypes.length; i++) {
-    if (placeObject.types.includes(validTypes[i])) {
-      return true;
-    }
+  // Check if placeObject exists and has a 'types' property that is an array
+  if (placeObject && Array.isArray(placeObject.types)) {
+    const validTypes = ['bar', 'cafe', 'bakery', 'food', 'restaurant'];
+    return validTypes.some((type) => placeObject.types.includes(type));
   }
-  return false;
+
+  return false; // return false if placeObject or placeObject.types is invalid
 };
 
 export {

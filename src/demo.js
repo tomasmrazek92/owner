@@ -233,8 +233,11 @@ $(document).ready(() => {
       (() => {
         // Splitting the URL at 'cid=' and taking the second part
         var restaurant = getRestaurant();
-        var cidLink = restaurant.url;
-        return cidLink.split('cid=')[1];
+        if (restaurant && restaurant.url) {
+          var cidLink = restaurant.url;
+          return cidLink.split('cid=')[1];
+        }
+        return 'none'; // or an appropriate fallback value
       })()
     );
 

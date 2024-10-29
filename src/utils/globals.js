@@ -11,8 +11,8 @@ export const setInputElementValue = (elementName, value) => {
 export const getInputElementValue = (elementName) => {
   return $(`input[name="${elementName}"]`).val();
 };
-// --- VideoPlay
 
+// --- VideoPlay
 export const videoPlay = () => {
   const videoBoxes = $('[vimeo-btn]');
   const modal = $('[vimeo-modal]');
