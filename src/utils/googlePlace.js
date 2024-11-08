@@ -5,6 +5,11 @@ import { getItem, setItem } from '$utils/localStorage';
 const restaurantObject = 'restaurant';
 
 const setAddressComponents = (googlePlace, componentForm) => {
+  if (!googlePlace) {
+    Object.keys(componentForm).forEach((key) => setInputElementValue(key, ''));
+    return;
+  }
+
   let route = '';
   let streetNumber = '';
 
@@ -24,12 +29,13 @@ const setAddressComponents = (googlePlace, componentForm) => {
 };
 
 const setTypes = (googlePlace) => {
-  if (!googlePlace.types) return;
+  if (!googlePlace || !googlePlace.types) return;
   const typesAsString = googlePlace.types.join(', ');
   setInputElementValue('place_types', typesAsString);
 };
 
 const setOtherComponents = (googlePlace, componentForm) => {
+  if (!googlePlace || !googlePlace.types) return;
   Object.keys(componentForm).forEach((key) => {
     if (key === 'address_components') return;
     const value = googlePlace[key];
@@ -38,8 +44,6 @@ const setOtherComponents = (googlePlace, componentForm) => {
 };
 
 const setGooglePlaceDataToForm = (googlePlace) => {
-  if (!googlePlace) return;
-
   const componentForm = {
     name: '',
     international_phone_number: '',
@@ -76,26 +80,36 @@ const initGooglePlaceAutocomplete = () => {
     const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
     const self = $(this);
 
-    autocomplete.addListener('place_changed', function () {
-      console.log('place-changed');
-      const place = autocomplete.getPlace();
+    function setValues(state) {
+      const place = state ? autocomplete.getPlace() : null;
       const value = self.val();
-
-      // Reset Val
-      toggleValidationMsg(self, false, $(self).attr('base-text'));
 
       // Set Content
       setGooglePlaceDataToForm(place);
       setItem('restaurant-value', value);
       setItem(restaurantObject, place);
       setInputElementValue('restaurant-name', getItem('restaurant-value'));
+    }
+
+    // Api Change
+    autocomplete.addListener('place_changed', function () {
+      setValues(true);
+      // Reset Val
+      toggleValidationMsg(self, false, $(self).attr('base-text'));
+    });
+
+    // Input Change
+    self.on('change', function () {
+      if ($(this).val() !== getItem('restaurant-value')) {
+        setValues(false);
+      }
     });
   });
 };
 
 const checkIfRestaurant = () => {
   // Parse the localStorage object into a JavaScript object
-  const placeObject = JSON.parse(localStorage.getItem('restaurantObject'));
+  const placeObject = JSON.parse(localStorage.getItem('restaurant'));
 
   // Check if placeObject exists and has a 'types' property that is an array
   if (placeObject && Array.isArray(placeObject.types)) {

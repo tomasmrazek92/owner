@@ -19,26 +19,14 @@ function validateGooglePlace(input) {
 }
 
 // Validate CheckPlaceType
-let hasRun = false;
 function checkPlaceType(input) {
-  if (hasRun) {
-    hasRun = false;
-    return true;
-  }
-
   let isValid = checkIfRestaurant();
 
   if (!isValid) {
-    toggleValidationMsg(
-      $(input),
-      true,
-      'Are you sure this is correct? Please update your entry to a recognized restaurant.'
-    );
+    toggleValidationMsg($(input), true);
   } else {
     toggleValidationMsg($(input), false);
   }
-
-  hasRun = true;
   return isValid;
 }
 
