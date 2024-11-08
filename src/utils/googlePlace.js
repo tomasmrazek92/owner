@@ -107,17 +107,31 @@ const initGooglePlaceAutocomplete = () => {
   });
 };
 
-const checkIfRestaurant = () => {
+// Initialize a flag to keep track of validation message display
+let validationMsgShown = false;
+
+const checkIfRestaurant = (input) => {
   // Parse the localStorage object into a JavaScript object
   const placeObject = JSON.parse(localStorage.getItem('restaurant'));
 
   // Check if placeObject exists and has a 'types' property that is an array
   if (placeObject && Array.isArray(placeObject.types)) {
     const validTypes = ['bar', 'cafe', 'bakery', 'food', 'restaurant'];
-    return validTypes.some((type) => placeObject.types.includes(type));
+
+    // Check if any valid type exists in placeObject.types
+    const isValid = placeObject.types.some((type) => validTypes.includes(type));
+
+    // Toggle validation message if invalid and hasn't been shown before
+    if (!isValid && !validationMsgShown) {
+      toggleValidationMsg(input);
+      validationMsgShown = true;
+      return false;
+    }
+
+    return true; // Valid type found, or message has already been shown
   }
 
-  return false; // return false if placeObject or placeObject.types is invalid
+  return false; // Return false if placeObject or placeObject.types is invalid
 };
 
 export {

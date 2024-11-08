@@ -20,13 +20,14 @@ function validateGooglePlace(input) {
 
 // Validate CheckPlaceType
 function checkPlaceType(input) {
-  let isValid = checkIfRestaurant();
+  let isValid = checkIfRestaurant(input);
 
   if (!isValid) {
     toggleValidationMsg($(input), true);
   } else {
     toggleValidationMsg($(input), false);
   }
+
   return isValid;
 }
 
