@@ -63,6 +63,14 @@ $(document).ready(() => {
       FS.event(status, FS.identify(userId, eventVars));
     }
   }
+  function trackCapterra() {
+    var capterra_vkey = 'db833abde57f505b06b0e4b2bfe5e24f',
+      capterra_vid = '2226621',
+      ct = document.createElement('img');
+    ct.src =
+      'https://ct.capterra.com/capterra_tracker.gif?vid=' + capterra_vid + '&vkey=' + capterra_vkey;
+    document.body.appendChild(ct);
+  }
 
   // store Restaurant
   const getRestaurant = () => {
@@ -353,6 +361,7 @@ $(document).ready(() => {
     },
     onFormSubmitted: () => {
       logFullstory('Form Submission Sent');
+      trackCapterra();
       setTimeout(() => {
         successSubmit();
       }, 200);
