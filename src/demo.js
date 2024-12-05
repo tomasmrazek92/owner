@@ -14,6 +14,7 @@ import { getItem, setItem } from '$utils/localStorage';
 $(document).ready(() => {
   // Qualification Variable
   let qualified;
+  let isSchedule = typeof scheduleFlow !== 'undefined' && scheduleFlow;
 
   // FullStory ID
   // check local storage for an existing user ID
@@ -83,7 +84,7 @@ $(document).ready(() => {
   function checkQualification() {
     return new Promise((resolve, reject) => {
       try {
-        if (typeof scheduleFlow !== 'undefined' && scheduleFlow) {
+        if (isSchedule) {
           let restaurant = getRestaurant();
 
           // Resetting the flag
@@ -323,21 +324,60 @@ $(document).ready(() => {
 
   const successSubmit = () => {
     const success = $('.demo-form_success');
+    const showSchedule = isSchedule && qualified;
+    const shouldRedirect =
+      !window.location.href.includes('/blog/') &&
+      !window.location.href.includes('/resources/') &&
+      !window.location.href.includes('/downloads/');
 
     // Toggle Loading
     toggleLoader(false);
     wfForm.hide();
-    success.show();
+
+    if (showSchedule) {
+      var meetingSettings = {
+        link: 'https://meetings.hubspot.com/jonathan-shenkman/self-scheduling',
+        selector: '.demo-form_success',
+        email: getInputElementValue('email'),
+        fName: getInputElementValue('first-name'),
+        lName: getInputElementValue('last-name'),
+        company: getInputElementValue('name'),
+      };
+
+      function replaceMeetingEmbed(options) {
+        // Merge default settings with provided options
+        var settings = $.extend({}, meetingSettings, options);
+
+        console.log(settings.email);
+        console.log(settings.fName);
+        console.log(settings.lName);
+        console.log(settings.company);
+
+        // Replace content
+        $(settings.selector).html(
+          '<div class="meetings-iframe-container" data-src="' +
+            settings.link +
+            `?embed=true&firstName=${settings.fName}&lastName=${settings.lName}&email=${settings.email}&company=${settings.company}"></div>`
+        );
+
+        // Load HubSpot script
+        $.getScript('https://static.hsappstatic.net/MeetingsEmbed/ex/MeetingsEmbedCode.js').done(
+          function () {
+            success.show();
+          }
+        );
+      }
+
+      // Basic usage:
+      replaceMeetingEmbed();
+    }
 
     // Success State flow
-    if (
-      !window.location.href.includes('/blog/') &&
-      !window.location.href.includes('/resources/') &&
-      !window.location.href.includes('/downloads/')
-    ) {
-      window.location.href = qualified
-        ? 'https://meetings.hubspot.com/jonathan-shenkman/self-scheduling'
-        : 'https://www.owner.com/funnel-demo-requested';
+    else if (shouldRedirect) {
+      success.show();
+      window.location.href = 'https://www.owner.com/funnel-demo-requested';
+    } else {
+      success.show();
     }
   };
 
