@@ -471,7 +471,7 @@ $(document).ready(() => {
   new Cleave('input[name="cellphone"]', {
     numericOnly: true,
     blocks: [0, 3, 3, 4, 10],
-    delimiters: ['(', ') ', '-', ' x'],
+    delimiters: ['(', ') ', '-'],
     delimiterLazyShow: true,
   });
 
