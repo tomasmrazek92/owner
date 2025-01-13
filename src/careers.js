@@ -63,6 +63,7 @@ if (window.location.pathname === '/careers/role') {
         let location = $('[data-location]');
         let team = $('[data-team]');
         let detailLink = $('[data-link]');
+        let detailOpening = $('[data-opening]');
         let detailHtml = $('[data-html]');
         let detailAdditional = $('[data-additional]');
 
@@ -70,15 +71,45 @@ if (window.location.pathname === '/careers/role') {
         function formatEmploymentType(type) {
           return type.replace(/([a-z])([A-Z])/g, '$1 $2');
         }
+        function cleanInlineStyles(htmlString) {
+          // Create a temporary div with the HTML content
+          let $temp = $('<div>').html(htmlString);
+
+          // Remove all style attributes from all elements
+          $temp.find('*').removeAttr('style');
+
+          // Return the cleaned HTML string
+          return $temp.html();
+        }
 
         // Data
         name.text(filteredJob.text);
         type.text(filteredJob.categories.commitment);
         location.text(filteredJob.categories.location);
         team.text(filteredJob.categories.team);
-        detailLink.attr('href', filteredJob.hostedUrl + '/apply'); // Append '/application' here
-        detailHtml.html(filteredJob.descriptionBody);
-        detailAdditional.html(filteredJob.additional);
+        detailLink.attr('href', filteredJob.hostedUrl + '/apply');
+
+        // Opening
+        detailOpening.html(cleanInlineStyles(filteredJob.opening));
+
+        // Detail
+        detailHtml.html(cleanInlineStyles(filteredJob.descriptionBody));
+
+        filteredJob.lists.forEach((item) => {
+          // Create the HTML elements
+          let listSection = $('<div>');
+          let heading = $('<h3>').text(item.text);
+          let list = $('<ul>').html(item.content);
+
+          // Append heading and list to the section
+          listSection.append(heading).append(list);
+
+          // Append the entire section to detailHtml
+          detailHtml.append(listSection);
+        });
+
+        // Additional
+        detailAdditional.html(cleanInlineStyles(filteredJob.additional));
 
         // Reveal
         $('.section_job-role').addClass('rendered');
