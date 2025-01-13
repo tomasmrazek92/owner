@@ -19,7 +19,7 @@ if (window.location.pathname === '/careers') {
 
       for (var x = 0; x < data.length; x++) {
         var currentItem = positionItem;
-        currentItem.find('a').attr('href', '/careers/role?=' + data[x].id);
+        currentItem.find('a').attr('href', data[x].hostedUrl);
         currentItem.find('[data-title]').text(data[x].text);
         currentItem.find('[data-category]').text(data[x].categories.team);
         currentItem.find('[data-location]').text(data[x].categories.allLocations.join(', '));
