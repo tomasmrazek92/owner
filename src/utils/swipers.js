@@ -14,7 +14,8 @@ export const createSwiper = (componentSelector, swiperSelector, classSelector, o
 
     // Build Options
     let swiperOptions = Object.assign({}, options, {
-      speed: 250,
+      speed: 750,
+      threshold: 20,
       navigation: {
         prevEl: `${arrows}.prev.${instanceClass}`,
         nextEl: `${arrows}.next.${instanceClass}`,

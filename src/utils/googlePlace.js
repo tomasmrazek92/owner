@@ -13,17 +13,19 @@ const setAddressComponents = (googlePlace, componentForm) => {
   let route = '';
   let streetNumber = '';
 
-  googlePlace.address_components.forEach((component) => {
-    const addressType = component.types[0];
-    const type = componentForm.address_components[addressType];
+  if (googlePlace.address_components) {
+    googlePlace.address_components.forEach((component) => {
+      const addressType = component.types[0];
+      const type = componentForm.address_components[addressType];
 
-    if (type) {
-      const val = component[type];
-      if (addressType === 'route') route = val;
-      else if (addressType === 'street_number') streetNumber = val;
-      else setInputElementValue(addressType, val);
-    }
-  });
+      if (type) {
+        const val = component[type];
+        if (addressType === 'route') route = val;
+        else if (addressType === 'street_number') streetNumber = val;
+        else setInputElementValue(addressType, val);
+      }
+    });
+  }
 
   setInputElementValue('restaurant-address', `${streetNumber} ${route}`);
 };
@@ -79,6 +81,7 @@ const initGooglePlaceAutocomplete = () => {
   $('input[name="restaurant-name"]').each(function () {
     const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
     const self = $(this);
+    console.log(self);
 
     function setValues(state) {
       const place = state ? autocomplete.getPlace() : null;
@@ -113,6 +116,8 @@ let validationMsgShown = false;
 const checkIfRestaurant = (input) => {
   // Parse the localStorage object into a JavaScript object
   const placeObject = JSON.parse(localStorage.getItem('restaurant'));
+
+  console.log(placeObject);
 
   // Check if placeObject exists and has a 'types' property that is an array
   if (placeObject && Array.isArray(placeObject.types)) {

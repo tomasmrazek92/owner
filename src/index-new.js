@@ -70,8 +70,9 @@ videoPlay();
 heroVideo();
 
 // Prevent Default Submit Action
-$('form[data-submit=prevent]').submit(function (e) {
-  e.preventDefault();
+$('form[data-submit=prevent]').on('submit', function (event) {
+  event.preventDefault();
+  event.stopPropagation();
 });
 
 $('form[data-submit=prevent]').on('keydown', function (e) {

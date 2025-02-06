@@ -14,6 +14,7 @@ function validateGooglePlace(input) {
   let isValid = true;
 
   isValid = checkPlaceType(input);
+  console.log(isValid);
 
   return isValid;
 }
