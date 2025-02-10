@@ -53,6 +53,15 @@ $('.hp-grader_btn-submit').on('click', function (e) {
   }
 });
 
+// Add this to your existing place_changed event handler
+window.googleAutocomplete.addListener('place_changed', function () {
+  let restaurant = getItem('restaurant');
+  window.open(
+    `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`,
+    '_blank'
+  );
+});
+
 $('.hp-grader_input').on('focus', function () {
   swipers['hp-hero'][0].autoplay.stop();
 });
@@ -68,7 +77,6 @@ function initVimeoPlayer() {
   const vimeoPlayers = document.querySelectorAll('[data-vimeo-player-init]');
 
   vimeoPlayers.forEach(function (vimeoElement, index) {
-    console.log(vimeoElement);
     // Add Vimeo URL ID to the iframe [src]
     // Looks like: https://player.vimeo.com/video/1019191082
     const vimeoVideoID = vimeoElement.getAttribute('data-vimeo-video-id');

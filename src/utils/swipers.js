@@ -25,6 +25,7 @@ export const createSwiper = (componentSelector, swiperSelector, classSelector, o
         type: 'bullets',
         bulletActiveClass: 'w-active',
         bulletClass: 'w-slider-dot',
+        clickable: true,
       },
     });
 

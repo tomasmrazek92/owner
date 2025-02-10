@@ -90,11 +90,11 @@ const initGooglePlaceAutocomplete = () => {
       componentRestrictions: country ? { country } : undefined,
     };
 
-    const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
-    console.log(self);
+    // Store the autocomplete instance on window
+    window.googleAutocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
 
     function setValues(state) {
-      const place = state ? autocomplete.getPlace() : null;
+      const place = state ? window.googleAutocomplete.getPlace() : null;
       const value = self.val();
 
       setGooglePlaceDataToForm(place);
@@ -103,7 +103,7 @@ const initGooglePlaceAutocomplete = () => {
       setInputElementValue('restaurant-name', getItem('restaurant-value'));
     }
 
-    autocomplete.addListener('place_changed', function () {
+    window.googleAutocomplete.addListener('place_changed', function () {
       setValues(true);
       toggleValidationMsg(self, false, $(self).attr('base-text'));
     });
