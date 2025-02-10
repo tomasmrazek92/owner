@@ -1,6 +1,4 @@
-import { validateInput } from '$utils/formValidations';
-import { initGooglePlaceAutocomplete } from '$utils/googlePlace';
-import { getItem, setItem } from '$utils/localStorage';
+import { toggleValidationMsg } from '$utils/formValidations.js';
 import { createSwiper } from '$utils/swipers';
 
 // #region Swipers
@@ -33,70 +31,144 @@ createSwiper('.section_hp-slider', '.hp-slider_wrap', 'hp-hero', {
 
 // #region Grader
 
-// Validate Fields Internally
-function internalValidation() {
-  // Global Validate checker
-  let isValid = true;
+$(document).ready(function () {
+  initGooglePlaces('#grader-name', '.predictions-container');
+});
 
-  // Validate all inputs internally
-  $('.hp-slider_item-form form')
-    .find(':input:visible, select')
-    .each(function () {
-      let validate = validateInput($(this));
-      isValid = isValid && validate;
-    });
+function initGooglePlaces(inputSelector, predictionsSelector) {
+  let autocompleteService;
+  let placesService;
+  let placeId;
 
-  return isValid;
-}
+  const $input = $(inputSelector);
+  const $predictionsList = $(predictionsSelector);
 
-$('.hp-grader_btn-submit').on('click', function (e) {
-  e.preventDefault();
+  // Get place types from data attribute and clean up any quotes
+  const placeTypes = $input
+    .data('place-types')
+    .split(',')
+    .map((type) => type.trim().replace(/['"]/g, ''));
 
-  let isValid = internalValidation();
-  if (isValid) {
-    let restaurant = getItem('restaurant');
-    window.open(
-      `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`,
-      '_blank'
-    );
+  const countryRestrict = $input.data('country-restrict');
+
+  function redirectToGrader(placeId) {
+    if (placeId) {
+      window.open(`https://grader.owner.com/?placeid=${placeId}&utm_source=homepage`, '_blank');
+    }
   }
-});
 
-const waitForGoogleAutocomplete = (callback, maxAttempts = 10) => {
-  let attempts = 0;
-
-  const checkAutocomplete = () => {
-    attempts++;
-
-    if (window.googleAutocomplete) {
-      // Autocomplete exists, execute callback
-      callback(window.googleAutocomplete);
-    } else if (attempts < maxAttempts) {
-      // Try again in 500ms
-      setTimeout(checkAutocomplete, 500);
+  // Initialize Google Places services
+  function initializeServices() {
+    if (window.google && window.google.maps) {
+      autocompleteService = new google.maps.places.AutocompleteService();
+      placesService = new google.maps.places.PlacesService(document.createElement('div'));
     } else {
-      console.warn('Google Autocomplete initialization timeout');
+      console.error('Google Maps API not loaded');
     }
-  };
+  }
 
-  checkAutocomplete();
-};
+  // Handle input changes
+  function handleInput(query) {
+    placeId = null;
+    if (query.length > 0 && autocompleteService) {
+      const searchConfig = {
+        input: query,
+        types: placeTypes,
+      };
 
-// Usage
-waitForGoogleAutocomplete((autocomplete) => {
-  autocomplete.addListener('place_changed', function () {
-    let restaurant = getItem('restaurant');
-    const url = `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`;
+      if (countryRestrict) {
+        searchConfig.componentRestrictions = { country: countryRestrict };
+      }
 
-    // Try the modern approach first
-    if (window.open(url, '_blank')) {
-      return;
+      autocompleteService.getPlacePredictions(searchConfig, (predictions, status) => {
+        displayPredictions(predictions, status);
+      });
+    } else {
+      $predictionsList.html('').addClass('hidden');
     }
+  }
 
-    // Fallback to location change if window.open fails
-    window.location.href = url;
+  // Display predictions
+  function displayPredictions(predictions, status) {
+    $predictionsList.html('');
+
+    if (
+      status === google.maps.places.PlacesServiceStatus.OK &&
+      predictions &&
+      predictions.length > 0
+    ) {
+      predictions.forEach((prediction) => {
+        const $predictionItem = $(`
+          <div class="prediction-item" data-place-id="${prediction.place_id}">
+            <span class="main-text p13">${prediction.structured_formatting.main_text}</span>
+            <span class="secondarytext p13 text-color-content-tertiary">${prediction.structured_formatting.secondary_text}</span>
+          </div>
+        `);
+
+        $predictionsList.append($predictionItem);
+      });
+
+      $predictionsList.removeClass('hidden');
+    } else {
+      $predictionsList.addClass('hidden');
+    }
+  }
+
+  // Handle place selection
+  function handlePlaceSelection(placeId) {
+    if (placeId && placesService) {
+      placesService.getDetails({ placeId: placeId }, (place, status) => {
+        if (status === google.maps.places.PlacesServiceStatus.OK) {
+          // Trigger a custom event with the selected place
+          $input.trigger('placeSelected', [place]);
+
+          // Update input with selected place name
+          $input.val(place.name);
+
+          // Store place ID
+          console.log(placeId);
+
+          // Hide predictions
+          $predictionsList.addClass('hidden');
+        }
+      });
+    }
+  }
+
+  // Event listeners
+  let debounceTimer;
+  $input.on('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      handleInput($(this).val());
+    }, 300);
   });
-});
+
+  $predictionsList.on('click', '.prediction-item', function () {
+    placeId = $(this).data('place-id');
+    toggleValidationMsg($input, false);
+    handlePlaceSelection(placeId);
+    redirectToGrader(placeId);
+  });
+
+  // Close predictions when clicking outside
+  $(document).on('click', function (event) {
+    if (!$(event.target).closest(predictionsSelector).length && !$(event.target).is($input)) {
+      $predictionsList.addClass('hidden');
+    }
+  });
+
+  $('.hp-grader_btn-submit').on('click', function (e) {
+    if (placeId) {
+      redirectToGrader(placeId);
+    } else {
+      toggleValidationMsg($input, true);
+    }
+  });
+
+  // Initialize services
+  initializeServices();
+}
 
 $('.hp-grader_input').on('focus', function () {
   swipers['hp-hero'][0].autoplay.stop();
