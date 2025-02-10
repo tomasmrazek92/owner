@@ -116,9 +116,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
       console.log(firstItem);
       if (firstItem && window.innerWidth <= 768) {
         setTimeout(() => {
-          const navHeight = $('.nav').outerHeight() || 0;
-          const scrollPosition =
-            firstItem.getBoundingClientRect().top + window.pageYOffset - navHeight - 16;
+          const scrollPosition = firstItem.getBoundingClientRect().top + window.pageYOffset - 16;
           window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
         }, 100);
       }
