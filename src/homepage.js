@@ -144,6 +144,21 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     }, 300);
   });
 
+  $input.on('focus', function () {
+    const $thisInput = $(this);
+    const windowHeight = $(window).height();
+    const inputOffset = $thisInput.offset().top;
+    const inputHeight = $thisInput.outerHeight();
+    const scrollPosition = inputOffset - windowHeight + inputHeight + 50;
+
+    $('html, body').animate(
+      {
+        scrollTop: scrollPosition,
+      },
+      300
+    );
+  });
+
   $predictionsList.on('click', '.prediction-item', function () {
     placeId = $(this).data('place-id');
     toggleValidationMsg($input, false);
