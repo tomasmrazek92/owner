@@ -86,10 +86,14 @@ const waitForGoogleAutocomplete = (callback, maxAttempts = 10) => {
 waitForGoogleAutocomplete((autocomplete) => {
   autocomplete.addListener('place_changed', function () {
     let restaurant = getItem('restaurant');
-    window.open(
-      `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`,
-      '_blank'
-    );
+    // Create a temporary link and click it
+    const link = document.createElement('a');
+    link.href = `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`;
+    link.target = '_blank';
+    link.rel = 'noopener noreferrer';
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   });
 });
 
