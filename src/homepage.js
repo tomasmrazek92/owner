@@ -97,7 +97,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
       predictions &&
       predictions.length > 0
     ) {
-      predictions.forEach((prediction) => {
+      predictions.forEach((prediction, index) => {
         const $predictionItem = $(`
           <div class="prediction-item" data-place-id="${prediction.place_id}">
             <span class="main-text p13">${prediction.structured_formatting.main_text}</span>
@@ -106,6 +106,11 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
         `);
 
         $predictionsList.append($predictionItem);
+
+        // Focus first item when list appears
+        if (index === 0) {
+          $predictionItem.focus();
+        }
       });
 
       $predictionsList.removeClass('hidden');
@@ -142,21 +147,6 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     debounceTimer = setTimeout(() => {
       handleInput($(this).val());
     }, 300);
-  });
-
-  $input.on('focus', function () {
-    const $thisInput = $(this);
-    const windowHeight = $(window).height();
-    const inputOffset = $thisInput.offset().top;
-    const inputHeight = $thisInput.outerHeight();
-    const scrollPosition = inputOffset - windowHeight + inputHeight + 50;
-
-    $('html, body').animate(
-      {
-        scrollTop: scrollPosition,
-      },
-      300
-    );
   });
 
   $predictionsList.on('click', '.prediction-item', function () {
