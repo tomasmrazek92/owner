@@ -62,13 +62,35 @@ $('.hp-grader_btn-submit').on('click', function (e) {
   }
 });
 
-// Add this to your existing place_changed event handler
-window.googleAutocomplete.addListener('place_changed', function () {
-  let restaurant = getItem('restaurant');
-  window.open(
-    `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`,
-    '_blank'
-  );
+const waitForGoogleAutocomplete = (callback, maxAttempts = 10) => {
+  let attempts = 0;
+
+  const checkAutocomplete = () => {
+    attempts++;
+
+    if (window.googleAutocomplete) {
+      // Autocomplete exists, execute callback
+      callback(window.googleAutocomplete);
+    } else if (attempts < maxAttempts) {
+      // Try again in 500ms
+      setTimeout(checkAutocomplete, 500);
+    } else {
+      console.warn('Google Autocomplete initialization timeout');
+    }
+  };
+
+  checkAutocomplete();
+};
+
+// Usage
+waitForGoogleAutocomplete((autocomplete) => {
+  autocomplete.addListener('place_changed', function () {
+    let restaurant = getItem('restaurant');
+    window.open(
+      `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`,
+      '_blank'
+    );
+  });
 });
 
 $('.hp-grader_input').on('focus', function () {
