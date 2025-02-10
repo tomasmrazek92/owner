@@ -17,6 +17,15 @@ createSwiper('.section_hp-slider', '.hp-slider_wrap', 'hp-hero', {
     autoplayStop: function () {
       $('.hp-slider_wrap .w-slider-dot').addClass('stopped');
     },
+    slideChange: function (swiper) {
+      let slide = $(swiper.slides).eq(swiper.realIndex);
+      let video = slide.find('.w-background-video video');
+
+      if (video.length && !video.hasClass('playing')) {
+        video.addClass('playing');
+        video[0].play();
+      }
+    },
   },
 });
 

@@ -20,7 +20,6 @@ createSwiper('.section_testimonials', '.testimonials1_slider', 'testimonials-1',
 
       $('#prev-restaurant').text($(prev).attr('data-restaurant'));
       $('#next-restaurant').text($(next).attr('data-restaurant'));
-      console.log(next);
     },
   },
 });
