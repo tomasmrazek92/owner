@@ -23,7 +23,6 @@ createSwiper('.section_hp-slider', '.hp-slider_wrap', 'hp-hero', {
 // #endregion
 
 // #region Grader
-initGooglePlaceAutocomplete();
 
 // Validate Fields Internally
 function internalValidation() {
@@ -47,7 +46,10 @@ $('.hp-grader_btn-submit').on('click', function (e) {
   let isValid = internalValidation();
   if (isValid) {
     let restaurant = getItem('restaurant');
-    window.open(`https://grader.owner.com/?placeid=${restaurant.place_id}`, '_blank');
+    window.open(
+      `https://grader.owner.com/?placeid=${restaurant.place_id}&utm_source=homepage`,
+      '_blank'
+    );
   }
 });
 

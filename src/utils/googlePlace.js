@@ -76,32 +76,38 @@ const initGooglePlaceAutocomplete = () => {
     setInputElementValue('restaurant-name', getItem('restaurant-value'));
   }
 
-  const gpaOptions = {};
-
   $('input[name="restaurant-name"]').each(function () {
-    const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
     const self = $(this);
+    const types =
+      self
+        .attr('data-place-types')
+        ?.match(/'([^']+)'/g)
+        ?.map((t) => t.replace(/'/g, '')) || [];
+    const country = self.attr('data-country-restrict');
+
+    const gpaOptions = {
+      types: types.length ? types : undefined,
+      componentRestrictions: country ? { country } : undefined,
+    };
+
+    const autocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
     console.log(self);
 
     function setValues(state) {
       const place = state ? autocomplete.getPlace() : null;
       const value = self.val();
 
-      // Set Content
       setGooglePlaceDataToForm(place);
       setItem('restaurant-value', value);
       setItem(restaurantObject, place);
       setInputElementValue('restaurant-name', getItem('restaurant-value'));
     }
 
-    // Api Change
     autocomplete.addListener('place_changed', function () {
       setValues(true);
-      // Reset Val
       toggleValidationMsg(self, false, $(self).attr('base-text'));
     });
 
-    // Input Change
     self.on('change', function () {
       if ($(this).val() !== getItem('restaurant-value')) {
         setValues(false);
