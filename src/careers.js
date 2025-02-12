@@ -19,7 +19,7 @@ if (window.location.pathname === '/careers') {
 
       for (var x = 0; x < data.length; x++) {
         var currentItem = positionItem;
-        currentItem.find('a').attr('href', data[x].hostedUrl);
+        currentItem.find('a').attr('href', '/careers/role?=' + data[x].id);
         currentItem.find('[data-title]').text(data[x].text);
         currentItem.find('[data-category]').text(data[x].categories.team);
         currentItem.find('[data-location]').text(data[x].categories.allLocations.join(', '));
@@ -59,9 +59,8 @@ if (window.location.pathname === '/careers/role') {
 
         // Update other elements with job details
         let name = $('[data-name]');
-        let type = $('[data-type]');
         let location = $('[data-location]');
-        let team = $('[data-team]');
+        let type = $('[data-type]');
         let detailLink = $('[data-link]');
         let detailOpening = $('[data-opening]');
         let detailHtml = $('[data-html]');
@@ -84,9 +83,21 @@ if (window.location.pathname === '/careers/role') {
 
         // Data
         name.text(filteredJob.text);
-        type.text(filteredJob.categories.commitment);
         location.text(filteredJob.categories.location);
-        team.text(filteredJob.categories.team);
+
+        // Categories
+        let details = [];
+        if (filteredJob.categories.commitment) {
+          details.push(filteredJob.categories.commitment);
+        }
+        if (filteredJob.categories.team) {
+          details.push(filteredJob.categories.team);
+        }
+        let combinedDetails = details.join(' / ');
+        console.log(combinedDetails);
+        type.text(combinedDetails);
+
+        // Link
         detailLink.attr('href', filteredJob.hostedUrl + '/apply');
 
         // Opening

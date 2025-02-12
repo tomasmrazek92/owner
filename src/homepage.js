@@ -54,7 +54,21 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
 
   function redirectToGrader(placeId) {
     if (placeId) {
-      window.open(`https://grader.owner.com/?placeid=${placeId}&utm_source=homepage`, '_blank');
+      // Get current URL parameters
+      const currentParams = new URLSearchParams(window.location.search);
+      const utmParams = ['utm_source=homepage']; // Always start with homepage source
+
+      // Look for UTM parameters and collect them (excluding utm_source)
+      currentParams.forEach((value, key) => {
+        if (key.toLowerCase().startsWith('utm_') && key.toLowerCase() !== 'utm_source') {
+          utmParams.push(`${key}=${value}`);
+        }
+      });
+
+      // Build the redirect URL
+      let redirectUrl = `https://grader.owner.com/?placeid=${placeId}&${utmParams.join('&')}`;
+
+      window.open(redirectUrl, '_blank');
     }
   }
 
@@ -113,10 +127,11 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
 
       // Scroll first item into view on mobile
       const firstItem = $predictionsList.find('.prediction-item')[0];
-      console.log(firstItem);
       if (firstItem && window.innerWidth <= 768) {
         setTimeout(() => {
-          const scrollPosition = firstItem.getBoundingClientRect().top + window.pageYOffset - 16;
+          const navHeight = $('.nav').outerHeight() || 0;
+          const scrollPosition =
+            firstItem.getBoundingClientRect().top + window.pageYOffset - navHeight - 16;
           window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
         }, 100);
       }
