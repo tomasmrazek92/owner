@@ -348,11 +348,6 @@ $(document).ready(() => {
         // Merge default settings with provided options
         var settings = $.extend({}, meetingSettings, options);
 
-        console.log(settings.email);
-        console.log(settings.fName);
-        console.log(settings.lName);
-        console.log(settings.company);
-
         // Replace content
         $(settings.selector).html(
           '<div class="meetings-iframe-container" data-src="' +

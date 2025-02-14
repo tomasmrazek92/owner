@@ -58,13 +58,13 @@ if (window.location.pathname === '/careers/role') {
         document.title = filteredJob.text + ' | owner.com';
 
         // Update other elements with job details
-        let name = $('[data-name]');
-        let location = $('[data-location]');
-        let type = $('[data-type]');
-        let detailLink = $('[data-link]');
-        let detailOpening = $('[data-opening]');
-        let detailHtml = $('[data-html]');
-        let detailAdditional = $('[data-additional]');
+        let name = $('[data-role-title]');
+        let location = $('[data-role-location]');
+        let type = $('[data-role-type]');
+        let detailLink = $('[data-role-link]');
+        let detailOpening = $('[data-role-opening]');
+        let detailHtml = $('[data-role-html]');
+        let detailAdditional = $('[data-role-additional]');
 
         // Fix of EmploymentType
         function formatEmploymentType(type) {
