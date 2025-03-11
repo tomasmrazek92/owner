@@ -1,6 +1,7 @@
 import { heroVideo, videoPlay } from '$utils/globals';
 import { initGooglePlaceAutocomplete } from '$utils/googlePlace';
 import { createSwiper } from '$utils/swipers';
+import { handleUTMParams } from '$utils/utms';
 
 // #region Swipers
 createSwiper('.section_testimonials', '.testimonials1_slider', 'testimonials-1', {
@@ -67,6 +68,8 @@ initGooglePlaceAutocomplete();
 // Vimeo Players
 videoPlay();
 heroVideo();
+
+handleUTMParams();
 
 // Prevent Default Submit Action
 $('form[data-submit=prevent]').on('submit', function (event) {

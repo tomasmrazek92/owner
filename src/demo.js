@@ -10,6 +10,7 @@ import {
   waitForFormReady,
 } from '$utils/hubspotLogic';
 import { getItem, setItem } from '$utils/localStorage';
+import { getParamsFromSession } from '$utils/utms';
 
 $(document).ready(() => {
   // Qualification Variable
@@ -250,19 +251,58 @@ $(document).ready(() => {
       })()
     );
 
-    // Partner Stack Filling
-    function checkAndLogParam(paramName) {
-      let paramValue = new URLSearchParams(window.location.search).get(paramName);
-      if (paramValue) {
-        return paramValue; // Return here ends the function
+    // Function to set input field values from UTM parameters
+    function fillFormInputsFromUTMs() {
+      // Get all UTM parameters from session storage
+      const utmParams = getParamsFromSession();
+
+      if (!utmParams || Object.keys(utmParams).length === 0) {
+        console.log('No UTM parameters found in session storage');
+        return;
       }
-      return null; // It's a good practice to return a default value if nothing is found
+
+      // Find all form inputs to check against
+      const allInputs = $('input');
+
+      // Group inputs by whether they have the "0-2/" prefix or not
+      const regularInputs = {};
+      const prefixedInputs = {};
+
+      allInputs.each(function () {
+        const inputName = $(this).attr('name');
+        if (!inputName) return;
+
+        if (inputName.startsWith('0-2/')) {
+          // For prefixed inputs, store with the key being everything after "0-2/"
+          const baseKey = inputName.substring(4); // Remove "0-2/"
+          prefixedInputs[baseKey] = $(this);
+        } else {
+          // Store regular inputs with their full name
+          regularInputs[inputName] = $(this);
+        }
+      });
+
+      // For each UTM parameter, try to find matching inputs
+      Object.keys(utmParams).forEach((paramName) => {
+        const paramValue = utmParams[paramName];
+
+        if (!paramValue) return;
+
+        // Check if we have a regular input matching this param name
+        if (regularInputs[paramName]) {
+          regularInputs[paramName].val(paramValue);
+          console.log(`Set regular input ${paramName} = ${paramValue}`);
+        }
+
+        // Check if we have a prefixed input where the base name matches
+        if (prefixedInputs[paramName]) {
+          prefixedInputs[paramName].val(paramValue);
+          console.log(`Set prefixed input 0-2/${paramName} = ${paramValue}`);
+        }
+      });
     }
 
-    setInputElementValue('0-2/ps_partner_key', checkAndLogParam('ps_partner_key'));
-    setInputElementValue('0-2/ps_xid', checkAndLogParam('ps_xid'));
-    setInputElementValue('ps_partner_key', checkAndLogParam('ps_partner_key'));
-    setInputElementValue('ps_xid', checkAndLogParam('ps_xid'));
+    fillFormInputsFromUTMs();
   }
 
   // Run the Qualification Logic
