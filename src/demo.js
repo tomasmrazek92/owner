@@ -12,29 +12,117 @@ import {
 import { getItem, setItem } from '$utils/localStorage';
 import { getParamsFromSession } from '$utils/utms';
 
+function initMixpanel() {
+  if (!window.mixpanel || !window.mixpanel.__SV) {
+    var mixpanel = (window.mixpanel = window.mixpanel || []);
+    mixpanel._i = [];
+
+    mixpanel.init = function (e, f, c) {
+      function g(a, d) {
+        var b = d.split('.');
+        2 == b.length && ((a = a[b[0]]), (d = b[1]));
+        a[d] = function () {
+          a.push([d].concat(Array.prototype.slice.call(arguments, 0)));
+        };
+      }
+
+      var a = mixpanel;
+      'undefined' !== typeof c ? (a = mixpanel[c] = []) : (c = 'mixpanel');
+      a.people = a.people || [];
+
+      a.toString = function (a) {
+        var d = 'mixpanel';
+        'mixpanel' !== c && (d += '.' + c);
+        a || (d += ' (stub)');
+        return d;
+      };
+
+      a.people.toString = function () {
+        return a.toString(1) + '.people (stub)';
+      };
+
+      var i =
+        'disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove'.split(
+          ' '
+        );
+
+      for (var h = 0; h < i.length; h++) g(a, i[h]);
+
+      var j = 'set set_once union unset remove delete'.split(' ');
+
+      a.get_group = function () {
+        function b(c) {
+          d[c] = function () {
+            call2_args = arguments;
+            call2 = [c].concat(Array.prototype.slice.call(call2_args, 0));
+            a.push([e, call2]);
+          };
+        }
+
+        for (
+          var d = {}, e = ['get_group'].concat(Array.prototype.slice.call(arguments, 0)), c = 0;
+          c < j.length;
+          c++
+        )
+          b(j[c]);
+
+        return d;
+      };
+
+      mixpanel._i.push([e, f, c]);
+    };
+
+    mixpanel.__SV = 1.2;
+
+    var e = document.createElement('script');
+    e.type = 'text/javascript';
+    e.async = true;
+    e.src =
+      'undefined' !== typeof MIXPANEL_CUSTOM_LIB_URL
+        ? MIXPANEL_CUSTOM_LIB_URL
+        : 'file:' === document.location.protocol &&
+          '//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js'.match(/^\/\//)
+        ? 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js'
+        : '//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
+
+    var g = document.getElementsByTagName('script')[0];
+    g.parentNode.insertBefore(e, g);
+  }
+}
+
+// Initialize with your project token
+initMixpanel();
+mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
+  record_sessions_percent: 100,
+  record_mask_text_selector: '',
+});
+
 $(document).ready(() => {
   // Qualification Variable
   let qualified;
   let isSchedule = typeof scheduleFlow !== 'undefined' && scheduleFlow;
 
-  // FullStory ID
+  // User ID
   // check local storage for an existing user ID
-  let userId = getItem('userId');
+  let webUserId = getItem('webUserId');
 
   // if none exists, generate a new one and save it
-  if (!userId) {
-    userId = uuidv4();
-    setItem('userId', userId);
+  if (!webUserId) {
+    webUserId = uuidv4();
+    setItem('webUserId', webUserId);
   }
 
+  // Also save to window level
+  window.webUserId = webUserId;
+
   // #region Functions
-  function logFullstory(status) {
+  function logMixpanel(status) {
     // Device Data
     function getBrowserAndDeviceInfo() {
       const { userAgent } = navigator;
       const browser = navigator.appName;
       const { platform } = navigator;
-      const { language } = navigator; // This gives the language of the OS
+      const { language } = navigator;
 
       return {
         userAgent,
@@ -61,8 +149,23 @@ $(document).ready(() => {
       ...userInfo,
     };
 
-    if (typeof FS !== 'undefined' && FS) {
-      FS.event(status, FS.identify(userId, eventVars));
+    // Check if Mixpanel is available
+    if (typeof mixpanel !== 'undefined' && mixpanel) {
+      // Identify the user
+      mixpanel.identify(webUserId);
+
+      // Set user properties
+      mixpanel.people.set({
+        $first_name: firstName,
+        $last_name: lastName,
+        $email: email,
+        $phone: phone,
+        restaurantName: restaurantName,
+        ...userInfo,
+      });
+
+      // Track the event
+      mixpanel.track(status, eventVars);
     }
   }
   function trackCapterra() {
@@ -72,6 +175,10 @@ $(document).ready(() => {
     ct.src =
       'https://ct.capterra.com/capterra_tracker.gif?vid=' + capterra_vid + '&vkey=' + capterra_vkey;
     document.body.appendChild(ct);
+  }
+  // Identify the user first for the mixPanel
+  if (typeof webUserId !== 'undefined' && webUserId) {
+    mixpanel.identify(webUserId);
   }
 
   // store Restaurant
@@ -100,7 +207,7 @@ $(document).ready(() => {
 
           // Instantly follow to success link - Unqualified
           if (!isOwner || !isUS) {
-            logFullstory('Submission Disqualified');
+            logMixpanel('Submission Disqualified');
             qualified = false;
           }
         } else {
@@ -301,8 +408,10 @@ $(document).ready(() => {
         }
       });
     }
-
     fillFormInputsFromUTMs();
+
+    // Fill User Id
+    setInputElementValue('web_user_id', webUserId);
   }
 
   // Run the Qualification Logic
@@ -352,7 +461,7 @@ $(document).ready(() => {
       // Proceed -- DO NOT EDIT !!!!
       fillCustomFields();
       fillHubSpot(wfForm, hsForm, inputMapping);
-      logFullstory('Form Button Clicked');
+      logMixpanel('Form Button Clicked');
       handleHubspotForm(hsForm);
     }
   }
@@ -425,6 +534,16 @@ $(document).ready(() => {
   let hsForm;
 
   // 2. Initialize the HubSpot form
+
+  // Default form ID
+  let formId = 'f3807262-aed3-4b9c-93a3-247ad4c55e60';
+  const currentUrl = window.location.href;
+
+  // Check URL path and assign appropriate form ID
+  if (currentUrl.indexOf('/resources/') !== -1) {
+    formId = '66b9776c-c640-4b5a-8807-439a721001ff';
+  }
+
   hbspt.forms.create({
     portalId: '6449395',
     formId: 'f3807262-aed3-4b9c-93a3-247ad4c55e60',
@@ -432,10 +551,10 @@ $(document).ready(() => {
     onFormReady: onFormReadyCallback,
     onFormSubmit: function () {
       console.log('Submit');
-      logFullstory('Form Submission Attempt');
+      logMixpanel('Form Submission Attempt');
     },
     onFormSubmitted: () => {
-      logFullstory('Form Submission Sent');
+      logMixpanel('Form Submission Sent');
       trackCapterra();
       setTimeout(() => {
         successSubmit();
@@ -479,7 +598,6 @@ $(document).ready(() => {
     auto_dq_flag: 'auto_dq_static',
     auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
     gmv_pred: ['pred_gmv', '0-2/pred_gmv_company'],
-
     // ...
   };
 
