@@ -478,6 +478,7 @@ $(document).ready(() => {
       !window.location.href.includes('/blog/') &&
       !window.location.href.includes('/resources/') &&
       !window.location.href.includes('/downloads/');
+    const redirectUrl = wfForm.attr('data-custom-redirect');
 
     // Toggle Loading
     toggleLoader(false);
@@ -517,7 +518,10 @@ $(document).ready(() => {
     }
 
     // Success State flow
-    else if (shouldRedirect) {
+    if (redirectUrl) {
+      success.show();
+      window.location.href = redirectUrl;
+    } else if (shouldRedirect) {
       success.show();
       window.location.href = 'https://www.owner.com/funnel-demo-requested';
     } else {
