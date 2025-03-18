@@ -59,6 +59,16 @@ function validateSelect(input) {
   return isValid;
 }
 
+// Validate Checkboy
+function validateCheckbox(input) {
+  if (!$(input).is(':checked')) {
+    toggleValidationMsg($(input), true);
+    return false;
+  }
+  toggleValidationMsg($(input), false);
+  return true;
+}
+
 // Validate Other Inputs
 function validateOtherInputs(input) {
   toggleValidationMsg($(input), false);
@@ -84,7 +94,9 @@ export const validateInput = (element) => {
   let isValidAll = true;
 
   if ($(input).prop('required')) {
-    if ($(input).val()) {
+    if ($(input).is('[type="checkbox"]')) {
+      isValidAll = validateCheckbox(input);
+    } else if ($(input).val()) {
       if ($(input).is('[type="email"]')) {
         isValidAll = validateEmail(input);
       } else if ($(input).attr('name') === 'restaurant-name') {
@@ -98,6 +110,7 @@ export const validateInput = (element) => {
       isValidAll = handleEmptyRequiredInput(input);
     }
   }
+
   if (!isValidAll) {
     $(input).addClass('error');
   } else {
