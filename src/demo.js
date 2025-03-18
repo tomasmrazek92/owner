@@ -473,17 +473,18 @@ $(document).ready(() => {
 
   const successSubmit = () => {
     const success = $('.demo-form_success');
-    const showSchedule = isSchedule && qualified;
     const shouldRedirect =
       !window.location.href.includes('/blog/') &&
       !window.location.href.includes('/resources/') &&
       !window.location.href.includes('/downloads/');
     const redirectUrl = wfForm.attr('data-custom-redirect');
+    const showSchedule = isSchedule && qualified && redirectUrl === '';
 
     // Toggle Loading
     toggleLoader(false);
     wfForm.hide();
 
+    // We proceed with the selfSchedule only if we are in the scheduleFlow + we don't have custom redirect set
     if (showSchedule) {
       var meetingSettings = {
         link: 'https://meetings.hubspot.com/jonathan-shenkman/self-scheduling',
@@ -518,10 +519,10 @@ $(document).ready(() => {
     }
 
     // Success State flow
-    if (redirectUrl) {
+    if (redirectUrl !== '') {
       success.show();
       window.location.href = redirectUrl;
-    } else if (shouldRedirect) {
+    } else if (shouldRedirect && !showSchedule) {
       success.show();
       window.location.href = 'https://www.owner.com/funnel-demo-requested';
     } else {
@@ -543,14 +544,19 @@ $(document).ready(() => {
   let formId = 'f3807262-aed3-4b9c-93a3-247ad4c55e60';
   const currentUrl = window.location.href;
 
-  // Check URL path and assign appropriate form ID
+  // Form for resources
   if (currentUrl.indexOf('/resources/') !== -1) {
     formId = '66b9776c-c640-4b5a-8807-439a721001ff';
   }
 
+  // Referall Page Form
+  if (currentUrl.indexOf('refer') !== -1) {
+    formId = '969fbdc3-b662-4428-a208-c78b8f20efa6';
+  }
+
   hbspt.forms.create({
     portalId: '6449395',
-    formId: 'f3807262-aed3-4b9c-93a3-247ad4c55e60',
+    formId: formId,
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
     onFormSubmit: function () {
@@ -602,6 +608,9 @@ $(document).ready(() => {
     auto_dq_flag: 'auto_dq_static',
     auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
     gmv_pred: ['pred_gmv', '0-2/pred_gmv_company'],
+    // Refers
+    referrer_s_phone_number: 'referrer_s_phone_number',
+
     // ...
   };
 
@@ -625,11 +634,13 @@ $(document).ready(() => {
   });
 
   // Format US Phone Number
-  new Cleave('input[name="cellphone"]', {
-    numericOnly: true,
-    blocks: [0, 3, 3, 4, 10],
-    delimiters: ['(', ') ', '-'],
-    delimiterLazyShow: true,
+  $('[data-cleave-phone]').each(function () {
+    new Cleave($(this), {
+      numericOnly: true,
+      blocks: [0, 3, 3, 4, 10],
+      delimiters: ['(', ') ', '-'],
+      delimiterLazyShow: true,
+    });
   });
 
   //#endregion
