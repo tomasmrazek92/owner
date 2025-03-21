@@ -1,4 +1,4 @@
-let url = 'https://api.lever.co/v0/postings/owner?mode=json';
+let url = 'https://lever.ownerengineering.com/postings';
 
 if (window.location.pathname === '/careers') {
   fetch(url)
@@ -9,7 +9,8 @@ if (window.location.pathname === '/careers') {
       return response.json();
     })
     .then((data) => {
-      console.log(data);
+      let roles = data.data;
+      console.log(data.data);
       // Els
       var positionList = $('.careers-roles_list');
       var positionItem = positionList.find('li').clone();
@@ -17,17 +18,17 @@ if (window.location.pathname === '/careers') {
       // Clear the list
       positionList.empty();
 
-      for (var x = 0; x < data.length; x++) {
+      for (var x = 0; x < roles.length; x++) {
         var currentItem = positionItem;
-        currentItem.find('a').attr('href', '/careers/role?=' + data[x].id);
-        currentItem.find('[data-title]').text(data[x].text);
-        currentItem.find('[data-category]').text(data[x].categories.team);
-        currentItem.find('[data-location]').text(data[x].categories.allLocations.join(', '));
+        currentItem.find('a').attr('href', '/careers/role?=' + roles[x].id);
+        currentItem.find('[data-title]').text(roles[x].text);
+        currentItem.find('[data-category]').text(roles[x].categories.team);
+        currentItem.find('[data-location]').text(roles[x].categories.allLocations.join(', '));
         positionList.append(currentItem.clone());
       }
 
       // Counter
-      $('[roles-counter]').text(data.length);
+      $('[roles-counter]').text(roles.length);
 
       // Reveal the list
       positionList.css('opacity', '1');
@@ -37,9 +38,9 @@ if (window.location.pathname === '/careers') {
 
 if (window.location.pathname === '/careers/role') {
   var jobId = window.location.search.split('=')[1];
-  console.log(jobId);
 
-  fetch(url)
+  // Fetch and Display Data
+  fetch(`${url}/${jobId}`)
     .then((response) => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -47,9 +48,9 @@ if (window.location.pathname === '/careers/role') {
       return response.json();
     })
     .then((data) => {
-      console.log(data);
+      console.log(data.data.posting);
       // Filter the job by its ID
-      let filteredJob = data.find((item) => item.id === jobId);
+      let filteredJob = data.data.posting;
 
       if (filteredJob) {
         console.log('Filtered Job:', filteredJob);
@@ -66,10 +67,6 @@ if (window.location.pathname === '/careers/role') {
         let detailHtml = $('[data-role-html]');
         let detailAdditional = $('[data-role-additional]');
 
-        // Fix of EmploymentType
-        function formatEmploymentType(type) {
-          return type.replace(/([a-z])([A-Z])/g, '$1 $2');
-        }
         function cleanInlineStyles(htmlString) {
           // Create a temporary div with the HTML content
           let $temp = $('<div>').html(htmlString);
@@ -94,19 +91,15 @@ if (window.location.pathname === '/careers/role') {
           details.push(filteredJob.categories.team);
         }
         let combinedDetails = details.join(' / ');
-        console.log(combinedDetails);
         type.text(combinedDetails);
 
         // Link
-        detailLink.attr('href', filteredJob.hostedUrl + '/apply');
+        detailLink.attr('href', filteredJob.urls.apply);
 
         // Opening
-        detailOpening.html(cleanInlineStyles(filteredJob.opening));
+        detailOpening.html(cleanInlineStyles(filteredJob.content.descriptionHtml));
 
-        // Detail
-        detailHtml.html(cleanInlineStyles(filteredJob.descriptionBody));
-
-        filteredJob.lists.forEach((item) => {
+        filteredJob.content.lists.forEach((item) => {
           // Create the HTML elements
           let listSection = $('<div>');
           let heading = $('<h3>').text(item.text);
@@ -120,7 +113,7 @@ if (window.location.pathname === '/careers/role') {
         });
 
         // Additional
-        detailAdditional.html(cleanInlineStyles(filteredJob.additional));
+        detailAdditional.html(cleanInlineStyles(filteredJob.content.closing));
 
         // Reveal
         $('.section_job-role').addClass('rendered');
