@@ -19,13 +19,13 @@ function getQueryParams() {
 function saveParamsToSession(params) {
   if (Object.keys(params).length > 0) {
     // Store all UTM parameters as a single JSON string
-    sessionStorage.setItem('utmParams', JSON.stringify(params));
+    sessionStorage.setItem('utmWebParams', JSON.stringify(params));
   }
 }
 
 // Get parameters from sessionStorage
 export function getParamsFromSession() {
-  const utmParamsString = sessionStorage.getItem('utmParams');
+  const utmParamsString = sessionStorage.getItem('utmWebParams');
 
   // Return empty object if no params found
   if (!utmParamsString) {
@@ -41,21 +41,38 @@ export function getParamsFromSession() {
   }
 }
 
-// Function to handle form parameters
+// Function to handle form parameters - preserves ALL UTMs
 export function handleUTMParams() {
   // Get URL parameters first
   const urlParams = getQueryParams();
 
-  // Get existing params from session
-  let sessionParams = getParamsFromSession();
+  // ALWAYS get existing params from session first
+  const sessionParams = getParamsFromSession();
 
-  // Merge parameters, with URL taking priority
-  const mergedParams = { ...sessionParams, ...urlParams };
+  // Start with all existing parameters
+  const mergedParams = { ...sessionParams };
 
-  // Save the merged params to session storage if we have URL params
+  // Add any new URL parameters or update existing ones
   if (Object.keys(urlParams).length > 0) {
+    // Only update the specific parameters present in the URL
+    Object.keys(urlParams).forEach((key) => {
+      mergedParams[key] = urlParams[key];
+    });
+
+    // Save back to session
     saveParamsToSession(mergedParams);
   }
 
   return mergedParams;
+}
+
+// Initialize on page load with jQuery
+$(document).ready(function () {
+  const params = handleUTMParams();
+  console.log('UTM Parameters:', params);
+});
+
+// Debug function to view current UTM parameters (can be removed in production)
+export function showCurrentUTMs() {
+  return getParamsFromSession();
 }
