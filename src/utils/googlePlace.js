@@ -30,7 +30,7 @@ const setAddressComponents = (googlePlace, componentForm) => {
   setInputElementValue('restaurant-address', `${streetNumber} ${route}`);
 };
 
-const setTypes = (googlePlace) => {
+const processPlaceTypes = (googlePlace) => {
   if (!googlePlace || !googlePlace.types) return;
   const typesAsString = googlePlace.types.join(', ');
   setInputElementValue('place_types', typesAsString);
@@ -65,7 +65,7 @@ const setGooglePlaceDataToForm = (googlePlace) => {
   };
 
   setAddressComponents(googlePlace, componentForm);
-  setTypes(googlePlace);
+  processPlaceTypes(googlePlace);
   setOtherComponents(googlePlace, componentForm);
 };
 
@@ -85,10 +85,17 @@ const initGooglePlaceAutocomplete = () => {
         ?.map((t) => t.replace(/'/g, '')) || [];
     const country = self.attr('data-country-restrict');
 
-    const gpaOptions = {
-      types: types.length ? types : undefined,
-      componentRestrictions: country ? { country } : undefined,
-    };
+    const gpaOptions = {};
+
+    // Only add types if there are actually types
+    if (types.length) {
+      gpaOptions.types = types;
+    }
+
+    // Only add component restrictions if there is a country
+    if (country) {
+      gpaOptions.componentRestrictions = { country };
+    }
 
     // Store the autocomplete instance on window
     window.googleAutocomplete = new google.maps.places.Autocomplete(this, gpaOptions);
