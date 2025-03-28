@@ -103,17 +103,22 @@ $(document).ready(() => {
   let isSchedule = typeof scheduleFlow !== 'undefined' && scheduleFlow;
 
   // User ID
-  // check local storage for an existing user ID
-  let webUserId = getItem('webUserId');
+  // check cookies for an existing user ID
+  let webUserId = $.cookie('webTempTatariUserId');
 
   // if none exists, generate a new one and save it
   if (!webUserId) {
     webUserId = uuidv4();
-    setItem('webUserId', webUserId);
+    $.cookie('webTempTatariUserId', webUserId, {
+      domain: '.owner.com',
+      path: '/',
+    });
   }
 
-  // Also save to window level
-  window.webUserId = webUserId;
+  // Identify the user first for the mixPanel
+  if (typeof webUserId !== 'undefined' && webUserId) {
+    mixpanel.identify(webUserId);
+  }
 
   // #region Functions
   function logMixpanel(status) {
@@ -175,10 +180,6 @@ $(document).ready(() => {
     ct.src =
       'https://ct.capterra.com/capterra_tracker.gif?vid=' + capterra_vid + '&vkey=' + capterra_vkey;
     document.body.appendChild(ct);
-  }
-  // Identify the user first for the mixPanel
-  if (typeof webUserId !== 'undefined' && webUserId) {
-    mixpanel.identify(webUserId);
   }
 
   // store Restaurant
