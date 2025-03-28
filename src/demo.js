@@ -115,6 +115,9 @@ $(document).ready(() => {
     });
   }
 
+  // Also save to window level
+  window.webUserId = webUserId;
+
   // Identify the user first for the mixPanel
   if (typeof webUserId !== 'undefined' && webUserId) {
     mixpanel.identify(webUserId);
