@@ -44,6 +44,8 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   const $input = $(inputSelector);
   const $predictionsList = $(predictionsSelector);
 
+  if (!$input.length) return;
+
   // Get place types from data attribute and clean up any quotes
   const placeTypes = $input
     .data('place-types')
