@@ -704,51 +704,41 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   let realViewportHeight;
-  let previousHeight = window.innerHeight;
-  let isKeyboardOpen = false;
 
   function updateViewportHeight() {
-    const currentHeight = window.innerHeight;
-
-    // Detect if keyboard is likely open (significant height reduction)
-    if (currentHeight < previousHeight * 0.8) {
-      isKeyboardOpen = true;
-    } else if (currentHeight > previousHeight * 0.9) {
-      isKeyboardOpen = false;
+    // Use visualViewport for accurate height measurements
+    if (window.visualViewport) {
+      realViewportHeight = window.visualViewport.height;
+    } else {
+      // Fallback to innerHeight for browsers without visualViewport support
+      realViewportHeight = window.innerHeight;
     }
 
-    // Update previous height
-    previousHeight = currentHeight;
-
-    // Set the actual usable viewport height
-    realViewportHeight = isKeyboardOpen ? currentHeight : window.innerHeight;
+    // Set the CSS variable
     document.documentElement.style.setProperty('--real-viewport-height', `${realViewportHeight}px`);
   }
 
   // Initial calculation
   updateViewportHeight();
 
-  // ResizeObserver for more reliable detection
-  const resizeObserver = new ResizeObserver((entries) => {
-    window.requestAnimationFrame(() => {
+  // Use visualViewport events if available
+  if (window.visualViewport) {
+    window.visualViewport.addEventListener('resize', function () {
       updateViewportHeight();
     });
-  });
 
-  // Observe the viewport
-  resizeObserver.observe(document.documentElement);
+    window.visualViewport.addEventListener('scroll', function () {
+      updateViewportHeight();
+    });
+  } else {
+    // Fallback to window events
+    $(window).on('resize', function () {
+      updateViewportHeight();
+    });
+  }
 
-  // Add event listeners for input focus events
-  $(document).on('focusin', 'input, textarea, select', function () {
-    setTimeout(updateViewportHeight, 300);
-  });
-
-  $(document).on('focusout', 'input, textarea, select', function () {
-    setTimeout(updateViewportHeight, 300);
-  });
-
-  // Additional resize and orientation change listeners
-  $(window).on('resize orientationchange', function () {
+  // Additional handling for orientation changes
+  $(window).on('orientationchange', function () {
     setTimeout(updateViewportHeight, 100);
   });
 });
