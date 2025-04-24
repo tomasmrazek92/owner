@@ -699,3 +699,24 @@ $(document).ready(function () {
 });
 
 // #endregion
+
+// #region dynamicHeight
+
+$(document).ready(function () {
+  let realViewportHeight;
+
+  function updateViewportHeight() {
+    realViewportHeight = window.innerHeight;
+    document.documentElement.style.setProperty('--real-viewport-height', `${realViewportHeight}px`);
+  }
+
+  // Initial calculation
+  updateViewportHeight();
+
+  // Recalculate on resize and orientation change
+  $(window).on('resize orientationchange', function () {
+    updateViewportHeight();
+  });
+});
+
+// #endregio
