@@ -704,18 +704,52 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   let realViewportHeight;
+  let previousHeight = window.innerHeight;
+  let isKeyboardOpen = false;
 
   function updateViewportHeight() {
-    realViewportHeight = window.innerHeight;
+    const currentHeight = window.innerHeight;
+
+    // Detect if keyboard is likely open (significant height reduction)
+    if (currentHeight < previousHeight * 0.8) {
+      isKeyboardOpen = true;
+    } else if (currentHeight > previousHeight * 0.9) {
+      isKeyboardOpen = false;
+    }
+
+    // Update previous height
+    previousHeight = currentHeight;
+
+    // Set the actual usable viewport height
+    realViewportHeight = isKeyboardOpen ? currentHeight : window.innerHeight;
     document.documentElement.style.setProperty('--real-viewport-height', `${realViewportHeight}px`);
   }
 
   // Initial calculation
   updateViewportHeight();
 
-  // Recalculate on resize and orientation change
+  // ResizeObserver for more reliable detection
+  const resizeObserver = new ResizeObserver((entries) => {
+    window.requestAnimationFrame(() => {
+      updateViewportHeight();
+    });
+  });
+
+  // Observe the viewport
+  resizeObserver.observe(document.documentElement);
+
+  // Add event listeners for input focus events
+  $(document).on('focusin', 'input, textarea, select', function () {
+    setTimeout(updateViewportHeight, 300);
+  });
+
+  $(document).on('focusout', 'input, textarea, select', function () {
+    setTimeout(updateViewportHeight, 300);
+  });
+
+  // Additional resize and orientation change listeners
   $(window).on('resize orientationchange', function () {
-    updateViewportHeight();
+    setTimeout(updateViewportHeight, 100);
   });
 });
 
