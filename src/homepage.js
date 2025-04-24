@@ -1,7 +1,31 @@
 import { toggleValidationMsg } from '$utils/formValidations.js';
 import { createSwiper } from '$utils/swipers';
 
-// #endregion
+let scrollPosition;
+let menuOpen = false;
+
+const disableScroll = () => {
+  if (!menuOpen) {
+    scrollPosition = $(window).scrollTop();
+    $('html, body').scrollTop(0).addClass('overflow-hidden');
+    $('.nav').addClass('open');
+  } else {
+    $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+    $('.nav').removeClass('open');
+  }
+  menuOpen = !menuOpen;
+};
+
+$(window).on('resize', function () {
+  const wasMobile = isMobile;
+  isMobile = $(window).width() < 480;
+
+  if (wasMobile !== isMobile && menuOpen) {
+    $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+    $('.nav').removeClass('open');
+    menuOpen = false;
+  }
+});
 
 // #region Swipers
 createSwiper('.section_hp-slider', '.hp-slider_wrap', 'hp-hero', {
@@ -281,9 +305,11 @@ $('.hp-grader_input').on('blur', function () {
 // V2
 $('.hp-grader_form2-input').on('focus', function () {
   $('.hp-grader_form2-wrap').addClass('cc-active');
+  disableScroll();
 });
 $('.hp-grader_form2-close').on('click', function () {
   $('.hp-grader_form2-wrap').removeClass('cc-active');
+  disableScroll();
 });
 
 // #endregion
@@ -743,4 +769,4 @@ $(document).ready(function () {
   });
 });
 
-// #endregio
+// #endregion
