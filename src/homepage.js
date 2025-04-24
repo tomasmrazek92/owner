@@ -1,6 +1,8 @@
 import { toggleValidationMsg } from '$utils/formValidations.js';
 import { createSwiper } from '$utils/swipers';
 
+// #endregion
+
 // #region Swipers
 createSwiper('.section_hp-slider', '.hp-slider_wrap', 'hp-hero', {
   slidesPerView: 1,
@@ -27,6 +29,86 @@ createSwiper('.section_hp-slider', '.hp-slider_wrap', 'hp-hero', {
     },
   },
 });
+
+createSwiper('.section_exp-tabs', '.exp-tabs_tabs', 'exp-tabs-menu', {
+  slidesPerView: 1,
+  spaceBetween: 20,
+  slideToClickedSlide: true,
+  autoplay: {
+    delay: 7000,
+  },
+  on: {
+    autoplayStart: function () {
+      $('.swiper-slide-active .exp-tabs_tabs-progress-line').removeClass('stopped');
+    },
+    autoplayStop: function () {
+      $('.swiper-slide-active .exp-tabs_tabs-progress-line').addClass('stopped');
+    },
+    slideChange: function (swiper) {
+      const firstSwiperKey = Object.keys(swipers['exp-tabs-content'])[0];
+      const firstSwiper = swipers['exp-tabs-content'][firstSwiperKey];
+      firstSwiper.slideTo(swiper.realIndex);
+    },
+  },
+  breakpoints: {
+    0: {
+      spaceBetween: 16,
+    },
+    992: {
+      spaceBetween: 20,
+    },
+  },
+});
+
+createSwiper('.exp-tabs_slider-box', '.exp-tabs_slider', 'exp-tabs-content', {
+  slidesPerView: 1,
+  spaceBetween: 0,
+  on: {
+    slideChange: function (swiper) {
+      if (window.innerWidth < 992) {
+        const firstSwiperKey = Object.keys(swipers['exp-tabs-menu'])[0];
+        const firstSwiper = swipers['exp-tabs-menu'][firstSwiperKey];
+        firstSwiper.slideTo(swiper.realIndex);
+      }
+      updateLabels(swiper);
+    },
+    init: function (swiper) {
+      updateLabels(swiper);
+    },
+  },
+  breakpoints: {
+    0: {
+      spaceBetween: 10,
+      allowTouchMove: true,
+    },
+    992: {
+      spaceBetween: 0,
+      allowTouchMove: false,
+    },
+  },
+});
+function updateLabels(swiper) {
+  // Labels
+  let currentIndex = swiper.activeIndex;
+  let { length } = swiper.slides;
+
+  let prevIndex = currentIndex - 1;
+  let nextIndex = currentIndex + 1;
+
+  if (prevIndex >= 0) {
+    let prev = swiper.slides.eq(prevIndex);
+    $('[prev-restaurant]').text($(prev).attr('data-label-next'));
+  } else {
+    $('[prev-restaurant]').text('');
+  }
+
+  if (nextIndex < length) {
+    let next = swiper.slides.eq(nextIndex);
+    $('[next-restaurant]').text($(next).attr('data-label-next'));
+  } else {
+    $('[next-restaurant]').text('');
+  }
+}
 
 // #endregion
 
@@ -116,11 +198,11 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     ) {
       predictions.forEach((prediction, index) => {
         const $predictionItem = $(`
-          <div class="prediction-item" data-place-id="${prediction.place_id}">
-            <span class="main-text p13">${prediction.structured_formatting.main_text}</span>
-            <span class="secondarytext p13 text-color-content-tertiary">${prediction.structured_formatting.secondary_text}</span>
-          </div>
-        `);
+        <div class="prediction-item" data-place-id="${prediction.place_id}">
+          <span class="main-text p13">${prediction.structured_formatting.main_text}</span>
+          <span class="secondarytext p13 text-color-content-tertiary">${prediction.structured_formatting.secondary_text}</span>
+        </div>
+      `);
 
         $predictionsList.append($predictionItem);
       });
@@ -186,13 +268,15 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     }
   });
 
-  $('.hp-grader_btn-submit').on('click', function (e) {
-    if (placeId) {
-      redirectToGrader(placeId);
-    } else {
-      toggleValidationMsg($input, true);
-    }
-  });
+  $('.hp-grader_btn-submit')
+    .add('.hp-grader_btn-submit2')
+    .on('click', function (e) {
+      if (placeId) {
+        redirectToGrader(placeId);
+      } else {
+        toggleValidationMsg($input, true);
+      }
+    });
 
   // Initialize services
   initializeServices();
@@ -203,6 +287,14 @@ $('.hp-grader_input').on('focus', function () {
 });
 $('.hp-grader_input').on('blur', function () {
   swipers['hp-hero'][0].autoplay.start();
+});
+
+// V2
+$('.hp-grader_form2-input').on('focus', function () {
+  $('.hp-grader_form2-wrap').addClass('cc-active');
+});
+$('.hp-grader_form2-close').on('click', function () {
+  $('.hp-grader_form2-wrap').removeClass('cc-active');
 });
 
 // #endregion
@@ -506,5 +598,115 @@ function initVimeoPlayer() {
 
 // Initialize Vimeo Player
 initVimeoPlayer();
+
+// #endregion
+
+// #region Grader Animations
+function initTextLoopAnimation(options) {
+  const defaults = {
+    container: '[data-ai-label]',
+    strings: [
+      'Scan your site and see what isn’t working',
+      'Find out how to get discovered on Google',
+      'Calculate how much more you could earn',
+      'Compare yourself with your local competition',
+    ],
+    duration: 0.5, // Animation duration for fade in/out
+    stayDuration: 2, // How long each text stays visible
+    yOffset: 4, // How far text moves during animation
+    ease: 'power3.out', // GSAP easing function
+  };
+
+  const settings = $.extend({}, defaults, options);
+  const $container = $(settings.container);
+
+  if ($container.length === 0) {
+    console.error('Animation container not found');
+    return;
+  }
+
+  // Clear container
+  $container.empty();
+
+  // Set container to have position relative and determine the tallest height
+  $container.css({
+    position: 'relative',
+    display: 'block',
+    width: '100%',
+  });
+
+  // First, we need to create spans for each string and measure their height
+  settings.strings.forEach((string, index) => {
+    const $span = $('<span class="loop-text"></span>');
+    $span.text(string);
+    $span.css({
+      opacity: 0,
+      position: 'absolute',
+      top: 0,
+      left: 0,
+      width: '100%',
+    });
+    $container.append($span);
+  });
+
+  // Calculate the maximum height needed
+  let maxHeight = 0;
+  $container.find('.loop-text').each(function () {
+    const height = $(this).outerHeight();
+    if (height > maxHeight) {
+      maxHeight = height;
+    }
+  });
+
+  // Set fixed height based on the tallest text
+  $container.css('height', maxHeight + 'px');
+
+  // Create the animation timeline
+  const $spans = $container.find('.loop-text');
+  const tl = gsap.timeline({
+    repeat: -1,
+    repeatDelay: 0,
+  });
+
+  // Initialize all spans to be invisible and below their final position
+  gsap.set($spans, {
+    opacity: 0,
+    y: settings.yOffset,
+  });
+
+  // Add each span to the timeline sequentially
+  $spans.each((index, span) => {
+    // Fade in and move up
+    tl.to(span, {
+      opacity: 1,
+      y: 0,
+      duration: settings.duration,
+      ease: settings.ease,
+    });
+
+    // Hold for specified duration
+    tl.to(span, {
+      opacity: 1,
+      duration: settings.stayDuration,
+    });
+
+    // Fade out and move up
+    tl.to(span, {
+      opacity: 0,
+      y: -settings.yOffset,
+      duration: settings.duration,
+      ease: settings.ease,
+    });
+
+    // Small pause between animations
+    tl.to({}, { duration: 0.1 });
+  });
+
+  return tl;
+}
+
+$(document).ready(function () {
+  initTextLoopAnimation();
+});
 
 // #endregion

@@ -29,15 +29,49 @@ export const createSwiper = (componentSelector, swiperSelector, classSelector, o
       },
     });
 
+    // Check if autoplay is in options
+    const hasAutoplay = options && options.autoplay;
+
+    // If autoplay exists, remove it from initial options
+    // We'll add it back when the swiper is in view
+    if (hasAutoplay) {
+      const autoplaySettings = { ...options.autoplay };
+      delete swiperOptions.autoplay;
+    }
+
     // Update Options
     for (let key in options) {
-      if (key in swiperOptions) {
+      if (key in swiperOptions && key !== 'autoplay') {
         swiperOptions[key] = options[key];
       }
     }
 
     // Init Slider
     let swiper = new Swiper(`${swiperSelector}.${instanceClass}`, swiperOptions);
+
+    // Handle autoplay on scroll into view
+    if (hasAutoplay) {
+      const swiperElement = $(this).find(`${swiperSelector}.${instanceClass}`)[0];
+
+      const observer = new IntersectionObserver(
+        (entries) => {
+          entries.forEach((entry) => {
+            if (entry.isIntersecting) {
+              // Swiper is in view, start autoplay
+              swiper.params.autoplay = options.autoplay;
+              swiper.autoplay.start();
+            } else {
+              // Swiper is out of view, pause autoplay
+              swiper.autoplay.stop();
+            }
+          });
+        },
+        { threshold: 0.1 }
+      ); // Trigger when at least 10% of the swiper is visible
+
+      // Start observing the swiper
+      observer.observe(swiperElement);
+    }
 
     // Push to Global for possible references
     // store swiper instance in object using classSelector as key
