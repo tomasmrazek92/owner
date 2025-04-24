@@ -236,7 +236,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
 
   // Event listeners
   let debounceTimer;
-  $input.on('input', function () {
+  $input.on('input focus', function () {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       handleInput($(this).val());
