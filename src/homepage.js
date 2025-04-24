@@ -29,7 +29,7 @@ function toggleScroll(state) {
   if (state) {
     enableScroll();
   } else {
-    toggleScroll(state);
+    disableScroll();
   }
 }
 
