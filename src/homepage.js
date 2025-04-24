@@ -208,17 +208,6 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
       });
 
       $predictionsList.removeClass('hidden');
-
-      // Scroll first item into view on mobile
-      const firstItem = $predictionsList.find('.prediction-item')[0];
-      if (firstItem && window.innerWidth <= 768) {
-        setTimeout(() => {
-          const navHeight = $('.nav').outerHeight() || 0;
-          const scrollPosition =
-            firstItem.getBoundingClientRect().top + window.pageYOffset - navHeight - 16;
-          window.scrollTo({ top: scrollPosition, behavior: 'smooth' });
-        }, 100);
-      }
     } else {
       $predictionsList.addClass('hidden');
     }
