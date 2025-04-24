@@ -1,33 +1,68 @@
 import { toggleValidationMsg } from '$utils/formValidations.js';
 import { createSwiper } from '$utils/swipers';
 
-let scrollPosition;
-let menuOpen = false;
+// #region Scroll Disabler
+var $body = $(document.body);
+var scrollPosition = 0;
 
-const disableScroll = () => {
-  if (window.innerWidth < 480) {
-    if (!menuOpen) {
-      scrollPosition = $(window).scrollTop();
-      $('html, body').scrollTop(0).addClass('overflow-hidden');
-      $('.nav').addClass('open');
-    } else {
-      $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
-      $('.nav').removeClass('open');
+function disableScroll() {
+  var oldWidth = $body.innerWidth();
+  scrollPosition = window.pageYOffset;
+  $body.css({
+    overflow: 'hidden',
+    position: 'fixed',
+    top: `-${scrollPosition}px`,
+    width: oldWidth,
+  });
+}
+function enableScroll() {
+  $body.css({
+    overflow: '',
+    position: '',
+    top: '',
+    width: '',
+  });
+  $(window).scrollTop(scrollPosition);
+}
+
+function toggleScroll(state) {
+  if (state) {
+    enableScroll();
+  } else {
+    toggleScroll(state);
+  }
+}
+
+// Run on resize
+const breakpoints = [991, 767, 479];
+let lastWidth = window.innerWidth;
+
+function handleBreakpoint() {
+  if (hamOpen) {
+    enableScroll();
+  }
+}
+
+// Function to check breakpoints on window resize
+function checkBreakpoints() {
+  const currentWidth = window.innerWidth;
+
+  breakpoints.forEach((breakpoint) => {
+    if (
+      (lastWidth <= breakpoint && currentWidth > breakpoint) ||
+      (lastWidth >= breakpoint && currentWidth < breakpoint)
+    ) {
+      handleBreakpoint(breakpoint);
     }
-    menuOpen = !menuOpen;
-  }
-};
+  });
 
-$(window).on('resize', function () {
-  const wasMobile = isMobile;
-  isMobile = $(window).width() < 480;
+  // Update lastWidth for the next call
+  lastWidth = currentWidth;
+}
+// Event listener for window resize
+window.addEventListener('resize', checkBreakpoints);
 
-  if (wasMobile !== isMobile && menuOpen) {
-    $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
-    $('.nav').removeClass('open');
-    menuOpen = false;
-  }
-});
+// #endregion
 
 // #region Swipers
 createSwiper('.section_hp-slider', '.hp-slider_wrap', 'hp-hero', {
@@ -306,12 +341,16 @@ $('.hp-grader_input').on('blur', function () {
 
 // V2
 $('.hp-grader_form2-input').on('focus', function () {
-  $('.hp-grader_form2-wrap').addClass('cc-active');
-  disableScroll();
+  if (window.innerWidth < 480) {
+    $('.hp-grader_form2-wrap').addClass('cc-active');
+    toggleScroll(false);
+  }
 });
 $('.hp-grader_form2-close').on('click', function () {
-  $('.hp-grader_form2-wrap').removeClass('cc-active');
-  disableScroll();
+  if (window.innerWidth < 480) {
+    $('.hp-grader_form2-wrap').removeClass('cc-active');
+    toggleScroll(false);
+  }
 });
 
 // #endregion
