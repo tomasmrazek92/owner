@@ -349,7 +349,7 @@ $('.hp-grader_form2-input').on('focus', function () {
 $('.hp-grader_form2-close').on('click', function () {
   if (window.innerWidth < 480) {
     $('.hp-grader_form2-wrap').removeClass('cc-active');
-    toggleScroll(false);
+    toggleScroll(true);
   }
 });
 
@@ -791,6 +791,10 @@ $(document).ready(function () {
   // Use visualViewport events if available
   if (window.visualViewport) {
     window.visualViewport.addEventListener('resize', function () {
+      updateViewportHeight();
+    });
+
+    window.visualViewport.addEventListener('scroll', function () {
       updateViewportHeight();
     });
   } else {
