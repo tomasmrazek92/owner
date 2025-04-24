@@ -793,10 +793,6 @@ $(document).ready(function () {
     window.visualViewport.addEventListener('resize', function () {
       updateViewportHeight();
     });
-
-    window.visualViewport.addEventListener('scroll', function () {
-      updateViewportHeight();
-    });
   } else {
     // Fallback to window events
     $(window).on('resize', function () {
