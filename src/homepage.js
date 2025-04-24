@@ -5,15 +5,17 @@ let scrollPosition;
 let menuOpen = false;
 
 const disableScroll = () => {
-  if (!menuOpen) {
-    scrollPosition = $(window).scrollTop();
-    $('html, body').scrollTop(0).addClass('overflow-hidden');
-    $('.nav').addClass('open');
-  } else {
-    $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
-    $('.nav').removeClass('open');
+  if (window.innerWidth < 480) {
+    if (!menuOpen) {
+      scrollPosition = $(window).scrollTop();
+      $('html, body').scrollTop(0).addClass('overflow-hidden');
+      $('.nav').addClass('open');
+    } else {
+      $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+      $('.nav').removeClass('open');
+    }
+    menuOpen = !menuOpen;
   }
-  menuOpen = !menuOpen;
 };
 
 $(window).on('resize', function () {
