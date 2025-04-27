@@ -19,8 +19,8 @@ createSwiper('.section_testimonials', '.testimonials1_slider', 'testimonials-1',
       let prev = swiper.slides.eq(prevIndex);
       let next = swiper.slides.eq(nextIndex);
 
-      $('#prev-restaurant').text($(prev).attr('data-restaurant'));
-      $('#next-restaurant').text($(next).attr('data-restaurant'));
+      $('[prev-restaurant]').text($(prev).attr('data-restaurant'));
+      $('[next-restaurant]').text($(next).attr('data-restaurant'));
     },
   },
 });

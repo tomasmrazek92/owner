@@ -2,65 +2,6 @@ import { toggleValidationMsg } from '$utils/formValidations.js';
 import { createSwiper } from '$utils/swipers';
 
 // #region Scroll Disabler
-var $body = $(document.body);
-var scrollPosition = 0;
-
-function disableScroll() {
-  var oldWidth = $body.innerWidth();
-  scrollPosition = window.pageYOffset;
-  $body.css({
-    overflow: 'hidden',
-    position: 'fixed',
-    top: `-${scrollPosition}px`,
-    width: oldWidth,
-  });
-}
-function enableScroll() {
-  $body.css({
-    overflow: '',
-    position: '',
-    top: '',
-    width: '',
-  });
-  $(window).scrollTop(scrollPosition);
-}
-
-function toggleScroll(state) {
-  if (state) {
-    enableScroll();
-  } else {
-    disableScroll();
-  }
-}
-
-// Run on resize
-const breakpoints = [991, 767, 479];
-let lastWidth = window.innerWidth;
-
-function handleBreakpoint() {
-  if (hamOpen) {
-    enableScroll();
-  }
-}
-
-// Function to check breakpoints on window resize
-function checkBreakpoints() {
-  const currentWidth = window.innerWidth;
-
-  breakpoints.forEach((breakpoint) => {
-    if (
-      (lastWidth <= breakpoint && currentWidth > breakpoint) ||
-      (lastWidth >= breakpoint && currentWidth < breakpoint)
-    ) {
-      handleBreakpoint(breakpoint);
-    }
-  });
-
-  // Update lastWidth for the next call
-  lastWidth = currentWidth;
-}
-// Event listener for window resize
-window.addEventListener('resize', checkBreakpoints);
 
 // #endregion
 
