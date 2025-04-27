@@ -188,12 +188,18 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
       autocompleteService.getPlacePredictions(searchConfig, (predictions, status) => {
         displayPredictions(predictions, status);
 
-        // Preselect first option if available
+        // Preselect first option if available (but don't scroll yet)
         if (predictions && predictions.length > 0) {
-          // Use setTimeout to ensure the DOM is updated before selection
+          // Use a slight delay to ensure the DOM is fully rendered
           setTimeout(() => {
-            selectPrediction(0);
-          }, 0);
+            if (
+              $predictionsList.is(':visible') &&
+              $predictionsList.find('.prediction-item').length > 0
+            ) {
+              // Just mark the first item as selected without scrolling
+              highlightPrediction(0);
+            }
+          }, 50); // Small delay for DOM rendering
         }
       });
     } else {
@@ -231,7 +237,29 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     }
   }
 
-  // Select a prediction by index
+  // Highlight a prediction without scrolling
+  function highlightPrediction(index) {
+    const $items = $predictionsList.find('.prediction-item');
+
+    if ($items.length === 0) return;
+
+    // Handle boundary cases with proper wrapping
+    if (index >= $items.length) {
+      index = 0;
+    } else if (index < 0) {
+      index = $items.length - 1;
+    }
+
+    // Remove selection from all items
+    $items.removeClass('selected');
+
+    // Add selection to the current item (without scrolling)
+    const $selected = $items.eq(index).addClass('selected');
+    selectedIndex = index;
+    placeId = $selected.data('place-id');
+  }
+
+  // Select a prediction by index with scrolling
   function selectPrediction(index) {
     const $items = $predictionsList.find('.prediction-item');
 
@@ -252,20 +280,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     selectedIndex = index;
     placeId = $selected.data('place-id');
 
-    // Make sure the selected item is visible (scroll if needed)
-    const container = $predictionsList[0];
-    const item = $selected[0];
-
-    if (item && container) {
-      if (item.offsetTop < container.scrollTop) {
-        container.scrollTop = item.offsetTop;
-      } else if (
-        item.offsetTop + item.clientHeight >
-        container.scrollTop + container.clientHeight
-      ) {
-        container.scrollTop = item.offsetTop + item.clientHeight - container.clientHeight;
-      }
-    }
+    // Wait for next frame to ensure DOM is updated before scrolling
   }
 
   // Handle place selection
@@ -288,7 +303,6 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     }
   }
 
-  // Handle Enter key press to select the current item
   function handleEnterKey() {
     const $selected = $predictionsList.find('.prediction-item.selected');
 
@@ -305,7 +319,14 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   let debounceTimer;
 
   // Input event for text changes
-  $input.on('input focus', function () {
+  $input.on('input', function () {
+    clearTimeout(debounceTimer);
+    debounceTimer = setTimeout(() => {
+      handleInput($(this).val());
+    }, 300);
+  });
+
+  $input.on('input', function () {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
       handleInput($(this).val());
@@ -314,10 +335,18 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
 
   // Key navigation
   $input.on('keydown', function (e) {
-    // Only process key navigation when predictions are visible
+    const keyCode = e.which;
+
+    // Handle Enter key regardless of dropdown state
+    if (keyCode === 13 && placeId) {
+      e.preventDefault();
+      redirectToGrader(placeId);
+      return false;
+    }
+
+    // Only process other keys when predictions are visible
     if (!$predictionsList.hasClass('hidden')) {
-      // Use e.which for compatibility (keyCode is deprecated)
-      switch (e.which) {
+      switch (keyCode) {
         case 38: // Up arrow
           e.preventDefault();
           selectPrediction(selectedIndex - 1);
@@ -326,18 +355,15 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
           e.preventDefault();
           selectPrediction(selectedIndex + 1);
           break;
-        case 13: // Enter
+        case 13: // Enter (with visible dropdown)
           e.preventDefault();
-          if (handleEnterKey()) {
-            // Prevent form submission if we handled the enter key
-            return false;
-          }
+          handleEnterKey();
           break;
         case 27: // Escape
           e.preventDefault();
           $predictionsList.addClass('hidden');
           break;
-        case 9: // Tab - just select without navigating
+        case 9: // Tab
           if (selectedIndex >= 0) {
             e.preventDefault();
             const $selected = $predictionsList.find('.prediction-item.selected');
@@ -347,13 +373,6 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
             }
           }
           break;
-      }
-    } else if (e.which === 13) {
-      // Handle Enter key when dropdown is closed
-      if (placeId) {
-        e.preventDefault();
-        redirectToGrader(placeId);
-        return false;
       }
     }
   });
@@ -377,7 +396,6 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   $(document).on('click', function (event) {
     if (!$(event.target).closest(predictionsSelector).length && !$(event.target).is($input)) {
       $predictionsList.addClass('hidden');
-      $input.val('');
     }
   });
 
@@ -821,60 +839,44 @@ $(document).ready(function () {
 
 $(document).ready(function () {
   let realViewportHeight;
+  let availableHeight;
 
-  function updateViewportHeight() {
-    // Use visualViewport for accurate height measurements
+  function updateHeights() {
     if (window.visualViewport) {
       realViewportHeight = window.visualViewport.height;
     } else {
-      // Fallback to innerHeight for browsers without visualViewport support
       realViewportHeight = window.innerHeight;
     }
 
-    // Set the CSS variable
     document.documentElement.style.setProperty('--real-viewport-height', `${realViewportHeight}px`);
+
+    const navHeight = $('.nav_wrap').outerHeight() || 0;
+    const formWrapHeight = $('.hp-grader_form2-wrap').outerHeight() || 0;
+    const predictionsMarginBottom = parseInt($('.predictions-container').css('margin-bottom')) || 0;
+    const formWrapBottomValue = parseInt($('.hp-grader_form2-wrap').css('bottom')) || 0;
+
+    availableHeight =
+      realViewportHeight -
+      navHeight -
+      formWrapHeight -
+      predictionsMarginBottom -
+      formWrapBottomValue;
+
+    document.documentElement.style.setProperty('--grader-list-height', `${availableHeight}px`);
   }
 
-  // Initial calculation
-  updateViewportHeight();
+  updateHeights();
 
-  // Use visualViewport events if available
   if (window.visualViewport) {
-    window.visualViewport.addEventListener('resize', function () {
-      updateViewportHeight();
-    });
-
-    window.visualViewport.addEventListener('scroll', function () {
-      updateViewportHeight();
-    });
+    window.visualViewport.addEventListener('resize', updateHeights);
+    window.visualViewport.addEventListener('scroll', updateHeights);
   } else {
-    // Fallback to window events
-    $(window).on('resize', function () {
-      updateViewportHeight();
-    });
+    $(window).on('resize', updateHeights);
   }
 
-  // Additional handling for orientation changes
   $(window).on('orientationchange', function () {
-    setTimeout(updateViewportHeight, 100);
+    setTimeout(updateHeights, 100);
   });
 });
 
 // #endregion
-
-$(document).ready(function () {
-  // Log to check if script is running
-  console.log('Script initialized');
-
-  // Then try the specific one
-  var $specificInput = $('input[placeholder="Find your restaurant name"]');
-
-  // Attach events to all input fields to be safe
-  $specificInput.on('focus click touchstart', function () {
-    console.log('Input focus/click/touch detected');
-
-    setTimeout(function () {
-      window.scrollTo(0, 0);
-    }, 500);
-  });
-});
