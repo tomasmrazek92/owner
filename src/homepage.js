@@ -124,6 +124,8 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   let autocompleteService;
   let placesService;
   let placeId;
+  let selectedIndex = -1;
+  let currentPredictions = [];
 
   const $input = $(inputSelector);
   const $predictionsList = $(predictionsSelector);
@@ -171,6 +173,8 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   // Handle input changes
   function handleInput(query) {
     placeId = null;
+    selectedIndex = -1;
+
     if (query.length > 0 && autocompleteService) {
       const searchConfig = {
         input: query,
@@ -183,6 +187,14 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
 
       autocompleteService.getPlacePredictions(searchConfig, (predictions, status) => {
         displayPredictions(predictions, status);
+
+        // Preselect first option if available
+        if (predictions && predictions.length > 0) {
+          // Use setTimeout to ensure the DOM is updated before selection
+          setTimeout(() => {
+            selectPrediction(0);
+          }, 0);
+        }
       });
     } else {
       $predictionsList.html('').addClass('hidden');
@@ -192,15 +204,19 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   // Display predictions
   function displayPredictions(predictions, status) {
     $predictionsList.html('');
+    currentPredictions = [];
 
     if (
       status === google.maps.places.PlacesServiceStatus.OK &&
       predictions &&
       predictions.length > 0
     ) {
+      // Store current predictions for reference
+      currentPredictions = predictions;
+
       predictions.forEach((prediction, index) => {
         const $predictionItem = $(`
-        <div class="prediction-item" data-place-id="${prediction.place_id}">
+        <div class="prediction-item" data-place-id="${prediction.place_id}" data-index="${index}">
           <span class="main-text p13">${prediction.structured_formatting.main_text}</span>
           <span class="secondarytext p13 text-color-content-tertiary">${prediction.structured_formatting.secondary_text}</span>
         </div>
@@ -215,6 +231,43 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     }
   }
 
+  // Select a prediction by index
+  function selectPrediction(index) {
+    const $items = $predictionsList.find('.prediction-item');
+
+    if ($items.length === 0) return;
+
+    // Handle boundary cases with proper wrapping
+    if (index >= $items.length) {
+      index = 0;
+    } else if (index < 0) {
+      index = $items.length - 1;
+    }
+
+    // Remove selection from all items
+    $items.removeClass('selected');
+
+    // Add selection to the current item
+    const $selected = $items.eq(index).addClass('selected');
+    selectedIndex = index;
+    placeId = $selected.data('place-id');
+
+    // Make sure the selected item is visible (scroll if needed)
+    const container = $predictionsList[0];
+    const item = $selected[0];
+
+    if (item && container) {
+      if (item.offsetTop < container.scrollTop) {
+        container.scrollTop = item.offsetTop;
+      } else if (
+        item.offsetTop + item.clientHeight >
+        container.scrollTop + container.clientHeight
+      ) {
+        container.scrollTop = item.offsetTop + item.clientHeight - container.clientHeight;
+      }
+    }
+  }
+
   // Handle place selection
   function handlePlaceSelection(placeId) {
     if (placeId && placesService) {
@@ -226,18 +279,32 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
           // Update input with selected place name
           $input.val(place.name);
 
-          // Store place ID
-          console.log(placeId);
-
           // Hide predictions
           $predictionsList.addClass('hidden');
+
+          toggleValidationMsg($input, false);
         }
       });
     }
   }
 
+  // Handle Enter key press to select the current item
+  function handleEnterKey() {
+    const $selected = $predictionsList.find('.prediction-item.selected');
+
+    if ($selected.length) {
+      placeId = $selected.data('place-id');
+      handlePlaceSelection(placeId);
+      redirectToGrader(placeId);
+      return true;
+    }
+    return false;
+  }
+
   // Event listeners
   let debounceTimer;
+
+  // Input event for text changes
   $input.on('input focus', function () {
     clearTimeout(debounceTimer);
     debounceTimer = setTimeout(() => {
@@ -245,6 +312,53 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     }, 300);
   });
 
+  // Key navigation
+  $input.on('keydown', function (e) {
+    // Only process key navigation when predictions are visible
+    if (!$predictionsList.hasClass('hidden')) {
+      // Use e.which for compatibility (keyCode is deprecated)
+      switch (e.which) {
+        case 38: // Up arrow
+          e.preventDefault();
+          selectPrediction(selectedIndex - 1);
+          break;
+        case 40: // Down arrow
+          e.preventDefault();
+          selectPrediction(selectedIndex + 1);
+          break;
+        case 13: // Enter
+          e.preventDefault();
+          if (handleEnterKey()) {
+            // Prevent form submission if we handled the enter key
+            return false;
+          }
+          break;
+        case 27: // Escape
+          e.preventDefault();
+          $predictionsList.addClass('hidden');
+          break;
+        case 9: // Tab - just select without navigating
+          if (selectedIndex >= 0) {
+            e.preventDefault();
+            const $selected = $predictionsList.find('.prediction-item.selected');
+            if ($selected.length) {
+              placeId = $selected.data('place-id');
+              handlePlaceSelection(placeId);
+            }
+          }
+          break;
+      }
+    } else if (e.which === 13) {
+      // Handle Enter key when dropdown is closed
+      if (placeId) {
+        e.preventDefault();
+        redirectToGrader(placeId);
+        return false;
+      }
+    }
+  });
+
+  // Click event for prediction items
   $predictionsList.on('click', '.prediction-item', function () {
     placeId = $(this).data('place-id');
     toggleValidationMsg($input, false);
@@ -252,13 +366,22 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     redirectToGrader(placeId);
   });
 
+  // Update selected item on mouse hover
+  $predictionsList.on('mouseenter', '.prediction-item', function () {
+    selectedIndex = parseInt($(this).data('index'), 10);
+    $predictionsList.find('.prediction-item').removeClass('selected');
+    $(this).addClass('selected');
+  });
+
   // Close predictions when clicking outside
   $(document).on('click', function (event) {
     if (!$(event.target).closest(predictionsSelector).length && !$(event.target).is($input)) {
       $predictionsList.addClass('hidden');
+      $input.val('');
     }
   });
 
+  // Submit button click handlers
   $('.hp-grader_btn-submit')
     .add('.hp-grader_btn-submit2')
     .on('click', function (e) {
@@ -278,20 +401,6 @@ $('.hp-grader_input').on('focus', function () {
 });
 $('.hp-grader_input').on('blur', function () {
   swipers['hp-hero'][0].autoplay.start();
-});
-
-// V2
-$('.hp-grader_form2-input').on('focus', function () {
-  if (window.innerWidth < 480) {
-    $('.hp-grader_form2-wrap').addClass('cc-active');
-    toggleScroll(false);
-  }
-});
-$('.hp-grader_form2-close').on('click', function () {
-  if (window.innerWidth < 480) {
-    $('.hp-grader_form2-wrap').removeClass('cc-active');
-    toggleScroll(true);
-  }
 });
 
 // #endregion
@@ -752,3 +861,20 @@ $(document).ready(function () {
 });
 
 // #endregion
+
+$(document).ready(function () {
+  // Log to check if script is running
+  console.log('Script initialized');
+
+  // Then try the specific one
+  var $specificInput = $('input[placeholder="Find your restaurant name"]');
+
+  // Attach events to all input fields to be safe
+  $specificInput.on('focus click touchstart', function () {
+    console.log('Input focus/click/touch detected');
+
+    setTimeout(function () {
+      window.scrollTo(0, 0);
+    }, 500);
+  });
+});
