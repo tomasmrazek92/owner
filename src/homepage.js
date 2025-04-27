@@ -156,7 +156,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
       // Build the redirect URL
       let redirectUrl = `https://grader.owner.com/?placeid=${placeId}&${utmParams.join('&')}`;
 
-      window.open(redirectUrl, '_blank');
+      window.open(redirectUrl);
     }
   }
 
