@@ -72,10 +72,6 @@ createSwiper('.exp-tabs_slider-box', '.exp-tabs_slider', 'exp-tabs-content', {
         const firstSwiper = swipers['exp-tabs-menu'][firstSwiperKey];
         firstSwiper.slideTo(swiper.realIndex);
       }
-      updateLabels(swiper);
-    },
-    init: function (swiper) {
-      updateLabels(swiper);
     },
   },
   breakpoints: {
@@ -89,28 +85,6 @@ createSwiper('.exp-tabs_slider-box', '.exp-tabs_slider', 'exp-tabs-content', {
     },
   },
 });
-function updateLabels(swiper) {
-  // Labels
-  let currentIndex = swiper.activeIndex;
-  let { length } = swiper.slides;
-
-  let prevIndex = currentIndex - 1;
-  let nextIndex = currentIndex + 1;
-
-  if (prevIndex >= 0) {
-    let prev = swiper.slides.eq(prevIndex);
-    $('[prev-restaurant]').text($(prev).attr('data-label-next'));
-  } else {
-    $('[prev-restaurant]').text('');
-  }
-
-  if (nextIndex < length) {
-    let next = swiper.slides.eq(nextIndex);
-    $('[next-restaurant]').text($(next).attr('data-label-next'));
-  } else {
-    $('[next-restaurant]').text('');
-  }
-}
 
 // #endregion
 
@@ -144,17 +118,18 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     if (placeId) {
       // Get current URL parameters
       const currentParams = new URLSearchParams(window.location.search);
-      const utmParams = ['utm_source=homepage']; // Always start with homepage source
+      const allParams = ['utm_source=homepage']; // Always start with homepage source
 
-      // Look for UTM parameters and collect them (excluding utm_source)
+      // Collect all existing query parameters
       currentParams.forEach((value, key) => {
-        if (key.toLowerCase().startsWith('utm_') && key.toLowerCase() !== 'utm_source') {
-          utmParams.push(`${key}=${value}`);
+        // Skip utm_source as we're already setting it to homepage
+        if (key.toLowerCase() !== 'utm_source') {
+          allParams.push(`${key}=${value}`);
         }
       });
 
       // Build the redirect URL
-      let redirectUrl = `https://grader.owner.com/?placeid=${placeId}&${utmParams.join('&')}`;
+      let redirectUrl = `https://grader.owner.com/?placeid=${placeId}&${allParams.join('&')}`;
 
       window.open(redirectUrl);
     }
@@ -396,6 +371,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   $(document).on('click', function (event) {
     if (!$(event.target).closest(predictionsSelector).length && !$(event.target).is($input)) {
       $predictionsList.addClass('hidden');
+      $input.val('');
     }
   });
 
