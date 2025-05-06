@@ -118,14 +118,11 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     if (placeId) {
       // Get current URL parameters
       const currentParams = new URLSearchParams(window.location.search);
-      const allParams = ['utm_source=homepage']; // Always start with homepage source
+      const allParams = [];
 
       // Collect all existing query parameters
       currentParams.forEach((value, key) => {
-        // Skip utm_source as we're already setting it to homepage
-        if (key.toLowerCase() !== 'utm_source') {
-          allParams.push(`${key}=${value}`);
-        }
+        allParams.push(`${key}=${value}`);
       });
 
       // Build the redirect URL
