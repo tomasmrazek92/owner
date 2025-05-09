@@ -705,7 +705,7 @@ function initTextLoopAnimation(options) {
     strings: [
       'Scan your site and see what isn’t working',
       'Find out how to get discovered on Google',
-      'Calculate how much more you could earn',
+      'See how much sales you could get from keywords',
       'Compare yourself with your local competition',
     ],
     duration: 0.5, // Animation duration for fade in/out
