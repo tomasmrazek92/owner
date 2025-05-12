@@ -89,6 +89,7 @@ $('form[data-submit=prevent]').on('keydown', function (e) {
 
 $(document).ready(() => {
   // Scroll
+  const snackBar = $('.snack-bar');
   const navbar = $('.nav');
   const scrollHeight = $(navbar).height();
 
@@ -157,9 +158,11 @@ $(document).ready(() => {
       scrollPosition = $(window).scrollTop();
       $('html, body').scrollTop(0).addClass('overflow-hidden');
       $('.nav').addClass('open');
+      snackBar.hide();
     } else {
       $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
       $('.nav').removeClass('open');
+      snackBar.show();
     }
     menuOpen = !menuOpen;
   };
