@@ -11,27 +11,60 @@ if (window.location.pathname === '/careers') {
     .then((data) => {
       let roles = data.data;
       console.log(data.data);
-      // Els
-      var positionList = $('.careers-roles_list');
-      var positionItem = positionList.find('li').clone();
 
-      // Clear the list
-      positionList.empty();
+      var teamListElement = $('.careers-roles_team-list');
+      var teamTemplate = teamListElement.children('li').clone();
 
-      for (var x = 0; x < roles.length; x++) {
-        var currentItem = positionItem;
-        currentItem.find('a').attr('href', '/careers/role?=' + roles[x].id);
-        currentItem.find('[data-title]').text(roles[x].text);
-        currentItem.find('[data-category]').text(roles[x].categories.team);
-        currentItem.find('[data-location]').text(roles[x].categories.allLocations.join(', '));
-        positionList.append(currentItem.clone());
+      teamListElement.empty();
+
+      var groupedRoles = {};
+
+      for (var i = 0; i < roles.length; i++) {
+        var { team } = roles[i].categories;
+
+        if (!groupedRoles[team]) {
+          groupedRoles[team] = [];
+        }
+
+        groupedRoles[team].push(roles[i]);
       }
 
-      // Counter
-      $('[roles-counter]').text(roles.length);
+      var teams = Object.keys(groupedRoles).sort();
 
-      // Reveal the list
-      positionList.css('opacity', '1');
+      console.log(groupedRoles);
+
+      for (var t = 0; t < teams.length; t++) {
+        var team = teams[t];
+        var teamRoles = groupedRoles[team];
+
+        teamRoles.sort(function (a, b) {
+          return a.text.localeCompare(b.text);
+        });
+
+        var currentTeam = teamTemplate.clone();
+
+        currentTeam.find('[data-team-name]').text(team);
+
+        var rolesList = currentTeam.find('.careers-roles_list');
+        var roleTemplate = rolesList.find('li').clone();
+
+        rolesList.empty();
+
+        for (var r = 0; r < teamRoles.length; r++) {
+          var currentRole = roleTemplate.clone();
+          currentRole.find('a').attr('href', '/careers/role?=' + teamRoles[r].id);
+          currentRole.find('[data-title]').text(teamRoles[r].text);
+          currentRole.find('[data-category]').text(teamRoles[r].categories.team);
+          currentRole.find('[data-location]').text(teamRoles[r].categories.allLocations.join(', '));
+          rolesList.append(currentRole);
+        }
+
+        teamListElement.append(currentTeam);
+      }
+
+      $('[roles-counter]').text(roles.length);
+      teamListElement.css('opacity', '1');
+      $('.careers-roles_list').css('opacity', '1');
     })
     .catch((error) => console.error('Error fetching data:', error));
 }
