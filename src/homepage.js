@@ -118,10 +118,25 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
     if (placeId) {
       let redirectUrl = `https://grader.owner.com/?placeid=${placeId}`;
 
-      const utmParams = sessionStorage.getItem('utmWebParams');
+      let utmParams;
+      try {
+        utmParams = JSON.parse(sessionStorage.getItem('utmWebParams'));
+      } catch (e) {
+        utmParams = null;
+      }
 
-      if (utmParams) {
-        redirectUrl += `&${utmParams}`;
+      if (utmParams && typeof utmParams === 'object') {
+        const paramStrings = [];
+
+        for (const key in utmParams) {
+          if (utmParams.hasOwnProperty(key)) {
+            paramStrings.push(`${encodeURIComponent(key)}=${encodeURIComponent(utmParams[key])}`);
+          }
+        }
+
+        if (paramStrings.length > 0) {
+          redirectUrl += `&${paramStrings.join('&')}`;
+        }
       }
 
       window.open(redirectUrl);
