@@ -116,17 +116,13 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
 
   function redirectToGrader(placeId) {
     if (placeId) {
-      // Get current URL parameters
-      const currentParams = new URLSearchParams(window.location.search);
-      const allParams = [];
+      let redirectUrl = `https://grader.owner.com/?placeid=${placeId}`;
 
-      // Collect all existing query parameters
-      currentParams.forEach((value, key) => {
-        allParams.push(`${key}=${value}`);
-      });
+      const utmParams = sessionStorage.getItem('utmWebParams');
 
-      // Build the redirect URL
-      let redirectUrl = `https://grader.owner.com/?placeid=${placeId}&${allParams.join('&')}`;
+      if (utmParams) {
+        redirectUrl += `&${utmParams}`;
+      }
 
       window.open(redirectUrl);
     }
