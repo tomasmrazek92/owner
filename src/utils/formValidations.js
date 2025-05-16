@@ -69,6 +69,25 @@ function validateCheckbox(input) {
   return true;
 }
 
+// Validate Radio Buttons
+function validateRadio(input) {
+  const name = $(input).attr('name');
+  const radioGroup = $(`input[name="${name}"]`);
+  const isChecked = radioGroup.is(':checked');
+
+  if (!isChecked) {
+    // For radio buttons, we typically show the error on the container/parent
+    const radioContainer = $(radioGroup).closest('.radio-group');
+    radioContainer.addClass('is-invalid');
+    toggleValidationMsg($(radioGroup[0]), true, 'Please select an option.');
+    return false;
+  }
+  const radioContainer = $(radioGroup).closest('.radio-group');
+  radioContainer.removeClass('is-invalid');
+  toggleValidationMsg($(radioGroup[0]), false);
+  return true;
+}
+
 // Validate Other Inputs
 function validateOtherInputs(input) {
   toggleValidationMsg($(input), false);
@@ -96,6 +115,8 @@ export const validateInput = (element) => {
   if ($(input).prop('required')) {
     if ($(input).is('[type="checkbox"]')) {
       isValidAll = validateCheckbox(input);
+    } else if ($(input).is('[type="radio"]')) {
+      isValidAll = validateRadio(input);
     } else if ($(input).val()) {
       if ($(input).is('[type="email"]')) {
         isValidAll = validateEmail(input);

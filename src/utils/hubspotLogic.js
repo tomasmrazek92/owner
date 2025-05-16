@@ -1,7 +1,46 @@
+// --- inputMatting - [wfForm: hsForm]
+const inputMapping = {
+  name: ['company', '0-2/name'],
+  international_phone_number: ['phone', '0-2/phone'],
+  'restaurant-address': ['address', '0-2/address'],
+  locality: ['city', '0-2/city'],
+  administrative_area_level_1: ['state', '0-2/state'],
+  postal_code: ['zip', '0-2/zip'],
+  country: ['country', '0-2/country'],
+  'first-name': 'firstname',
+  'last-name': 'lastname',
+  cellphone: 'mobilephone',
+  email: 'email',
+  'person-type': 'lead_person_type',
+  website: 'website',
+  place_id: 'place_id',
+  url: 'place_cid',
+  place_types: ['place_types_contact', '0-2/place_types'],
+  rating: 'place_rating',
+  user_ratings_total: 'user_ratings_total',
+  'number-of-locations': 'of_locations_number',
+  hear: 'how_did_you_hear_about_us',
+  page_url: 'last_pdf_download',
+  page_lang: 'page_lang',
+  brizo_id: ['brizo_id', '0-2/brizo_id_account'],
+  base_enrich_date: ['auto_enrich_date', '0-2/auto_enrich_date_company'],
+  inbound_add_to_cadence: 'inbound_add_to_cadence',
+  execution_time_seconds: 'auto_enrich_time',
+  auto_dq_flag: 'auto_dq_static',
+  auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
+  gmv_pred: ['pred_gmv', '0-2/pred_gmv_company'],
+
+  // Refers
+  referrer_s_phone_number: 'referrer_s_phone_number',
+
+  // ...
+};
+
 // --- Fill HubSpot Forms
-export const fillHubSpot = (formElement, hsform, mapping) => {
+const fillHubSpot = (formElement, hsform) => {
   var $form = $(formElement);
   var hsform = $(hsform);
+  var mapping = inputMapping;
 
   // Collect data from the form
   Object.keys(mapping).forEach(function (sourceInputName) {
@@ -10,6 +49,8 @@ export const fillHubSpot = (formElement, hsform, mapping) => {
     var $sourceInput = $form.find(
       'input[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
     );
+
+    console.log($sourceInput);
     // Otherwise look for select
     if ($sourceInput.length === 0) {
       $sourceInput = $form.find(
@@ -52,7 +93,7 @@ export const fillHubSpot = (formElement, hsform, mapping) => {
 };
 
 // --- Mirror HubSpot Error Messages ---
-export const mirrorHS = (hsform) => {
+const mirrorHS = (hsform) => {
   let isError = false;
 
   // HS Phone
@@ -106,37 +147,24 @@ export function waitForFormReady() {
 }
 
 // Hahdle Errors and submit form
-export const handleHubspotForm = (form) => {
-  // Elems
-  const button = $('[data-form="submit-btn"]');
+export const handleHubspotForm = (formElement, hsform) => {
+  // Fill in the inputs
+  fillHubSpot(formElement, hsform);
 
-  // Validation
-  let isError;
+  // Wait for while and check if hsform has any validations and return promise
+  return new Promise((resolve) => {
+    // Validation
+    let isError;
 
-  // Button States
-  const disableButton = () => {
-    button.addClass('disabled');
-  };
-  const enableButton = () => {
-    button.removeClass('disabled');
-  };
-
-  toggleLoader(true);
-  disableButton();
-
-  // Fallback for Hubspot Validation to happen
-  setTimeout(() => {
-    // Run the Validation and stop the animation
-    isError = mirrorHS(form);
-    enableButton();
-
-    // Check condition and submit the form otherwise
-    if (!isError) {
-      form[0].submit();
-    } else {
+    // Fallback for Hubspot Validation to happen
+    setTimeout(() => {
+      // Run the Validation and stop the animation
+      isError = mirrorHS(hsform);
+      // Resolve the promise with the validation result
       toggleLoader(false);
-    }
-  }, 3000);
+      resolve(!isError);
+    }, 3000);
+  });
 };
 
 // Show loading state

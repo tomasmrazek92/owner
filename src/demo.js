@@ -1,9 +1,8 @@
 import { v4 as uuidv4 } from 'uuid';
 
 import { validateInput } from '$utils/formValidations';
-import { getInputElementValue, setInputElementValue } from '$utils/globals';
+import { getInputElementValue, locationType, setInputElementValue } from '$utils/globals';
 import {
-  fillHubSpot,
   handleHubspotForm,
   onFormReadyCallback,
   toggleLoader,
@@ -313,12 +312,12 @@ $(document).ready(() => {
   }
 
   // Validate Fields Internally
-  function internalValidation() {
+  function internalValidation(el) {
     // Global Validate checker
     let isValid = true;
 
     // Validate all inputs internally
-    wfForm.find(':input:visible, select').each(function () {
+    el.find(':input:visible, select').each(function () {
       let validate = validateInput($(this));
       isValid = isValid && validate;
     });
@@ -418,18 +417,37 @@ $(document).ready(() => {
     setInputElementValue('web_user_id', webUserId);
   }
 
-  // Run the Qualification Logic
-  async function processQualificationAndForm() {
-    // Validate Fields
-    let validation = internalValidation();
+  function disableButton(state) {
+    // Choose which button
+    let button;
+    if ($('[data-form="submit-btn"]').is(':visible')) {
+      button = $('[data-form="submit-btn"]');
+    } else {
+      button = $('[data-form="next-btn"]');
+    }
 
-    console.log(validation);
+    if (state) {
+      const originalText = button.text();
+      button.addClass('disabled');
+      button.attr('data-original-text', originalText);
+      button.children('div:first-child').text('Processing');
+    } else {
+      const originalText = button.attr('data-original-text');
+      button.removeClass('disabled');
+      button.children('div:first-child').text(originalText);
+    }
+  }
+
+  // Run the Qualification Logic
+  async function processQualification() {
+    disableButton(true);
+
+    // Validate Fields
+    let validation = internalValidation(wfForm);
 
     // Proceed only if validation pass
     if (validation) {
-      // Show Loader
       toggleLoader(true);
-
       try {
         // Wait for checkQualification to complete
         await checkQualification();
@@ -464,15 +482,25 @@ $(document).ready(() => {
 
       // Proceed -- DO NOT EDIT !!!!
       fillCustomFields();
-      fillHubSpot(wfForm, hsForm, inputMapping);
       logMixpanel('Form Button Clicked');
-      handleHubspotForm(hsForm);
+
+      disableButton(false);
+      let handler = await handleHubspotForm(wfForm, hsForm);
+      console.log(handler);
+      return handler;
     }
+
+    disableButton(false);
+    return false;
   }
 
   // Handle Submit
-  function fireSubmit() {
-    processQualificationAndForm();
+  async function fireSubmit() {
+    let qualification = await processQualification();
+
+    if (qualification) {
+      hsForm[0].submit();
+    }
   }
 
   const successSubmit = () => {
@@ -482,7 +510,7 @@ $(document).ready(() => {
       !window.location.href.includes('/resources/') &&
       !window.location.href.includes('/downloads/');
     const redirectUrl = wfForm.attr('data-custom-redirect');
-    const showSchedule = isSchedule && qualified && redirectUrl === '';
+    const showSchedule = isSchedule && qualified && !redirectUrl;
 
     // Toggle Loading
     toggleLoader(false);
@@ -523,7 +551,7 @@ $(document).ready(() => {
     }
 
     // Success State flow
-    if (redirectUrl !== '') {
+    if (redirectUrl) {
       success.show();
       window.location.href = redirectUrl;
     } else if (shouldRedirect && !showSchedule) {
@@ -581,61 +609,13 @@ $(document).ready(() => {
     hsForm = $(form);
   });
 
-  // 4. Mapp all input [wfForm: hsForm]
-  const inputMapping = {
-    name: ['company', '0-2/name'],
-    international_phone_number: ['phone', '0-2/phone'],
-    'restaurant-address': ['address', '0-2/address'],
-    locality: ['city', '0-2/city'],
-    administrative_area_level_1: ['state', '0-2/state'],
-    postal_code: ['zip', '0-2/zip'],
-    country: ['country', '0-2/country'],
-    'first-name': 'firstname',
-    'last-name': 'lastname',
-    cellphone: 'mobilephone',
-    email: 'email',
-    'person-type': 'lead_person_type',
-    website: 'website',
-    place_id: 'place_id',
-    url: 'place_cid',
-    place_types: ['place_types_contact', '0-2/place_types'],
-    rating: 'place_rating',
-    user_ratings_total: 'user_ratings_total',
-    'number-of-locations': 'of_locations_number',
-    hear: 'how_did_you_hear_about_us',
-    page_url: 'last_pdf_download',
-    page_lang: 'page_lang',
-    brizo_id: ['brizo_id', '0-2/brizo_id_account'],
-    base_enrich_date: ['auto_enrich_date', '0-2/auto_enrich_date_company'],
-    inbound_add_to_cadence: 'inbound_add_to_cadence',
-    execution_time_seconds: 'auto_enrich_time',
-    auto_dq_flag: 'auto_dq_static',
-    auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
-    gmv_pred: ['pred_gmv', '0-2/pred_gmv_company'],
-    // Refers
-    referrer_s_phone_number: 'referrer_s_phone_number',
-
-    // ...
-  };
-
-  // 5. Submit Action
+  // 4. Submit Action
   $('[data-form=submit-btn]').on('click', fireSubmit);
 
   // #endregion
 
   // #region Custom Actions
-
-  // Condition Logic for input
-  $('select[name="person-type"]').on('change', function () {
-    let val = $(this).val();
-
-    // Show Locations
-    if (val === "I'm a restaurant owner or manager") {
-      $('#locations-wrap').show();
-    } else {
-      $('#locations-wrap').hide();
-    }
-  });
+  locationType();
 
   // Format US Phone Number
   $('[data-cleave-phone]').each(function () {
@@ -648,4 +628,157 @@ $(document).ready(() => {
   });
 
   //#endregion
+
+  // #region multistep
+  function initMultistep() {
+    function initGoalFlows() {
+      // Use only click handler instead of both
+      $(document).on('click', '.goals-screen input[name="goals"]', function (event) {
+        // Get the selected value
+        const selectedValue = $(this).val();
+        console.log('Selected value:', selectedValue);
+
+        // Handle the heading update
+        var screen2_heading = $('#screen2_heading');
+        if (selectedValue == 'All of the above') {
+          screen2_heading.html(
+            'Good news! Restaurants see online sales grow by up to <span class="text-color-brand">$8k</span> per month and reduce costs by up to <span class="text-color-brand">$2k</span> per month with Owner'
+          );
+        } else if (selectedValue == 'Reduce my costs') {
+          screen2_heading.html(
+            'Good news! Restaurants see costs reduce by up to <span class="text-color-brand">$2k</span> per month with Owner'
+          );
+        } else {
+          screen2_heading.html(
+            'Good news! Restaurants see online sales grow by up to <span class="text-color-brand">$8k</span> per month with Owner'
+          );
+        }
+
+        // Navigate to next screen
+        if (nextBtn) {
+          nextBtn.click();
+        }
+      });
+
+      // Remove the change handler completely to avoid double-firing
+      $(document).off('change', '.goals-screen input[name="goals"]');
+    }
+    // Elements
+    const steps = document.querySelectorAll('[class*="step-"]');
+    const prevBtn = document.querySelector('[data-form="back-btn"]');
+    const nextBtn = document.querySelector('[data-form="next-btn"]');
+    const submitBtn = document.querySelector('[data-form="multi-submit-btn"]');
+
+    const progressbar = document.querySelector('.progressbar-left');
+    const form = document.getElementById('wf-form-email-form-v2');
+    const hearSelect = document.getElementById('Hear');
+
+    let currentStep = 0;
+
+    // Update step visibility
+    function updateSteps(direction = 'next') {
+      const wrapper = document.querySelector('.all-screens'); // Get the wrapper
+
+      // Set overflow hidden before starting animation
+      if (wrapper) wrapper.style.overflow = 'hidden';
+
+      steps.forEach((step, index) => {
+        step.classList.remove(
+          'step-hide',
+          'step-active',
+          'step-slide',
+          'step-enter-left',
+          'step-enter-right'
+        );
+
+        if (index === currentStep) {
+          step.classList.add('step-slide', 'step-active');
+          step.classList.add(direction === 'next' ? 'step-enter-right' : 'step-enter-left');
+
+          // Trigger reflow to start animation
+          void step.offsetWidth;
+
+          step.classList.remove('step-enter-left', 'step-enter-right');
+
+          // Wait for transition to complete before restoring overflow
+          setTimeout(() => {
+            if (wrapper) wrapper.style.overflow = 'visible';
+          }, 400); // Match your CSS transition duration
+        } else {
+          step.classList.add('step-hide');
+        }
+      });
+
+      const isFirstStep = currentStep === 0;
+      const isFinalStep = currentStep === steps.length - 1;
+
+      progressbar.style.display = isFirstStep ? 'none' : 'flex';
+      nextBtn.style.display = isFirstStep || isFinalStep ? 'none' : 'flex';
+      prevBtn.style.display = isFirstStep ? 'none' : 'flex';
+
+      updateProgress();
+    }
+
+    // Progress bar steps
+    function updateProgress() {
+      const progressItems = document.querySelectorAll('.progressbar__item-2');
+      progressItems.forEach((item, index) => {
+        // item.classList.toggle('active-bar', index === currentStep);
+        item.classList.toggle('active-bar', index <= currentStep);
+      });
+    }
+
+    // Event: next step
+    nextBtn?.addEventListener('click', async function () {
+      if (currentStep < steps.length - 1) {
+        const isValid = internalValidation($(steps[currentStep]));
+        if (isValid) {
+          currentStep++;
+          updateSteps('next');
+        }
+      }
+    });
+
+    submitBtn?.addEventListener('click', async function () {
+      let qualification = await processQualification();
+
+      for (let i = 0; i < steps.length; i++) {
+        const invalidFields = $(steps[i])
+          .find('[field-validation]')
+          .filter(function () {
+            return $(this).css('display') === 'block';
+          });
+
+        if (invalidFields.length > 0) {
+          currentStep = i;
+          updateSteps('back');
+          break;
+        }
+      }
+
+      if (qualification) {
+        hsForm[0].submit();
+      }
+    });
+
+    // Event: prev step
+    prevBtn?.addEventListener('click', function () {
+      if (currentStep > 0) {
+        currentStep--;
+        updateSteps('prev');
+      }
+    });
+
+    // Handle submission button manually
+
+    // Final form validation on actual submit
+
+    // Initialize
+    $(document).ready(function () {
+      initGoalFlows();
+      updateSteps();
+    });
+  }
+  initMultistep();
+  // #endregion
 });

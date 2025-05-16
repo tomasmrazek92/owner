@@ -12,6 +12,20 @@ export const getInputElementValue = (elementName) => {
   return $(`input[name="${elementName}"]`).val();
 };
 
+// Condition Logic for input
+export const locationType = () => {
+  $('select[name="person-type"]').on('change', function () {
+    let val = $(this).val();
+
+    // Show Locations
+    if (val === "I'm a restaurant owner or manager") {
+      $('#locations-wrap').show();
+    } else {
+      $('#locations-wrap').hide();
+    }
+  });
+};
+
 // --- VideoPlay
 export const videoPlay = () => {
   const videoBoxes = $('[vimeo-btn]');
