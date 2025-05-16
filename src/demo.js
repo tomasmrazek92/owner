@@ -486,7 +486,6 @@ $(document).ready(() => {
 
       disableButton(false);
       let handler = await handleHubspotForm(wfForm, hsForm);
-      console.log(handler);
       return handler;
     }
 
@@ -513,8 +512,8 @@ $(document).ready(() => {
     const showSchedule = isSchedule && qualified && !redirectUrl;
 
     // Toggle Loading
-    toggleLoader(false);
     wfForm.hide();
+    toggleLoader(false);
 
     // We proceed with the selfSchedule only if we are in the scheduleFlow + we don't have custom redirect set
     if (showSchedule) {
@@ -632,11 +631,20 @@ $(document).ready(() => {
   // #region multistep
   function initMultistep() {
     function initGoalFlows() {
-      // Use only click handler instead of both
+      // Remove is-active class from all labels on page load
+      $(document).ready(function () {
+        $('.goals-screen input[name="goals"]').closest('label').removeClass('is-active');
+      });
+
+      // Use click handler
       $(document).on('click', '.goals-screen input[name="goals"]', function (event) {
         // Get the selected value
         const selectedValue = $(this).val();
         console.log('Selected value:', selectedValue);
+
+        // Remove is-active class from all labels and add it to the clicked one
+        $('.goals-screen input[name="goals"]').closest('label').removeClass('is-active');
+        $(this).closest('label').addClass('is-active');
 
         // Handle the heading update
         var screen2_heading = $('#screen2_heading');
@@ -750,6 +758,7 @@ $(document).ready(() => {
           });
 
         if (invalidFields.length > 0) {
+          toggleLoader(false);
           currentStep = i;
           updateSteps('back');
           break;
@@ -758,6 +767,9 @@ $(document).ready(() => {
 
       if (qualification) {
         hsForm[0].submit();
+        $('.last-button').hide();
+      } else {
+        toggleLoader(false);
       }
     });
 
@@ -768,10 +780,6 @@ $(document).ready(() => {
         updateSteps('prev');
       }
     });
-
-    // Handle submission button manually
-
-    // Final form validation on actual submit
 
     // Initialize
     $(document).ready(function () {

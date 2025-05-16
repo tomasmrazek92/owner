@@ -161,7 +161,6 @@ export const handleHubspotForm = (formElement, hsform) => {
       // Run the Validation and stop the animation
       isError = mirrorHS(hsform);
       // Resolve the promise with the validation result
-      toggleLoader(false);
       resolve(!isError);
     }, 3000);
   });
