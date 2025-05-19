@@ -19,7 +19,7 @@ export const locationType = () => {
 
     // Show Locations
     if (val === "I'm a restaurant owner or manager") {
-      $('#locations-wrap').show();
+      $('#locations-wrap').css('display', 'flex');
     } else {
       $('#locations-wrap').hide();
     }
