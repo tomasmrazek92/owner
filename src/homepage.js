@@ -140,7 +140,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
       }
 
       // LP Custom tracking
-      redirectUrl += '&lp=graderhome2';
+      redirectUrl += '&lp=homepage';
 
       window.open(redirectUrl);
     }
