@@ -139,6 +139,9 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
         }
       }
 
+      // LP Custom tracking
+      redirectUrl += '&lp=graderhome2';
+
       window.open(redirectUrl);
     }
   }

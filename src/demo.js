@@ -648,11 +648,11 @@ $(document).ready(() => {
 
         // Handle the heading update
         var screen2_heading = $('#screen2_heading');
-        if (selectedValue == 'All of the above') {
+        if (selectedValue === 'All of the above') {
           screen2_heading.html(
             'Good news! Restaurants see online sales grow by up to <span class="text-color-brand">$8k</span> per month and reduce costs by up to <span class="text-color-brand">$2k</span> per month with Owner'
           );
-        } else if (selectedValue == 'Reduce my costs') {
+        } else if (selectedValue === 'Reduce my costs') {
           screen2_heading.html(
             'Good news! Restaurants see costs reduce by up to <span class="text-color-brand">$2k</span> per month with Owner'
           );
