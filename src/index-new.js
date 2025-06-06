@@ -150,17 +150,31 @@ $(document).ready(() => {
 
   // Opened Menu
   // --- Scroll Disabler
-  let scrollPosition;
   let menuOpen = false;
+  var scrollPosition = 0;
 
   const disableScroll = () => {
     if (!menuOpen) {
       scrollPosition = $(window).scrollTop();
-      $('html, body').scrollTop(0).addClass('overflow-hidden');
+      $('html').scrollTop(0).addClass('overflow-hidden');
+      scrollPosition = window.pageYOffset;
+      $('body').css({
+        overflow: 'hidden',
+        position: 'fixed',
+        top: `-${scrollPosition}px`,
+        width: '100%',
+      });
       $('.nav').addClass('open');
       snackBar.hide();
     } else {
       $('html, body').scrollTop(scrollPosition).removeClass('overflow-hidden');
+      $('body').css({
+        overflow: '',
+        position: '',
+        top: '',
+        width: '',
+      });
+      $(window).scrollTop(scrollPosition);
       $('.nav').removeClass('open');
       snackBar.show();
     }
