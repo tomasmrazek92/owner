@@ -685,9 +685,8 @@ $(document).ready(() => {
 
     // Update step visibility
     function updateSteps(direction = 'next') {
-      const wrapper = document.querySelector('.all-screens'); // Get the wrapper
+      const wrapper = document.querySelector('.all-screens');
 
-      // Set overflow hidden before starting animation
       if (wrapper) wrapper.style.overflow = 'hidden';
 
       steps.forEach((step, index) => {
@@ -703,15 +702,13 @@ $(document).ready(() => {
           step.classList.add('step-slide', 'step-active');
           step.classList.add(direction === 'next' ? 'step-enter-right' : 'step-enter-left');
 
-          // Trigger reflow to start animation
           void step.offsetWidth;
 
           step.classList.remove('step-enter-left', 'step-enter-right');
 
-          // Wait for transition to complete before restoring overflow
           setTimeout(() => {
             if (wrapper) wrapper.style.overflow = 'visible';
-          }, 400); // Match your CSS transition duration
+          }, 400);
         } else {
           step.classList.add('step-hide');
         }
@@ -723,6 +720,10 @@ $(document).ready(() => {
       progressbar.style.display = isFirstStep ? 'none' : 'flex';
       nextBtn.style.display = isFirstStep || isFinalStep ? 'none' : 'flex';
       prevBtn.style.display = isFirstStep ? 'none' : 'flex';
+
+      // Remove existing continue-* classes and add current step class
+      nextBtn.className = nextBtn.className.replace(/continue-\d+/g, '');
+      nextBtn.classList.add(`continue-${currentStep}`);
 
       updateProgress();
     }
