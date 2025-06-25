@@ -50,7 +50,6 @@ const fillHubSpot = (formElement, hsform) => {
       'input[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
     );
 
-    console.log($sourceInput);
     // Otherwise look for select
     if ($sourceInput.length === 0) {
       $sourceInput = $form.find(

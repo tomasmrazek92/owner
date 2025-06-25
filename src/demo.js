@@ -296,10 +296,12 @@ $(document).ready(() => {
     if (flag) {
       inputs.each(function () {
         const inputName = $(this).attr('name');
-        // Check if the input's name matches any key in the API data
         if (allowedKeys.includes(inputName) && apiData.hasOwnProperty(inputName)) {
           var value = apiData[inputName];
-          if (typeof value === 'number' || (!isNaN(value) && !isNaN(parseFloat(value)))) {
+
+          if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
+            $(this).val(value.split('T')[0]);
+          } else if (typeof value === 'number' || (!isNaN(value) && !isNaN(parseFloat(value)))) {
             $(this).val(Number(value).toFixed(2));
           } else {
             $(this).val(value);
@@ -499,6 +501,8 @@ $(document).ready(() => {
 
     if (qualification) {
       hsForm[0].submit();
+    } else {
+      toggleLoader(false);
     }
   }
 
@@ -671,11 +675,14 @@ $(document).ready(() => {
       // Remove the change handler completely to avoid double-firing
       $(document).off('change', '.goals-screen input[name="goals"]');
     }
+
     // Elements
     const steps = document.querySelectorAll('[class*="step-"]');
     const prevBtn = document.querySelector('[data-form="back-btn"]');
     const nextBtn = document.querySelector('[data-form="next-btn"]');
     const submitBtn = document.querySelector('[data-form="multi-submit-btn"]');
+
+    if (!steps.length) return;
 
     const progressbar = document.querySelector('.progressbar-left');
     const form = document.getElementById('wf-form-email-form-v2');
