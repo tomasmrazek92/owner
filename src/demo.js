@@ -279,8 +279,6 @@ $(document).ready(() => {
 
   // Fill data from API
   function fillFormWithMatchingData(apiData, flag) {
-    console.log(apiData);
-    console.log(flag);
     const inputs = $('[demo-form] input');
     const allowedKeys = [
       'brizo_id',

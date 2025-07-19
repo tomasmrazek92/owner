@@ -29,6 +29,7 @@ const inputMapping = {
   auto_dq_flag: 'auto_dq_static',
   auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
   gmv_pred: ['pred_gmv', '0-2/pred_gmv_company'],
+  sms_opt_in: 'sms_opt_in',
 
   // Refers
   referrer_s_phone_number: 'referrer_s_phone_number',
@@ -71,7 +72,11 @@ const fillHubSpot = (formElement, hsform) => {
 
       // Check if Checkbox
       if (targetInput.attr('type') === 'checkbox') {
-        if (String(inputValue).toLowerCase() === 'true') {
+        console.log(inputValue.toLowerCase());
+        if (
+          String(inputValue).toLowerCase() === 'true' ||
+          String(inputValue).toLowerCase() === 'on'
+        ) {
           targetInput.prop('checked', true);
         } else {
           targetInput.prop('checked', false);
