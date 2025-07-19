@@ -72,7 +72,6 @@ const fillHubSpot = (formElement, hsform) => {
 
       // Check if Checkbox
       if (targetInput.attr('type') === 'checkbox') {
-        console.log(inputValue.toLowerCase());
         if (
           String(inputValue).toLowerCase() === 'true' ||
           String(inputValue).toLowerCase() === 'on'
