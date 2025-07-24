@@ -139,8 +139,9 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
         }
       }
 
-      // LP Custom tracking
-      redirectUrl += '&lp=homepage';
+      if (!redirectUrl.includes('lp=') && window.location.pathname === '/') {
+        redirectUrl += '&lp=homepage';
+      }
 
       window.open(redirectUrl);
     }
