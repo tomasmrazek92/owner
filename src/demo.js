@@ -252,12 +252,10 @@ $(document).ready(() => {
           },
           error: function (xhr, status, error) {
             if (status === 'timeout') {
-              console.log('Error occurred:', error);
               setInputElementValue('execution_time_seconds', 15);
               setInputElementValue('gmv_pred', 0);
               resolve('');
             } else {
-              console.log('Error occurred:', error);
               resolve('');
             }
           },
@@ -268,7 +266,6 @@ $(document).ready(() => {
     // Usage
     return callApi(data)
       .then((response) => {
-        console.log(response);
         return response[0]; // Return the response directly
       })
       .catch((error) => {
@@ -327,7 +324,6 @@ $(document).ready(() => {
 
   // Fill Custom Fields for the insta flow
   function fillStaticAPIFields(type) {
-    console.log(type);
     setInputElementValue('base_enrich_date', new Date().toISOString().slice(0, 10));
     setInputElementValue('inbound_add_to_cadence', 'true');
     // Inputs for insta Disqualification
@@ -367,7 +363,6 @@ $(document).ready(() => {
       const utmParams = getParamsFromSession();
 
       if (!utmParams || Object.keys(utmParams).length === 0) {
-        console.log('No UTM parameters found in session storage');
         return;
       }
 
@@ -401,13 +396,11 @@ $(document).ready(() => {
         // Check if we have a regular input matching this param name
         if (regularInputs[paramName]) {
           regularInputs[paramName].val(paramValue);
-          console.log(`Set regular input ${paramName} = ${paramValue}`);
         }
 
         // Check if we have a prefixed input where the base name matches
         if (prefixedInputs[paramName]) {
           prefixedInputs[paramName].val(paramValue);
-          console.log(`Set prefixed input 0-2/${paramName} = ${paramValue}`);
         }
       });
     }
@@ -477,7 +470,6 @@ $(document).ready(() => {
         }
       } catch (error) {
         qualified = false;
-        console.log('Qualification check or call failed:', error);
       }
 
       // Proceed -- DO NOT EDIT !!!!
@@ -587,13 +579,17 @@ $(document).ready(() => {
     formId = '969fbdc3-b662-4428-a208-c78b8f20efa6';
   }
 
+  // Dev QA
+  if (currentUrl.indexOf('dev') !== -1) {
+    formId = '969fbdc3-b662-4428-a208-c78b8f20efa6';
+  }
+
   hbspt.forms.create({
     portalId: '6449395',
     formId: formId,
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
     onFormSubmit: function () {
-      console.log('Submit');
       logMixpanel('Form Submission Attempt');
     },
     onFormSubmitted: () => {
@@ -642,7 +638,6 @@ $(document).ready(() => {
       $(document).on('click', '.goals-screen input[name="goals"]', function (event) {
         // Get the selected value
         const selectedValue = $(this).val();
-        console.log('Selected value:', selectedValue);
 
         // Remove is-active class from all labels and add it to the clicked one
         $('.goals-screen input[name="goals"]').closest('label').removeClass('is-active');
