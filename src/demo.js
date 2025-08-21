@@ -568,6 +568,7 @@ $(document).ready(() => {
 
   // Default form ID
   let formId = 'f3807262-aed3-4b9c-93a3-247ad4c55e60';
+  let portalId = '6449395'
   const currentUrl = window.location.href;
 
   // Form for resources
@@ -583,10 +584,11 @@ $(document).ready(() => {
   // Dev QA
   if (currentUrl.indexOf('dev') !== -1) {
     formId = 'e13f4000-0da1-48db-bc88-752e55c82fe7';
+    portalId = '50356338'
   }
 
   hbspt.forms.create({
-    portalId: '6449395',
+    portalId: portalId,
     formId: formId,
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
