@@ -645,122 +645,103 @@ $(document).ready(() => {
     const form = $(formSelector);
     const questions = [];
     const responses = {};
+    const questionMap = {}; // track unique questions by label
 
     form.find('input, textarea, select').each(function () {
       const $field = $(this);
       const fieldType = $field.attr('type');
       const fieldTag = $field.prop('tagName').toLowerCase();
-      const fieldName = $field.attr('name');
       const fieldId = $field.attr('id');
       const label =
         $(`label[for="${fieldId}"]`).text().trim() ||
         $field.closest('.field, .hs-form-field').find('label').text().trim() ||
         $field.attr('placeholder') ||
-        fieldName;
+        $field.attr('name');
 
-      if (!fieldName || $field.attr('type') === 'hidden' || $field.attr('type') === 'submit') {
-        return;
-      }
+      if (!$field.attr('name') || fieldType === 'hidden' || fieldType === 'submit') return;
+      if (!label || !fieldId) return;
 
       let questionType = 'input';
       let options = [];
       let fieldValue = '';
 
-      // Capture current field value first
+      // Checkboxes
       if (fieldType === 'checkbox') {
-        if ($field.is(':checked')) {
-          fieldValue = $field.val();
-        } else {
-          return; // Skip unchecked checkboxes entirely
-        }
-        const checkboxValue = $field.val() || 'true';
-        const existingQuestion = questions.find((q) => q.name === label.replace(/\*$/, '').trim());
-        if (existingQuestion) {
-          existingQuestion.type = 'checkbox';
-          if (!existingQuestion.options.includes(checkboxValue)) {
-            existingQuestion.options.push(checkboxValue);
-          }
-          if (fieldValue) {
-            const existingValue = responses[existingQuestion.id];
-            if (existingValue) {
-              responses[existingQuestion.id] = Array.isArray(existingValue)
-                ? [...existingValue, fieldValue]
-                : [existingValue, fieldValue];
-            } else {
-              responses[existingQuestion.id] = fieldValue;
-            }
-          }
-          return;
-        }
+        if (!$field.is(':checked')) return;
+        fieldValue = ($field.val() || 'true').toString();
         questionType = 'checkbox';
-        options = [checkboxValue];
-      } else if (fieldType === 'radio') {
-        if ($field.is(':checked')) {
-          fieldValue = $field.val();
-        } else {
-          return; // Skip unselected radios entirely
-        }
-        const existingQuestion = questions.find((q) => q.name === label);
-        if (existingQuestion) {
-          if (!existingQuestion.options.includes($field.val())) {
-            existingQuestion.options.push($field.val());
-          }
-          if (fieldValue) {
-            responses[existingQuestion.id] = fieldValue;
-          }
-          return;
-        }
+        options = [fieldValue];
+      }
+      // Radios
+      else if (fieldType === 'radio') {
+        if (!$field.is(':checked')) return;
+        fieldValue = $field.val().toString();
         questionType = 'radio';
-        options = [$field.val()];
-      } else {
+        options = [fieldValue];
+      }
+      // Other inputs
+      else {
         fieldValue = $field.val();
-        if (!fieldValue || fieldValue.trim() === '') {
-          return; // Skip empty fields entirely
-        }
+        if (!fieldValue || fieldValue.trim() === '') return;
 
+        // Determine question type
         if (fieldType === 'email') {
           questionType = 'email';
-        } else if (fieldType === 'tel' || fieldType === 'phone') {
-          questionType = 'tel';
-        } else if (fieldTag === 'textarea') {
-          questionType = 'textarea';
-        } else if (fieldTag === 'select') {
+          // Force name to "email" for SDK
+          const question = { id: 'email', name: 'email', type: questionType };
+          if (options.length) question.options = options;
+
+          questions.push(question);
+          responses['email'] = fieldValue;
+          questionMap['email'] = question;
+          return; // skip rest, email already handled
+        } else if (fieldType === 'tel' || fieldType === 'phone') questionType = 'tel';
+        else if (fieldTag === 'textarea') questionType = 'textarea';
+        else if (fieldTag === 'select') {
           questionType = 'select';
           $field.find('option').each(function () {
             const optionValue = $(this).val();
-            if (optionValue && !$(this).is(':disabled')) {
-              options.push(optionValue);
-            }
+            if (optionValue && !$(this).is(':disabled')) options.push(optionValue.toString());
           });
         }
       }
 
-      const cleanLabel = label.replace(/\*$/, '').trim();
-
-      if (
-        cleanLabel &&
-        fieldId &&
-        fieldValue !== '' &&
-        fieldValue !== null &&
-        fieldValue !== undefined
-      ) {
-        const question = {
-          id: fieldId,
-          name: cleanLabel,
-          type: questionType,
-        };
-
-        if (options.length > 0) {
-          question.options = options;
+      // Merge duplicates
+      if (questionMap[label]) {
+        const existingQuestion = questionMap[label];
+        if (options.length) {
+          options.forEach((opt) => {
+            const strOpt = opt.toString();
+            if (!existingQuestion.options) existingQuestion.options = [];
+            if (!existingQuestion.options.includes(strOpt)) existingQuestion.options.push(strOpt);
+          });
         }
 
-        questions.push(question);
-        responses[fieldId] = fieldValue;
+        if (questionType === 'checkbox') {
+          const existingValue = responses[existingQuestion.id];
+          responses[existingQuestion.id] = existingValue
+            ? Array.isArray(existingValue)
+              ? [...existingValue, fieldValue]
+              : [existingValue, fieldValue]
+            : [fieldValue];
+        } else {
+          responses[existingQuestion.id] = fieldValue;
+        }
+        return;
       }
+
+      // Add new question
+      const question = { id: fieldId, name: label, type: questionType };
+      if (options.length) question.options = options;
+
+      questions.push(question);
+      responses[fieldId] = fieldValue;
+      questionMap[label] = question;
     });
 
-    return { questions: questions, responses: responses };
+    return { questions, responses };
   }
+
   function submitToDefaultSDK() {
     if (!capturedFormData) {
       console.error('No form data captured');
@@ -777,27 +758,25 @@ $(document).ready(() => {
       return;
     }
 
+    console.log(capturedFormData);
+
     // Use correct structure from docs
-    const minimalData = {
-      form_id: 864618,
+    const data = {
+      form_id: 593374,
       team_id: 514,
-      email: emailValue, // Required at root level according to docs
-      responses: {
-        email: emailValue,
-      },
-      questions: [
-        { id: 'email', name: 'Email', type: 'email', options: [] }, // Must include empty options array
-      ],
+      email: emailValue,
+      responses: capturedFormData.responses,
+      questions: capturedFormData.questions,
     };
 
     console.log('=== TESTING WITH YOUR CREDENTIALS ===');
-    console.log('Submission:', minimalData);
+    console.log('Submission:', data);
 
     const options = {
       autoSchedulerDisplay: false,
       onSuccess: (response) => {
         console.log('SUCCESS:', response);
-        window.defaultSchedulerUrl = response ? response.scheduler_url || response.url : null;
+        window.defaultSchedulerUrl = response ? response.body.stepDetails.url : null;
         defaultSdkComplete = true;
       },
       onError: (error) => {
@@ -807,7 +786,7 @@ $(document).ready(() => {
       },
     };
 
-    window.DefaultSDK.submit(minimalData, options);
+    window.DefaultSDK.submit(data, options);
   }
 
   function waitForDefaultSdk(timeout = 5000) {
