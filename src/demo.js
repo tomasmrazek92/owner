@@ -547,7 +547,6 @@ $(document).ready(() => {
       } else {
         // No scheduler URL from Default SDK, redirect to static page
         success.show();
-        window.location.href = 'https://www.owner.com/funnel-demo-requested';
       }
     }
 
