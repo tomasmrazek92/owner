@@ -528,7 +528,7 @@ $(document).ready(() => {
 
         function replaceMeetingEmbed() {
           $(settings.selector).html(
-            '<div class="meetings-iframe-container" style="width: 100%; height: 600px;"><iframe src="' +
+            '<div class="meetings-iframe-container" style="width: 100%; height: 900px;"><iframe src="' +
               settings.link +
               '" width="100%" height="100%" frameborder="0" allow="camera; microphone; autoplay; encrypted-media; fullscreen; display-capture"></iframe></div>'
           );
@@ -965,6 +965,3 @@ $(document).ready(() => {
   initMultistep();
   // #endregion
 });
-
-
-
