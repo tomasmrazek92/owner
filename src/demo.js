@@ -492,7 +492,13 @@ $(document).ready(() => {
 
     if (qualification) {
       capturedFormData = scrapeFormFields('#hbst-form');
+      submitToDefaultSDK();
+      await waitForDefaultSdk();
       hsForm[0].submit();
+
+      setTimeout(() => {
+        successSubmit();
+      }, 500);
     } else {
       toggleLoader(false);
     }
@@ -515,32 +521,19 @@ $(document).ready(() => {
     if (showSchedule) {
       // Check if we have a valid scheduler URL from Default SDK
       if (window.defaultSchedulerUrl) {
-        var meetingSettings = {
+        var settings = {
           link: window.defaultSchedulerUrl,
           selector: '.demo-form_success',
-          email: getInputElementValue('email'),
-          fName: getInputElementValue('first-name'),
-          lName: getInputElementValue('last-name'),
-          company: getInputElementValue('name'),
         };
 
-        function replaceMeetingEmbed(options) {
-          // Merge default settings with provided options
-          var settings = $.extend({}, meetingSettings, options);
-
-          // Replace content
+        function replaceMeetingEmbed() {
           $(settings.selector).html(
-            '<div class="meetings-iframe-container" data-src="' +
+            '<div class="meetings-iframe-container" style="width: 100%; height: 600px;"><iframe src="' +
               settings.link +
-              `?embed=true&firstName=${settings.fName}&lastName=${settings.lName}&email=${settings.email}&company=${settings.company}"></div>`
+              '" width="100%" height="100%" frameborder="0" allow="camera; microphone; autoplay; encrypted-media; fullscreen; display-capture"></iframe></div>'
           );
-
-          // Load HubSpot script
-          $.getScript('https://static.hsappstatic.net/MeetingsEmbed/ex/MeetingsEmbedCode.js').done(
-            function () {
-              success.show();
-            }
-          );
+          success.css('background-color', 'white');
+          success.show();
         }
 
         replaceMeetingEmbed();
@@ -604,14 +597,6 @@ $(document).ready(() => {
     onFormSubmitted: async () => {
       logMixpanel('Form Submission Sent');
       trackCapterra();
-
-      submitToDefaultSDK();
-
-      await waitForDefaultSdk();
-
-      setTimeout(() => {
-        successSubmit();
-      }, 200);
     },
   });
 
@@ -645,56 +630,54 @@ $(document).ready(() => {
     const form = $(formSelector);
     const questions = [];
     const responses = {};
-    const questionMap = {}; // track unique questions by label
+    const questionMap = {};
 
     form.find('input, textarea, select').each(function () {
       const $field = $(this);
       const fieldType = $field.attr('type');
       const fieldTag = $field.prop('tagName').toLowerCase();
-      const fieldId = $field.attr('id');
+      let fieldName = $field.attr('name');
+
+      if (fieldName && fieldName.includes('/')) {
+        fieldName = fieldName.split('/').pop();
+      }
+
+      const fieldId = fieldName;
       const label =
         $(`label[for="${fieldId}"]`).text().trim() ||
         $field.closest('.field, .hs-form-field').find('label').text().trim() ||
         $field.attr('placeholder') ||
-        $field.attr('name');
+        fieldName;
 
-      if (!$field.attr('name') || fieldType === 'hidden' || fieldType === 'submit') return;
+      if (!$field.attr('name') || fieldType === 'submit') return;
       if (!label || !fieldId) return;
 
       let questionType = 'input';
       let options = [];
-      let fieldValue = '';
+      let fieldValue = $field.val() || '';
 
-      // Checkboxes
       if (fieldType === 'checkbox') {
         if (!$field.is(':checked')) return;
         fieldValue = ($field.val() || 'true').toString();
         questionType = 'checkbox';
         options = [fieldValue];
-      }
-      // Radios
-      else if (fieldType === 'radio') {
+      } else if (fieldType === 'radio') {
         if (!$field.is(':checked')) return;
         fieldValue = $field.val().toString();
         questionType = 'radio';
         options = [fieldValue];
-      }
-      // Other inputs
-      else {
-        fieldValue = $field.val();
-        if (!fieldValue || fieldValue.trim() === '') return;
+      } else {
+        if (!fieldValue.trim() && fieldType !== 'hidden') return;
 
-        // Determine question type
         if (fieldType === 'email') {
           questionType = 'email';
-          // Force name to "email" for SDK
-          const question = { id: 'email', name: 'email', type: questionType };
+          const question = { id: 'email', name: 'email', label: 'email', type: questionType };
           if (options.length) question.options = options;
 
           questions.push(question);
           responses['email'] = fieldValue;
           questionMap['email'] = question;
-          return; // skip rest, email already handled
+          return;
         } else if (fieldType === 'tel' || fieldType === 'phone') questionType = 'tel';
         else if (fieldTag === 'textarea') questionType = 'textarea';
         else if (fieldTag === 'select') {
@@ -706,7 +689,6 @@ $(document).ready(() => {
         }
       }
 
-      // Merge duplicates
       if (questionMap[label]) {
         const existingQuestion = questionMap[label];
         if (options.length) {
@@ -730,8 +712,7 @@ $(document).ready(() => {
         return;
       }
 
-      // Add new question
-      const question = { id: fieldId, name: label, type: questionType };
+      const question = { id: fieldId, name: fieldName, label: label, type: questionType };
       if (options.length) question.options = options;
 
       questions.push(question);
@@ -744,7 +725,7 @@ $(document).ready(() => {
 
   function submitToDefaultSDK() {
     if (!capturedFormData) {
-      console.error('No form data captured');
+      console.error('No form data');
       return;
     }
 
@@ -752,7 +733,7 @@ $(document).ready(() => {
     const emailValue = emailField ? capturedFormData.responses[emailField] : null;
 
     if (!emailValue) {
-      console.error('No email found in form responses');
+      console.error('No email found');
       window.defaultSchedulerUrl = null;
       defaultSdkComplete = true;
       return;
@@ -769,7 +750,6 @@ $(document).ready(() => {
       questions: capturedFormData.questions,
     };
 
-    console.log('=== TESTING WITH YOUR CREDENTIALS ===');
     console.log('Submission:', data);
 
     const options = {
@@ -784,12 +764,18 @@ $(document).ready(() => {
         window.defaultSchedulerUrl = null;
         defaultSdkComplete = true;
       },
+      onSchedulerClosed: (data) => {
+        console.log('Scheduler closed, optional redirect: ' + data.redirect);
+      },
+      onMeetingBooked: (data) => {
+        console.log('Meeting booked successfully!', data.payload);
+      },
     };
 
     window.DefaultSDK.submit(data, options);
   }
 
-  function waitForDefaultSdk(timeout = 5000) {
+  function waitForDefaultSdk(timeout = 15000) {
     return new Promise((resolve) => {
       const startTime = Date.now();
 
@@ -948,8 +934,15 @@ $(document).ready(() => {
       }
 
       if (qualification) {
+        capturedFormData = scrapeFormFields('#hbst-form');
+        submitToDefaultSDK();
+        await waitForDefaultSdk();
         hsForm[0].submit();
         $('.last-button').hide();
+
+        setTimeout(() => {
+          successSubmit();
+        }, 500);
       } else {
         toggleLoader(false);
       }
@@ -972,3 +965,6 @@ $(document).ready(() => {
   initMultistep();
   // #endregion
 });
+
+
+
