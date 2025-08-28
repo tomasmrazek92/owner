@@ -527,9 +527,12 @@ $(document).ready(() => {
         };
 
         function replaceMeetingEmbed() {
+          var url = new URL(settings.link);
+          url.searchParams.set('page_embed', 'false');
+
           $(settings.selector).html(
             '<div class="meetings-iframe-container" style="width: 100%; height: 900px;"><iframe src="' +
-              settings.link +
+              url.toString() +
               '" width="100%" height="100%" frameborder="0" allow="camera; microphone; autoplay; encrypted-media; fullscreen; display-capture"></iframe></div>'
           );
           success.css('background-color', 'white');
@@ -765,7 +768,7 @@ $(document).ready(() => {
         defaultSdkComplete = true;
       },
       onSchedulerClosed: (data) => {
-        console.log('Scheduler closed, optional redirect: ' + data.redirect);
+        window.location.href = data.redirectUrl;
       },
       onMeetingBooked: (data) => {
         console.log('Meeting booked successfully!', data.payload);
