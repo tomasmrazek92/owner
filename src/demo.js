@@ -528,7 +528,6 @@ $(document).ready(() => {
 
         function replaceMeetingEmbed() {
           var url = new URL(settings.link);
-          url.searchParams.set('page_embed', 'false');
 
           $(settings.selector).html(
             '<div class="meetings-iframe-container" style="width: 100%; height: 900px;"><iframe src="' +
