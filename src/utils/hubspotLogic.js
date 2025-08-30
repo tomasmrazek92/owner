@@ -43,50 +43,41 @@ const fillHubSpot = (formElement, hsform) => {
   var hsform = $(hsform);
   var mapping = inputMapping;
 
-  // Collect data from the form
   Object.keys(mapping).forEach(function (sourceInputName) {
     var targetInputNames = mapping[sourceInputName];
-    // Look for Input
     var $sourceInput = $form.find(
       'input[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
     );
 
-    // Otherwise look for select
     if ($sourceInput.length === 0) {
       $sourceInput = $form.find(
         'select[name="' + sourceInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + '"]'
       );
     }
+
     var inputValue = $sourceInput.val();
 
-    // If targetInputNames is not an array, wrap it in an array
+    if ($sourceInput.attr('type') === 'checkbox') {
+      inputValue = $sourceInput.is(':checked') ? 'true' : 'false';
+    }
+
     if (!Array.isArray(targetInputNames)) {
       targetInputNames = [targetInputNames];
     }
 
-    // Set the values for the target form (hsform)
     targetInputNames.forEach(function (targetInputName) {
       var targetInput = hsform.find(
         'input[name=' + targetInputName.replace(/[-/\\^$*+?.()|[\]{}]/g, '\\$&') + ']'
       );
 
-      // Check if Checkbox
       if (targetInput.attr('type') === 'checkbox') {
-        if (
-          String(inputValue).toLowerCase() === 'true' ||
-          String(inputValue).toLowerCase() === 'on'
-        ) {
-          targetInput.prop('checked', true);
-        } else {
-          targetInput.prop('checked', false);
-        }
+        targetInput.prop('checked', String(inputValue).toLowerCase() === 'true');
       } else if (hasMatchingSibling(targetInput, '.hs-datepicker')) {
         targetInput.siblings('input[readonly]').val(inputValue).change();
       } else {
         targetInput.val(inputValue);
       }
 
-      // Perform focus and blur actions for required items
       if (['phone', 'mobilephone', 'email', 'pred_gmv'].includes(targetInputName)) {
         targetInput.get(0).focus({ preventScrol: true });
         targetInput.get(0).blur();

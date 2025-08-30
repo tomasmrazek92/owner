@@ -89,6 +89,23 @@ function initMixpanel() {
   }
 }
 
+// Load required scripts
+function loadScript(src, callback) {
+  const script = document.createElement('script');
+  script.src = src;
+  script.async = true;
+  document.head.appendChild(script);
+
+  script.onload = function () {
+    console.log('Script loaded successfully');
+    if (callback) callback();
+  };
+
+  script.onerror = function () {
+    console.error('Failed to load script');
+  };
+}
+
 // Initialize with your project token
 initMixpanel();
 mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
@@ -97,6 +114,9 @@ mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
 });
 
 $(document).ready(() => {
+  // Load scripts
+  loadScript('https://import-cdn.default.com/sdk.js');
+
   // Qualification Variable
   let qualified;
   let isSchedule = typeof scheduleFlow !== 'undefined' && scheduleFlow;
@@ -659,8 +679,7 @@ $(document).ready(() => {
       let fieldValue = $field.val() || '';
 
       if (fieldType === 'checkbox') {
-        if (!$field.is(':checked')) return;
-        fieldValue = ($field.val() || 'true').toString();
+        fieldValue = $field.is(':checked') ? 'true' : 'false';
         questionType = 'checkbox';
         options = [fieldValue];
       } else if (fieldType === 'radio') {
