@@ -795,7 +795,7 @@ $(document).ready(() => {
     window.DefaultSDK.submit(data, options);
   }
 
-  function waitForDefaultSdk(timeout = 15000) {
+  function waitForDefaultSdk(timeout = 60000) {
     return new Promise((resolve) => {
       const startTime = Date.now();
 
