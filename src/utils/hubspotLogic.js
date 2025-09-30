@@ -79,8 +79,11 @@ const fillHubSpot = (formElement, hsform) => {
       }
 
       if (['phone', 'mobilephone', 'email', 'pred_gmv'].includes(targetInputName)) {
-        targetInput.get(0).focus({ preventScrol: true });
-        targetInput.get(0).blur();
+        const element = targetInput.get(0);
+        if (element) {
+          element.focus({ preventScroll: true });
+          element.blur();
+        }
       }
     });
   });

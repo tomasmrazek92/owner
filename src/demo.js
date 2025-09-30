@@ -142,6 +142,23 @@ $(document).ready(() => {
   }
 
   // #region Functions
+
+  // Handle redirect
+  function handleRedirect(redirect) {
+    let placeId = getInputElementValue('place_id');
+    let resName = getInputElementValue('name');
+    let dqFlaq = getInputElementValue('auto_dq_flag');
+    let prosResult = dqFlaq === 'False' ? 'aql' : 'non-aql';
+
+    const defaultUrl = window.location.href.includes('/demo-grader')
+      ? '/demo-thank-you-grader'
+      : '/funnel-demo-requested';
+    console.log(defaultUrl);
+    window.location.href = `${
+      redirect || defaultUrl
+    }?placeid=${placeId}&resname=${resName}&prosresult=${prosResult}`;
+  }
+
   function logMixpanel(status) {
     // Device Data
     function getBrowserAndDeviceInfo() {
@@ -507,17 +524,21 @@ $(document).ready(() => {
 
   // Handle Submit
   async function fireSubmit() {
+    // Qualify the User
     let qualification = await processQualification();
 
     if (qualification) {
-      capturedFormData = scrapeFormFields('#hbst-form');
-      submitToDefaultSDK();
-      await waitForDefaultSdk();
-      hsForm[0].submit();
+      console.log('Form Attempt');
 
-      setTimeout(() => {
-        successSubmit();
-      }, 500);
+      // Scrape the data for the SDK
+      capturedFormData = scrapeFormFields('#hbst-form');
+      console.log(capturedFormData);
+
+      // Track the User
+      logMixpanel('Form Submission Attempt');
+
+      // Fire the submission
+      hsForm[0].submit();
     } else {
       toggleLoader(false);
     }
@@ -567,10 +588,10 @@ $(document).ready(() => {
     // Success State flow
     if (redirectUrl) {
       success.show();
-      window.location.href = redirectUrl;
+      handleRedirect(redirectUrl);
     } else if (shouldRedirect && !showSchedule) {
       success.show();
-      window.location.href = 'https://www.owner.com/funnel-demo-requested';
+      handleRedirect();
     } else if (!showSchedule) {
       success.show();
     }
@@ -607,15 +628,27 @@ $(document).ready(() => {
     portalId = '50356338';
   }
 
+  let capturedFormData = null;
+  let defaultSdkComplete = false;
+
   hbspt.forms.create({
     portalId: portalId,
     formId: formId,
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
-    onFormSubmit: function () {
-      logMixpanel('Form Submission Attempt');
-    },
     onFormSubmitted: async () => {
+      console.log('Submitted');
+
+      // Handle Default
+      submitToDefaultSDK();
+      await waitForDefaultSdk();
+
+      // Shows Result
+      setTimeout(() => {
+        successSubmit();
+      }, 500);
+
+      // Track result
       logMixpanel('Form Submission Sent');
       trackCapterra();
     },
@@ -643,9 +676,6 @@ $(document).ready(() => {
       delimiterLazyShow: true,
     });
   });
-
-  let capturedFormData = null;
-  let defaultSdkComplete = false;
 
   function scrapeFormFields(formSelector) {
     const form = $(formSelector);
@@ -785,7 +815,7 @@ $(document).ready(() => {
         defaultSdkComplete = true;
       },
       onSchedulerClosed: (data) => {
-        window.location.href = data.redirectUrl;
+        handleRedirect();
       },
       onMeetingBooked: (data) => {
         console.log('Meeting booked successfully!', data.payload);
