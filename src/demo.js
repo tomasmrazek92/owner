@@ -153,7 +153,6 @@ $(document).ready(() => {
     const defaultUrl = window.location.href.includes('/demo-grader')
       ? '/demo-thank-you-grader'
       : '/funnel-demo-requested';
-    console.log(defaultUrl);
     window.location.href = `${
       redirect || defaultUrl
     }?placeid=${placeId}&resname=${resName}&prosresult=${prosResult}`;
@@ -326,6 +325,7 @@ $(document).ready(() => {
 
     // Flag = We run this only when the apiCall runned
     if (flag) {
+      // Fill all the fiels coming from API
       inputs.each(function () {
         const inputName = $(this).attr('name');
         if (allowedKeys.includes(inputName) && apiData.hasOwnProperty(inputName)) {
@@ -340,6 +340,23 @@ $(document).ready(() => {
           }
         }
       });
+
+      // Also calculate the brand_emrr
+      function calculateEMRR() {
+        let predGMV = apiData.gmv_pred;
+        let locations = parseInt(getInputElementValue('number-of-locations'));
+
+        let EMRR;
+
+        if (locations === 1) {
+          EMRR = 499 + 0.05 * predGMV;
+        } else {
+          EMRR = 599 + 0.05 * predGMV * locations + 299 * (locations - 1);
+        }
+
+        setInputElementValue('brand_emrr', EMRR);
+      }
+      calculateEMRR();
     } else {
       fillStaticAPIFields(false);
     }
@@ -532,7 +549,6 @@ $(document).ready(() => {
 
       // Scrape the data for the SDK
       capturedFormData = scrapeFormFields('#hbst-form');
-      console.log(capturedFormData);
 
       // Track the User
       logMixpanel('Form Submission Attempt');
@@ -563,7 +579,7 @@ $(document).ready(() => {
       if (window.defaultSchedulerUrl) {
         var settings = {
           link: window.defaultSchedulerUrl,
-          selector: '.demo-form_success',
+          selector: '.demo-form_success-box',
         };
 
         function replaceMeetingEmbed() {
@@ -677,6 +693,38 @@ $(document).ready(() => {
     });
   });
 
+  // Format Location Numbers
+  function validateNumLocations(input) {
+    const $input = $(input);
+    let value = $input.val().replace(/\D/g, '');
+
+    if (value !== '') {
+      const numValue = parseInt(value);
+      if (numValue > 999) {
+        $input.val('999');
+      } else if (numValue < 1) {
+        $input.val('1');
+      } else {
+        $input.val(value);
+      }
+    }
+
+    return value !== '' && parseInt(value) >= 1 && parseInt(value) <= 999;
+  }
+
+  $('#number-of-locations').on('input', function () {
+    validateNumLocations(this);
+  });
+
+  $('#number-of-locations').on('blur', function () {
+    const $input = $(this);
+    if ($input.val() === '' || parseInt($input.val()) < 1) {
+      $input.val('1');
+    }
+  });
+  //#endregion
+
+  // #region defaulSDK
   function scrapeFormFields(formSelector) {
     const form = $(formSelector);
     const questions = [];
@@ -789,8 +837,6 @@ $(document).ready(() => {
       return;
     }
 
-    console.log(capturedFormData);
-
     // Use correct structure from docs
     const data = {
       form_id: 593374,
@@ -799,8 +845,6 @@ $(document).ready(() => {
       responses: capturedFormData.responses,
       questions: capturedFormData.questions,
     };
-
-    console.log('Submission:', data);
 
     const options = {
       autoSchedulerDisplay: false,
@@ -818,6 +862,22 @@ $(document).ready(() => {
         handleRedirect();
       },
       onMeetingBooked: (data) => {
+        // Redirect to thank you page with a timer
+        $('[data-form-success]').css('display', 'flex');
+        setTimeout(() => {
+          let countdown = 6;
+          const timer = $('[data-redirect-timer]');
+
+          const interval = setInterval(() => {
+            timer.text(countdown);
+            countdown--;
+
+            if (countdown < 0) {
+              clearInterval(interval);
+              handleRedirect();
+            }
+          }, 6000);
+        }, 0);
         console.log('Meeting booked successfully!', data.payload);
       },
     };
@@ -985,14 +1045,9 @@ $(document).ready(() => {
 
       if (qualification) {
         capturedFormData = scrapeFormFields('#hbst-form');
-        submitToDefaultSDK();
-        await waitForDefaultSdk();
+
         hsForm[0].submit();
         $('.last-button').hide();
-
-        setTimeout(() => {
-          successSubmit();
-        }, 500);
       } else {
         toggleLoader(false);
       }

@@ -29,6 +29,7 @@ const inputMapping = {
   auto_dq_flag: 'auto_dq_static',
   auto_dq_reason: ['auto_dq_reason', '0-2/auto_dq_reason_company'],
   gmv_pred: ['pred_gmv', '0-2/pred_gmv_company'],
+  brand_emrr: 'default_brand_emrr',
   sms_opt_in: 'sms_opt_in',
 
   // Refers
