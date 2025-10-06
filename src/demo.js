@@ -548,7 +548,8 @@ $(document).ready(() => {
       console.log('Form Attempt');
 
       // Scrape the data for the SDK
-      capturedFormData = scrapeFormFields('#hbst-form');
+      capturedFormData = scrapeFormFields();
+      console.log(capturedFormData);
 
       // Track the User
       logMixpanel('Form Submission Attempt');
@@ -725,8 +726,8 @@ $(document).ready(() => {
   //#endregion
 
   // #region defaulSDK
-  function scrapeFormFields(formSelector) {
-    const form = $(formSelector);
+  function scrapeFormFields() {
+    const form = $(hsForm);
     const questions = [];
     const responses = {};
     const questionMap = {};
@@ -865,18 +866,20 @@ $(document).ready(() => {
         // Redirect to thank you page with a timer
         $('[data-form-success]').css('display', 'flex');
         setTimeout(() => {
-          let countdown = 6;
+          let countdown = 5;
           const timer = $('[data-redirect-timer]');
 
-          const interval = setInterval(() => {
-            timer.text(countdown);
-            countdown--;
+          timer.text(countdown);
 
-            if (countdown < 0) {
+          const interval = setInterval(() => {
+            countdown--;
+            timer.text(countdown);
+
+            if (countdown === 0) {
               clearInterval(interval);
               handleRedirect();
             }
-          }, 6000);
+          }, 1000);
         }, 0);
         console.log('Meeting booked successfully!', data.payload);
       },
@@ -1044,7 +1047,7 @@ $(document).ready(() => {
       }
 
       if (qualification) {
-        capturedFormData = scrapeFormFields('#hbst-form');
+        capturedFormData = scrapeFormFields();
 
         hsForm[0].submit();
         $('.last-button').hide();
