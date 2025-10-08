@@ -136,6 +136,12 @@ $(document).ready(() => {
   // Also save to window level
   window.webUserId = webUserId;
 
+  // Saves to dataLayer for GTM
+  window.dataLayer = window.dataLayer || [];
+  window.dataLayer.push({
+    webUserId: webUserId,
+  });
+
   // Identify the user first for the mixPanel
   if (typeof webUserId !== 'undefined' && webUserId) {
     mixpanel.identify(webUserId);
