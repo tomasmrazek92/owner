@@ -11,6 +11,94 @@ import {
 import { getItem, setItem } from '$utils/localStorage';
 import { getParamsFromSession } from '$utils/utms';
 
+const timer = (() => {
+  const logs = [];
+  let lastTime = 0;
+  let startTime = 0;
+  let globalIndex = 0;
+  let isPaused = true;
+  let totalPausedTime = 0;
+  let pauseStartTime = 0;
+
+  return {
+    log: (label, data) => {
+      const now = performance.now();
+
+      if (!startTime) {
+        startTime = now;
+        lastTime = now;
+        globalIndex = 1;
+        logs.push({ label, step: 0, total: 0, index: globalIndex, data });
+
+        // console.log(`[Event #${globalIndex}]: ${label}: 0.00ms (active time: 0.00ms)`);
+        if (data && Object.keys(data).length > 0) {
+          // console.log('  Data:', data);
+        }
+        return;
+      }
+
+      globalIndex++;
+
+      // Calculate actual time excluding paused periods
+      let actualTotalTime = now - startTime - totalPausedTime;
+      if (isPaused && pauseStartTime) {
+        actualTotalTime -= now - pauseStartTime;
+      }
+
+      const stepTime = now - lastTime;
+
+      logs.push({ label, step: stepTime, total: actualTotalTime, index: globalIndex, data });
+      lastTime = now;
+
+      /*
+      console.log(
+        `[Event #${globalIndex}]: ${label}: ${stepTime.toFixed(
+          2
+        )}ms (active time: ${actualTotalTime.toFixed(2)}ms)`
+      );
+
+      if (data && Object.keys(data).length > 0) {
+        console.log('  Data:', data);
+      }
+      */
+    },
+
+    pause: () => {
+      if (!isPaused) {
+        isPaused = true;
+        pauseStartTime = performance.now();
+        // console.log('[Timer]: Paused');
+      }
+    },
+
+    resume: () => {
+      if (isPaused && pauseStartTime) {
+        totalPausedTime += performance.now() - pauseStartTime;
+        isPaused = false;
+        pauseStartTime = 0;
+        // console.log('[Timer]: Resumed');
+      }
+    },
+
+    dump: () => {
+      console.table(logs);
+      return logs;
+    },
+
+    reset: () => {
+      logs.length = 0;
+      lastTime = 0;
+      startTime = 0;
+      globalIndex = 0;
+      isPaused = true;
+      totalPausedTime = 0;
+      pauseStartTime = 0;
+    },
+
+    getLogs: () => logs,
+  };
+})();
+
 function initMixpanel() {
   if (!window.mixpanel || !window.mixpanel.__SV) {
     var mixpanel = (window.mixpanel = window.mixpanel || []);
@@ -107,6 +195,7 @@ function loadScript(src, callback) {
 
 // Initialize with your project token
 initMixpanel();
+
 mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
   record_sessions_percent: 100,
   record_mask_text_selector: '',
@@ -115,6 +204,8 @@ mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
 $(document).ready(() => {
   // Load scripts
   loadScript('https://import-cdn.default.com/sdk.js');
+
+  let isDev = window.location.href.indexOf('dev') !== -1;
 
   // Qualification Variable
   let qualified;
@@ -145,12 +236,22 @@ $(document).ready(() => {
   // Identify the user first for the mixPanel
   if (typeof webUserId !== 'undefined' && webUserId) {
     mixpanel.identify(webUserId);
+
+    // Track pageview
+    mixpanel.track_pageview({
+      page: window.location.pathname,
+      url: window.location.href,
+      referrer: document.referrer,
+      title: document.title,
+    });
   }
 
   // #region Functions
 
   // Handle redirect
   function handleRedirect(redirect) {
+    if (isDev) return;
+
     let placeId = getInputElementValue('place_id');
     let resName = getInputElementValue('name');
     let dqFlaq = getInputElementValue('auto_dq_flag');
@@ -159,13 +260,90 @@ $(document).ready(() => {
     const defaultUrl = window.location.href.includes('/demo-grader')
       ? '/demo-thank-you-grader'
       : '/funnel-demo-requested';
-    window.location.href = `${
+
+    const finalRedirect = `${
       redirect || defaultUrl
     }?placeid=${placeId}&resname=${resName}&prosresult=${prosResult}`;
+
+    // Track
+    logMixpanel('Form - Success - Redirect', { redirectUrl: finalRedirect });
+
+    window.location.href = finalRedirect;
   }
 
-  function logMixpanel(status) {
-    // Device Data
+  const processMap = new Map();
+
+  function logMixpanel(status, additionalData, options) {
+    options = options || {};
+    additionalData = additionalData || {};
+
+    const shouldDumpTimer = options.dumpTimer || false;
+    const includeConsoleLog = options.consoleLog !== false;
+    const skipFormData = options.skipFormData || false;
+
+    // Process detection based on status text
+    const isProcessStart = status.toLowerCase().includes('start');
+    const isProcessEnd = status.toLowerCase().includes('end');
+
+    // Control timer based on process state
+    if (isProcessStart) {
+      const processName = options.processName || status.split(' - ')[0];
+      const now = performance.now();
+
+      if (!processMap.has(processName)) {
+        processMap.set(processName, {
+          startTime: now,
+          totalPausedTime: 0,
+          pauseStartTime: 0,
+          isPaused: false,
+        });
+      } else {
+        const process = processMap.get(processName);
+        if (process.isPaused) {
+          process.totalPausedTime += now - process.pauseStartTime;
+          process.pauseStartTime = 0;
+          process.isPaused = false;
+        }
+      }
+
+      timer.resume();
+    }
+
+    let processCompleteLog = null; // temporary holder outside
+
+    if (isProcessEnd) {
+      const processName = options.processName || status.split(' - ')[0];
+      const now = performance.now();
+      const process = processMap.get(processName);
+
+      if (process) {
+        if (process.isPaused && process.pauseStartTime) {
+          process.totalPausedTime += now - process.pauseStartTime;
+        }
+
+        const totalActiveTime = now - process.startTime - process.totalPausedTime;
+
+        // save it to log later (after timer.log)
+        processCompleteLog = `[Process Complete]: "${processName}" took ${totalActiveTime.toFixed(
+          2
+        )}ms (active only)`;
+
+        processMap.delete(processName);
+      } else {
+        processCompleteLog = `[Process Warning]: End called for unknown process "${processName}"`;
+      }
+
+      if (processMap.size === 0) timer.pause();
+    }
+
+    if (includeConsoleLog) {
+      timer.log(status, additionalData);
+    }
+
+    if (processCompleteLog) {
+      // console.log(processCompleteLog);
+    }
+
     function getBrowserAndDeviceInfo() {
       const { userAgent } = navigator;
       const browser = navigator.appName;
@@ -179,43 +357,86 @@ $(document).ready(() => {
         language,
       };
     }
+
     const userInfo = getBrowserAndDeviceInfo();
-
-    const firstName = wfForm.find($('input[name=first-name]')).val();
-    const lastName = wfForm.find($('input[name=last-name]')).val();
-    const restaurantName = wfForm.find($('input[name=name]')).val();
-    const phone = wfForm.find($('input[name=cellphone]')).val();
-    const email = wfForm.find($('input[name=email]')).val();
-
-    const eventVars = {
-      displayName: firstName + ' ' + lastName,
-      restaurantName: restaurantName,
-      phone: phone,
-      email: email,
-      firstName: firstName,
-      lastName: lastName,
+    let eventVars = {
       ...userInfo,
+      ...additionalData,
     };
 
-    // Check if Mixpanel is available
-    if (typeof mixpanel !== 'undefined' && mixpanel) {
-      // Identify the user
-      mixpanel.identify(webUserId);
+    if (!skipFormData && typeof wfForm !== 'undefined') {
+      const firstName = wfForm.find($('input[name=first-name]')).val();
+      const lastName = wfForm.find($('input[name=last-name]')).val();
+      const restaurantName = wfForm.find($('input[name=name]')).val();
+      const phone = wfForm.find($('input[name=cellphone]')).val();
+      const email = wfForm.find($('input[name=email]')).val();
 
-      // Set user properties
-      mixpanel.people.set({
-        $first_name: firstName,
-        $last_name: lastName,
-        $email: email,
-        $phone: phone,
+      eventVars = {
+        ...eventVars,
+        displayName: firstName + ' ' + lastName,
         restaurantName: restaurantName,
-        ...userInfo,
-      });
+        phone: phone,
+        email: email,
+        firstName: firstName,
+        lastName: lastName,
+      };
+    }
 
-      // Track the event
+    const timerLogs = timer.getLogs();
+    if (timerLogs.length > 0) {
+      const lastLog = timerLogs[timerLogs.length - 1];
+      eventVars.timing = {
+        lastStepTime: lastLog.step,
+        activeTime: lastLog.total, // This is now only active time, not total page time
+        eventIndex: lastLog.index,
+        ...(processMap.size > 0 &&
+          (() => {
+            const [processName, process] = processMap.entries().next().value;
+            return {
+              processTime: performance.now() - process.startTime - process.totalPausedTime,
+              processName,
+            };
+          })()),
+      };
+
+      if (shouldDumpTimer) {
+        eventVars.performanceBreakdown = timerLogs;
+      }
+    }
+
+    if (typeof mixpanel !== 'undefined' && mixpanel) {
+      if (typeof webUserId !== 'undefined' && webUserId) {
+        mixpanel.identify(webUserId);
+      }
+
+      if (!skipFormData && typeof wfForm !== 'undefined') {
+        const firstName = eventVars.firstName;
+        const lastName = eventVars.lastName;
+        const email = eventVars.email;
+        const phone = eventVars.phone;
+        const restaurantName = eventVars.restaurantName;
+
+        if (email || phone) {
+          mixpanel.people.set({
+            $first_name: firstName,
+            $last_name: lastName,
+            $email: email,
+            $phone: phone,
+            restaurantName: restaurantName,
+            ...userInfo,
+          });
+        }
+      }
+
       mixpanel.track(status, eventVars);
     }
+
+    if (shouldDumpTimer) {
+      timer.dump();
+      timer.reset();
+    }
   }
+
   function trackCapterra() {
     var capterra_vkey = 'db833abde57f505b06b0e4b2bfe5e24f',
       capterra_vid = '2226621',
@@ -229,11 +450,20 @@ $(document).ready(() => {
   const getRestaurant = () => {
     let restaurant = getItem('restaurant');
 
+    // Track
+    logMixpanel('Form Init - GetRestaurant', { restaurant: restaurant });
+
     return restaurant;
   };
 
   // Qualification Flow Divider
   function checkQualification() {
+    // Track
+    logMixpanel('Form Qualification - Start');
+
+    let isOwner;
+    let isUS;
+
     return new Promise((resolve, reject) => {
       try {
         if (isSchedule) {
@@ -243,24 +473,42 @@ $(document).ready(() => {
           qualified = undefined;
 
           // Conditions
-          let isOwner =
-            $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
-          let isUS = restaurant.address_components.some(
-            (component) => component.short_name === 'US'
-          );
+          isOwner = $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
+          isUS = restaurant.address_components.some((component) => component.short_name === 'US');
 
           // Instantly follow to success link - Unqualified
           if (!isOwner || !isUS) {
-            logMixpanel('Submission Disqualified');
             qualified = false;
           }
         } else {
+          // Track
+          logMixpanel('Form Qualification - End', {
+            status: 'No Schedule Flow',
+          });
+
           // temp for static purpose
           qualified = false;
         }
 
+        // Track
+        logMixpanel('Form Qualification - End', {
+          status:
+            qualified === undefined || qualified === true
+              ? 'Success - Qualified for Enrichment'
+              : 'Submission InstaDisqualified',
+          isOwner: isOwner,
+          isUS: isUS,
+        });
+
         resolve(); // Resolve the promise after evaluation
       } catch (error) {
+        // Track
+        logMixpanel('Form Qualification - End', {
+          status: 'Flow Error',
+          errorMessage: error.message,
+          errorType: error.name,
+        });
+
         reject(error); // Reject the promise if an error occurs
       }
     });
@@ -277,43 +525,52 @@ $(document).ready(() => {
       token: 'AJXuyxPXgGF68NMv',
       sfdc_id: 'None',
     };
-    let response;
 
     function callApi(data) {
       return new Promise((resolve, reject) => {
+        // Track
+        logMixpanel('Enrichment API - Start');
+
         $.ajax({
           url: 'https://owner-ops.net/business-info/',
           type: 'POST',
           contentType: 'application/json',
           dataType: 'json',
           data: JSON.stringify(data),
-          timeout: 15000,
+          timeout: 40000,
           success: function (response) {
-            console.log(response);
+            // Track
+            logMixpanel('Enrichment API - End', {
+              status: 'Completed',
+              response: response,
+            });
             resolve(response);
           },
           error: function (xhr, status, error) {
+            // Track
+            logMixpanel('Enrichment API - End', {
+              error: error,
+              status: xhr.status,
+              response: xhr.responseJSON || xhr.responseText,
+            });
+
             if (status === 'timeout') {
-              setInputElementValue('execution_time_seconds', 15);
+              setInputElementValue('execution_time_seconds', 40);
               setInputElementValue('gmv_pred', 0);
-              resolve('');
-            } else {
-              resolve('');
             }
+
+            resolve(null);
           },
         });
       });
     }
 
-    // Usage
-    return callApi(data)
-      .then((response) => {
-        return response[0]; // Return the response directly
-      })
-      .catch((error) => {
-        console.error('Error:', error); // Log or handle error as needed
-        return false; // Return false on error
-      });
+    return callApi(data).then((response) => {
+      if (response && response[0]) {
+        return response[0];
+      }
+      return false; // Return false if no valid response
+    });
   }
 
   // Fill data from API
@@ -370,6 +627,9 @@ $(document).ready(() => {
 
   // Validate Fields Internally
   function internalValidation(el) {
+    // Track
+    logMixpanel('Form Internal Validation - Start');
+
     // Global Validate checker
     let isValid = true;
 
@@ -378,6 +638,9 @@ $(document).ready(() => {
       let validate = validateInput($(this));
       isValid = isValid && validate;
     });
+
+    // Track
+    logMixpanel('Form Internal Validation - End', { status: isValid });
 
     return isValid;
   }
@@ -391,7 +654,7 @@ $(document).ready(() => {
       setInputElementValue('execution_time_seconds', 0);
       setInputElementValue('auto_dq_flags', 'true');
     }
-    // Inputs for insta Qualifiation
+    // Inputs for insta Qualifiation - Currently NOT USED in the flow
     if (type === true) {
       setInputElementValue('execution_time_seconds', 0);
       setInputElementValue('auto_dq_reason', 'none');
@@ -493,6 +756,7 @@ $(document).ready(() => {
 
   // Run the Qualification Logic
   async function processQualification() {
+    // Init
     disableButton(true);
 
     // Validate Fields
@@ -534,10 +798,12 @@ $(document).ready(() => {
 
       // Proceed -- DO NOT EDIT !!!!
       fillCustomFields();
-      logMixpanel('Form Button Clicked');
-
       disableButton(false);
+
+      logMixpanel('Form Mirror - Hubspot - Start');
       let handler = await handleHubspotForm(wfForm, hsForm);
+      logMixpanel('Form Mirror - Hubspot - End', { status: handler });
+
       return handler;
     }
 
@@ -547,22 +813,28 @@ $(document).ready(() => {
 
   // Handle Submit
   async function fireSubmit() {
+    // Reset timer
+    timer.reset();
+
+    // Track
+    logMixpanel('Submit Attempt - Start');
+
     // Qualify the User
     let qualification = await processQualification();
 
     if (qualification) {
-      console.log('Form Attempt');
-
-      // Scrape the data for the SDK
+      // Scrape the data for the SDK\
       capturedFormData = scrapeFormFields();
-      console.log(capturedFormData);
 
-      // Track the User
-      logMixpanel('Form Submission Attempt');
+      // Track
+      logMixpanel('Submit Attempt - End', { status: 'success' });
+      logMixpanel('HS Form - Submission - Start');
 
       // Fire the submission
       hsForm[0].submit();
     } else {
+      // Track
+      logMixpanel('Submit Attempt - End', { status: 'validation failed' });
       toggleLoader(false);
     }
   }
@@ -601,12 +873,23 @@ $(document).ready(() => {
           success.show();
         }
 
+        logMixpanel('Default Scheduler - Open');
+
         replaceMeetingEmbed();
       } else {
         // No scheduler URL from Default SDK, redirect to static page
         success.show();
       }
     }
+
+    // Track
+    logMixpanel(
+      'Form - Success Submission',
+      {},
+      {
+        dumpTimer: true,
+      }
+    );
 
     // Success State flow
     if (redirectUrl) {
@@ -646,7 +929,7 @@ $(document).ready(() => {
   }
 
   // Dev QA
-  if (currentUrl.indexOf('dev') !== -1) {
+  if (isDev) {
     formId = 'e13f4000-0da1-48db-bc88-752e55c82fe7';
     portalId = '50356338';
   }
@@ -659,8 +942,9 @@ $(document).ready(() => {
     formId: formId,
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
-    onFormSubmitted: async () => {
-      console.log('Submitted');
+    onFormSubmitted: async (data) => {
+      // Track
+      logMixpanel('HS Form - Submisison - End', { status: 'success' });
 
       // Handle Default
       submitToDefaultSDK();
@@ -671,14 +955,15 @@ $(document).ready(() => {
         successSubmit();
       }, 500);
 
-      // Track result
-      logMixpanel('Form Submission Sent');
       trackCapterra();
     },
   });
 
   // 3. Wait for hsform to be ready so we can refference it
   waitForFormReady().then(function (form) {
+    // Track
+    logMixpanel('HSform - Ready');
+
     hsForm = $(form);
   });
 
@@ -733,6 +1018,9 @@ $(document).ready(() => {
 
   // #region defaulSDK
   function scrapeFormFields() {
+    // Track
+    logMixpanel('Default Scrapper - Start');
+
     const form = $(hsForm);
     const questions = [];
     const responses = {};
@@ -825,12 +1113,20 @@ $(document).ready(() => {
       questionMap[label] = question;
     });
 
+    // Track
+    logMixpanel('Default Scrapper - End', { questions, responses });
     return { questions, responses };
   }
 
   function submitToDefaultSDK() {
+    // Track
+    logMixpanel('DefaultSDK - Submission Attempt - Start');
+
     if (!capturedFormData) {
-      console.error('No form data');
+      // Track
+      logMixpanel('DefaultSDK - Submission Attempt - End', {
+        status: 'No form data',
+      });
       return;
     }
 
@@ -838,7 +1134,11 @@ $(document).ready(() => {
     const emailValue = emailField ? capturedFormData.responses[emailField] : null;
 
     if (!emailValue) {
-      console.error('No email found');
+      // Track
+      logMixpanel('DefaultSDK - Submission Attempt - End', {
+        status: 'No email found',
+      });
+
       window.defaultSchedulerUrl = null;
       defaultSdkComplete = true;
       return;
@@ -856,16 +1156,27 @@ $(document).ready(() => {
     const options = {
       autoSchedulerDisplay: false,
       onSuccess: (response) => {
-        console.log('SUCCESS:', response);
+        // Track
+        logMixpanel('DefaultSDK - Submission Attempt - End', {
+          status: 'Success',
+          response: response,
+        });
+
         window.defaultSchedulerUrl = response ? response.body.stepDetails.url : null;
         defaultSdkComplete = true;
       },
       onError: (error) => {
-        console.error('ERROR:', error);
+        // Track
+        logMixpanel('DefaultSDK - Submission Attempt - End', {
+          status: error,
+        });
+
         window.defaultSchedulerUrl = null;
         defaultSdkComplete = true;
       },
       onSchedulerClosed: (data) => {
+        // Track
+        logMixpanel('Default Scheduler - Closed');
         handleRedirect();
       },
       onMeetingBooked: (data) => {
@@ -887,7 +1198,9 @@ $(document).ready(() => {
             }
           }, 1000);
         }, 0);
-        console.log('Meeting booked successfully!', data.payload);
+
+        // Track
+        logMixpanel('Default Scheduler - Meeting booked!', data);
       },
     };
 

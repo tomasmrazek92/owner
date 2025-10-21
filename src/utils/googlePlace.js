@@ -16,10 +16,10 @@ const setAddressComponents = (googlePlace, componentForm) => {
   if (googlePlace.address_components) {
     googlePlace.address_components.forEach((component) => {
       const addressType = component.types[0];
-      const type = componentForm.address_components[addressType];
 
-      if (type) {
-        const val = component[type];
+      if (componentForm.address_components[addressType]) {
+        const val = component.long_name || component.short_name || '';
+
         if (addressType === 'route') route = val;
         else if (addressType === 'street_number') streetNumber = val;
         else setInputElementValue(addressType, val);
@@ -55,12 +55,12 @@ const setGooglePlaceDataToForm = (googlePlace) => {
     rating: '',
     user_ratings_total: '',
     address_components: {
-      street_number: 'short_name',
-      route: 'long_name',
-      locality: 'long_name',
-      administrative_area_level_1: 'short_name',
-      country: 'short_name',
-      postal_code: 'short_name',
+      street_number: true,
+      route: true,
+      locality: true,
+      administrative_area_level_1: true,
+      country: true,
+      postal_code: true,
     },
   };
 
@@ -85,7 +85,9 @@ const initGooglePlaceAutocomplete = () => {
         ?.map((t) => t.replace(/'/g, '')) || [];
     const country = self.attr('data-country-restrict');
 
-    const gpaOptions = {};
+    const gpaOptions = {
+      language: 'en',
+    };
 
     // Only add types if there are actually types
     if (types.length) {
