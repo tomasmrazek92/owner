@@ -20,6 +20,26 @@ const timer = (() => {
   let totalPausedTime = 0;
   let pauseStartTime = 0;
 
+  const logToConsole = (type, index, label, stepTime, actualTotalTime, data) => {
+    return;
+    if (type === 'event') {
+      console.log(
+        `[Event #${index}]: ${label}: ${stepTime.toFixed(
+          2
+        )}ms (active time: ${actualTotalTime.toFixed(2)}ms)`
+      );
+      if (data && Object.keys(data).length > 0) {
+        console.log('  Data:', data);
+      }
+    } else if (type === 'pause') {
+      console.log('[Timer]: Paused');
+    } else if (type === 'resume') {
+      console.log('[Timer]: Resumed');
+    } else if (type === 'table') {
+      console.table(logs);
+    }
+  };
+
   return {
     log: (label, data) => {
       const now = performance.now();
@@ -30,16 +50,12 @@ const timer = (() => {
         globalIndex = 1;
         logs.push({ label, step: 0, total: 0, index: globalIndex, data });
 
-        // console.log(`[Event #${globalIndex}]: ${label}: 0.00ms (active time: 0.00ms)`);
-        if (data && Object.keys(data).length > 0) {
-          // console.log('  Data:', data);
-        }
+        logToConsole('event', globalIndex, label, 0, 0, data);
         return;
       }
 
       globalIndex++;
 
-      // Calculate actual time excluding paused periods
       let actualTotalTime = now - startTime - totalPausedTime;
       if (isPaused && pauseStartTime) {
         actualTotalTime -= now - pauseStartTime;
@@ -50,24 +66,14 @@ const timer = (() => {
       logs.push({ label, step: stepTime, total: actualTotalTime, index: globalIndex, data });
       lastTime = now;
 
-      /*
-      console.log(
-        `[Event #${globalIndex}]: ${label}: ${stepTime.toFixed(
-          2
-        )}ms (active time: ${actualTotalTime.toFixed(2)}ms)`
-      );
-
-      if (data && Object.keys(data).length > 0) {
-        console.log('  Data:', data);
-      }
-      */
+      logToConsole('event', globalIndex, label, stepTime, actualTotalTime, data);
     },
 
     pause: () => {
       if (!isPaused) {
         isPaused = true;
         pauseStartTime = performance.now();
-        // console.log('[Timer]: Paused');
+        logToConsole('pause');
       }
     },
 
@@ -76,12 +82,12 @@ const timer = (() => {
         totalPausedTime += performance.now() - pauseStartTime;
         isPaused = false;
         pauseStartTime = 0;
-        // console.log('[Timer]: Resumed');
+        logToConsole('resume');
       }
     },
 
     dump: () => {
-      console.table(logs);
+      logToConsole('table');
       return logs;
     },
 
@@ -281,11 +287,9 @@ $(document).ready(() => {
     const includeConsoleLog = options.consoleLog !== false;
     const skipFormData = options.skipFormData || false;
 
-    // Process detection based on status text
     const isProcessStart = status.toLowerCase().includes('start');
     const isProcessEnd = status.toLowerCase().includes('end');
 
-    // Control timer based on process state
     if (isProcessStart) {
       const processName = options.processName || status.split(' - ')[0];
       const now = performance.now();
@@ -309,7 +313,7 @@ $(document).ready(() => {
       timer.resume();
     }
 
-    let processCompleteLog = null; // temporary holder outside
+    let processCompleteLog = null;
 
     if (isProcessEnd) {
       const processName = options.processName || status.split(' - ')[0];
@@ -323,7 +327,6 @@ $(document).ready(() => {
 
         const totalActiveTime = now - process.startTime - process.totalPausedTime;
 
-        // save it to log later (after timer.log)
         processCompleteLog = `[Process Complete]: "${processName}" took ${totalActiveTime.toFixed(
           2
         )}ms (active only)`;
@@ -341,7 +344,7 @@ $(document).ready(() => {
     }
 
     if (processCompleteLog) {
-      // console.log(processCompleteLog);
+      console.log(processCompleteLog);
     }
 
     function getBrowserAndDeviceInfo() {
@@ -358,10 +361,36 @@ $(document).ready(() => {
       };
     }
 
+    function parseJSONStrings(obj) {
+      const parsed = {};
+      for (const key in obj) {
+        if (obj.hasOwnProperty(key)) {
+          const value = obj[key];
+          if (typeof value === 'string' && value.length > 0) {
+            const firstChar = value.trim().charAt(0);
+            if (firstChar === '[' || firstChar === '{') {
+              try {
+                parsed[key] = JSON.parse(value);
+              } catch (e) {
+                parsed[key] = value;
+              }
+            } else {
+              parsed[key] = value;
+            }
+          } else {
+            parsed[key] = value;
+          }
+        }
+      }
+      return parsed;
+    }
+
     const userInfo = getBrowserAndDeviceInfo();
+    const parsedAdditionalData = parseJSONStrings(additionalData);
+
     let eventVars = {
       ...userInfo,
-      ...additionalData,
+      ...parsedAdditionalData,
     };
 
     if (!skipFormData && typeof wfForm !== 'undefined') {
@@ -385,22 +414,15 @@ $(document).ready(() => {
     const timerLogs = timer.getLogs();
     if (timerLogs.length > 0) {
       const lastLog = timerLogs[timerLogs.length - 1];
-      eventVars.timing = {
-        lastStepTime: lastLog.step,
-        activeTime: lastLog.total, // This is now only active time, not total page time
-        eventIndex: lastLog.index,
-        ...(processMap.size > 0 &&
-          (() => {
-            const [processName, process] = processMap.entries().next().value;
-            return {
-              processTime: performance.now() - process.startTime - process.totalPausedTime,
-              processName,
-            };
-          })()),
-      };
 
-      if (shouldDumpTimer) {
-        eventVars.performanceBreakdown = timerLogs;
+      eventVars.lastStepTime = lastLog.step;
+      eventVars.activeTime = lastLog.total;
+      eventVars.eventIndex = lastLog.index;
+
+      if (processMap.size > 0) {
+        const [processName, process] = processMap.entries().next().value;
+        eventVars.processTime = performance.now() - process.startTime - process.totalPausedTime;
+        eventVars.processName = processName;
       }
     }
 
@@ -1018,13 +1040,13 @@ $(document).ready(() => {
 
   // #region defaulSDK
   function scrapeFormFields() {
-    // Track
     logMixpanel('Default Scrapper - Start');
 
     const form = $(hsForm);
     const questions = [];
     const responses = {};
     const questionMap = {};
+    const numericFields = ['default_brand_emrr', 'pred_gmv', 'pred_gmv_company'];
 
     form.find('input, textarea, select').each(function () {
       const $field = $(this);
@@ -1100,7 +1122,11 @@ $(document).ready(() => {
               : [existingValue, fieldValue]
             : [fieldValue];
         } else {
-          responses[existingQuestion.id] = fieldValue;
+          const finalValue =
+            numericFields.includes(existingQuestion.id) && fieldValue !== ''
+              ? parseFloat(fieldValue)
+              : fieldValue;
+          responses[existingQuestion.id] = finalValue;
         }
         return;
       }
@@ -1109,11 +1135,13 @@ $(document).ready(() => {
       if (options.length) question.options = options;
 
       questions.push(question);
-      responses[fieldId] = fieldValue;
+
+      const finalValue =
+        numericFields.includes(fieldId) && fieldValue !== '' ? parseFloat(fieldValue) : fieldValue;
+      responses[fieldId] = finalValue;
       questionMap[label] = question;
     });
 
-    // Track
     logMixpanel('Default Scrapper - End', { questions, responses });
     return { questions, responses };
   }
