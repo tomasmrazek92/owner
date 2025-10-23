@@ -1,5 +1,3 @@
-import { v4 as uuidv4 } from 'uuid';
-
 import { validateInput } from '$utils/formValidations';
 import { getInputElementValue, locationType, setInputElementValue } from '$utils/globals';
 import {
@@ -21,22 +19,26 @@ const timer = (() => {
   let pauseStartTime = 0;
 
   const logToConsole = (type, index, label, stepTime, actualTotalTime, data) => {
-    return;
-    if (type === 'event') {
-      console.log(
-        `[Event #${index}]: ${label}: ${stepTime.toFixed(
-          2
-        )}ms (active time: ${actualTotalTime.toFixed(2)}ms)`
-      );
-      if (data && Object.keys(data).length > 0) {
-        console.log('  Data:', data);
+    if (
+      localStorage.getItem('isStagingForMe') === 'true' ||
+      window.location.origin.includes('webflow.io')
+    ) {
+      if (type === 'event') {
+        console.log(
+          `[Event #${index}]: ${label}: ${stepTime.toFixed(
+            2
+          )}ms (active time: ${actualTotalTime.toFixed(2)}ms)`
+        );
+        if (data && Object.keys(data).length > 0) {
+          console.log('  Data:', data);
+        }
+      } else if (type === 'pause') {
+        console.log('[Timer]: Paused');
+      } else if (type === 'resume') {
+        console.log('[Timer]: Resumed');
+      } else if (type === 'table') {
+        console.table(logs);
       }
-    } else if (type === 'pause') {
-      console.log('[Timer]: Paused');
-    } else if (type === 'resume') {
-      console.log('[Timer]: Resumed');
-    } else if (type === 'table') {
-      console.table(logs);
     }
   };
 
@@ -105,84 +107,6 @@ const timer = (() => {
   };
 })();
 
-function initMixpanel() {
-  if (!window.mixpanel || !window.mixpanel.__SV) {
-    var mixpanel = (window.mixpanel = window.mixpanel || []);
-    mixpanel._i = [];
-
-    mixpanel.init = function (e, f, c) {
-      function g(a, d) {
-        var b = d.split('.');
-        2 == b.length && ((a = a[b[0]]), (d = b[1]));
-        a[d] = function () {
-          a.push([d].concat(Array.prototype.slice.call(arguments, 0)));
-        };
-      }
-
-      var a = mixpanel;
-      'undefined' !== typeof c ? (a = mixpanel[c] = []) : (c = 'mixpanel');
-      a.people = a.people || [];
-
-      a.toString = function (a) {
-        var d = 'mixpanel';
-        'mixpanel' !== c && (d += '.' + c);
-        a || (d += ' (stub)');
-        return d;
-      };
-
-      a.people.toString = function () {
-        return a.toString(1) + '.people (stub)';
-      };
-
-      var i =
-        'disable time_event track track_pageview track_links track_forms track_with_groups add_group set_group remove_group register register_once alias unregister identify name_tag set_config reset opt_in_tracking opt_out_tracking has_opted_in_tracking has_opted_out_tracking clear_opt_in_out_tracking start_batch_senders people.set people.set_once people.unset people.increment people.append people.union people.track_charge people.clear_charges people.delete_user people.remove'.split(
-          ' '
-        );
-
-      for (var h = 0; h < i.length; h++) g(a, i[h]);
-
-      var j = 'set set_once union unset remove delete'.split(' ');
-
-      a.get_group = function () {
-        function b(c) {
-          d[c] = function () {
-            call2_args = arguments;
-            call2 = [c].concat(Array.prototype.slice.call(call2_args, 0));
-            a.push([e, call2]);
-          };
-        }
-
-        for (
-          var d = {}, e = ['get_group'].concat(Array.prototype.slice.call(arguments, 0)), c = 0;
-          c < j.length;
-          c++
-        )
-          b(j[c]);
-
-        return d;
-      };
-
-      mixpanel._i.push([e, f, c]);
-    };
-
-    mixpanel.__SV = 1.2;
-
-    var e = document.createElement('script');
-    e.type = 'text/javascript';
-    e.async = true;
-    e.src =
-      'undefined' !== typeof MIXPANEL_CUSTOM_LIB_URL
-        ? MIXPANEL_CUSTOM_LIB_URL
-        : 'file:' === document.location.protocol &&
-          '//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js'.match(/^\/\//)
-        ? 'https://cdn.mxpnl.com/libs/mixpanel-2-latest.min.js'
-        : '//cdn.mxpnl.com/libs/mixpanel-2-latest.min.js';
-
-    var g = document.getElementsByTagName('script')[0];
-    g.parentNode.insertBefore(e, g);
-  }
-}
-
 // Load required scripts
 function loadScript(src, callback) {
   const script = document.createElement('script');
@@ -199,14 +123,6 @@ function loadScript(src, callback) {
   };
 }
 
-// Initialize with your project token
-initMixpanel();
-
-mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
-  record_sessions_percent: 100,
-  record_mask_text_selector: '',
-});
-
 $(document).ready(() => {
   // Load scripts
   loadScript('https://import-cdn.default.com/sdk.js');
@@ -221,35 +137,9 @@ $(document).ready(() => {
   // check cookies for an existing user ID
   let webUserId = $.cookie('webTempTatariUserId');
 
-  // if none exists, generate a new one and save it
-  if (!webUserId) {
-    webUserId = uuidv4();
-    $.cookie('webTempTatariUserId', webUserId, {
-      domain: '.owner.com',
-      path: '/',
-    });
-  }
-
   // Also save to window level
-  window.webUserId = webUserId;
-
-  // Saves to dataLayer for GTM
-  window.dataLayer = window.dataLayer || [];
-  window.dataLayer.push({
-    webUserId: webUserId,
-  });
-
-  // Identify the user first for the mixPanel
-  if (typeof webUserId !== 'undefined' && webUserId) {
-    mixpanel.identify(webUserId);
-
-    // Track pageview
-    mixpanel.track_pageview({
-      page: window.location.pathname,
-      url: window.location.href,
-      referrer: document.referrer,
-      title: document.title,
-    });
+  if (webUserId) {
+    window.webUserId = webUserId;
   }
 
   // #region Functions
@@ -344,7 +234,7 @@ $(document).ready(() => {
     }
 
     if (processCompleteLog) {
-      console.log(processCompleteLog);
+      // console.log(processCompleteLog);
     }
 
     function getBrowserAndDeviceInfo() {
@@ -385,6 +275,35 @@ $(document).ready(() => {
       return parsed;
     }
 
+    function flattenObject(obj, prefix = '') {
+      const flattened = {};
+
+      for (const key in obj) {
+        if (!obj.hasOwnProperty(key)) continue;
+
+        const value = obj[key];
+        const newKey = prefix ? `${prefix}_${key}` : key;
+
+        if (value === null || value === undefined) {
+          flattened[newKey] = value;
+        } else if (Array.isArray(value)) {
+          value.forEach((item, index) => {
+            if (typeof item === 'object' && item !== null) {
+              Object.assign(flattened, flattenObject(item, `${newKey}_${index}`));
+            } else {
+              flattened[`${newKey}_${index}`] = item;
+            }
+          });
+        } else if (typeof value === 'object') {
+          Object.assign(flattened, flattenObject(value, newKey));
+        } else {
+          flattened[newKey] = value;
+        }
+      }
+
+      return flattened;
+    }
+
     const userInfo = getBrowserAndDeviceInfo();
     const parsedAdditionalData = parseJSONStrings(additionalData);
 
@@ -412,11 +331,12 @@ $(document).ready(() => {
     }
 
     const timerLogs = timer.getLogs();
+
     if (timerLogs.length > 0) {
       const lastLog = timerLogs[timerLogs.length - 1];
 
-      eventVars.lastStepTime = lastLog.step;
-      eventVars.activeTime = lastLog.total;
+      eventVars.stepActiveTime = lastLog.step;
+      eventVars.totalActiveTime = lastLog.total;
       eventVars.eventIndex = lastLog.index;
 
       if (processMap.size > 0) {
@@ -426,17 +346,19 @@ $(document).ready(() => {
       }
     }
 
+    const flattenedEventVars = flattenObject(eventVars);
+
     if (typeof mixpanel !== 'undefined' && mixpanel) {
       if (typeof webUserId !== 'undefined' && webUserId) {
         mixpanel.identify(webUserId);
       }
 
       if (!skipFormData && typeof wfForm !== 'undefined') {
-        const firstName = eventVars.firstName;
-        const lastName = eventVars.lastName;
-        const email = eventVars.email;
-        const phone = eventVars.phone;
-        const restaurantName = eventVars.restaurantName;
+        const firstName = flattenedEventVars.firstName;
+        const lastName = flattenedEventVars.lastName;
+        const email = flattenedEventVars.email;
+        const phone = flattenedEventVars.phone;
+        const restaurantName = flattenedEventVars.restaurantName;
 
         if (email || phone) {
           mixpanel.people.set({
@@ -450,10 +372,25 @@ $(document).ready(() => {
         }
       }
 
-      mixpanel.track(status, eventVars);
+      mixpanel.track(status, flattenedEventVars);
     }
 
     if (shouldDumpTimer) {
+      if (typeof mixpanel !== 'undefined' && mixpanel && timerLogs.length > 0) {
+        const timerEventVars = {
+          ...userInfo,
+          parentEvent: status,
+          totalActiveTime: timerLogs[timerLogs.length - 1].total,
+        };
+
+        timerLogs.forEach((logEntry, idx) => {
+          const stepKey = logEntry.label || `step_${idx + 1}`;
+          timerEventVars[stepKey] = logEntry.step;
+        });
+
+        mixpanel.track('Full Timer Log', timerEventVars);
+      }
+
       timer.dump();
       timer.reset();
     }
