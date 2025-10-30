@@ -153,9 +153,7 @@ $(document).ready(() => {
     let dqFlaq = getInputElementValue('auto_dq_flag');
     let prosResult = dqFlaq === 'False' ? 'aql' : 'non-aql';
 
-    const defaultUrl = window.location.href.includes('/demo-grader')
-      ? '/demo-thank-you-grader'
-      : '/funnel-demo-requested';
+    const defaultUrl = '/demo-thank-you-grader';
 
     const finalRedirect = `${
       redirect || defaultUrl
@@ -903,7 +901,7 @@ $(document).ready(() => {
     onFormReady: onFormReadyCallback,
     onFormSubmitted: async (data) => {
       // Track
-      logMixpanel('HS Form - Submisison - End', { status: 'success' });
+      logMixpanel('HS Form - Submission - End', { status: 'success' });
 
       // Handle Default
       submitToDefaultSDK();
