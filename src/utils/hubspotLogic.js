@@ -33,8 +33,10 @@ const inputMapping = {
   sms_opt_in: 'sms_opt_in',
 
   // Refers
+  referrer_s_name: 'referrer_s_name',
+  referrer_s_last_name: 'referrer_s_last_name',
   referrer_s_phone_number: 'referrer_s_phone_number',
-
+  referrer_s_email: 'referrer_s_email',
   // ...
 };
 
