@@ -881,7 +881,7 @@ $(document).ready(() => {
   }
 
   // Referall Page Form
-  if (currentUrl.indexOf('refer') !== -1) {
+  if (currentUrl.indexOf('refer') !== -1 || currentUrl.indexOf('benekeith') !== -1) {
     formId = '969fbdc3-b662-4428-a208-c78b8f20efa6';
   }
 
