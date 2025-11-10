@@ -132,6 +132,7 @@ $(document).ready(() => {
   // Qualification Variable
   let qualified;
   let isSchedule = typeof scheduleFlow !== 'undefined' && scheduleFlow;
+  let isLiveBooked = false;
 
   // User ID
   // check cookies for an existing user ID
@@ -157,7 +158,7 @@ $(document).ready(() => {
 
     const finalRedirect = `${
       redirect || defaultUrl
-    }?placeid=${placeId}&resname=${resName}&prosresult=${prosResult}`;
+    }?placeid=${placeId}&resname=${resName}&prosresult=${prosResult}&livebooked=${isLiveBooked}`;
 
     // Track
     logMixpanel('Form - Success - Redirect', { redirectUrl: finalRedirect });
@@ -1144,6 +1145,7 @@ $(document).ready(() => {
       },
       onMeetingBooked: (data) => {
         // Redirect to thank you page with a timer
+        isLiveBooked = true;
         $('[data-form-success]').css('display', 'flex');
         setTimeout(() => {
           let countdown = 5;
@@ -1157,7 +1159,7 @@ $(document).ready(() => {
 
             if (countdown === 0) {
               clearInterval(interval);
-              handleRedirect();
+              handleRedirect('');
             }
           }, 1000);
         }, 0);
