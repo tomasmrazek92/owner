@@ -623,7 +623,14 @@ $(document).ready(() => {
 
   function fillCustomFields() {
     // Some quick input filling
-    setInputElementValue('page_url', isSchedule ? '/demo-schedule' : window.location.pathname);
+    setInputElementValue(
+      'page_url',
+      window.location.href.includes('benekeith')
+        ? '/benekeith'
+        : isSchedule
+        ? '/demo-schedule'
+        : window.location.pathname
+    );
     setInputElementValue('page_lang', $('html').attr('lang'));
     setInputElementValue(
       'url',
