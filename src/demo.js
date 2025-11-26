@@ -371,7 +371,15 @@ $(document).ready(() => {
         }
       }
 
+      // Track for mixPanel
       mixpanel.track(status, flattenedEventVars);
+
+      // Track to GTM as well
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: status,
+        ...flattenedEventVars,
+      });
     }
 
     if (shouldDumpTimer) {
@@ -387,7 +395,14 @@ $(document).ready(() => {
           timerEventVars[stepKey] = logEntry.step;
         });
 
+        // Track for mixPanel
         mixpanel.track('Full Timer Log', timerEventVars);
+
+        // Track for GTM as well
+        window.dataLayer.push({
+          event: 'Full Timer Log',
+          ...timerEventVars,
+        });
       }
 
       timer.dump();
@@ -486,7 +501,6 @@ $(document).ready(() => {
 
     function callApi(data) {
       return new Promise((resolve, reject) => {
-        // Track
         logMixpanel('Enrichment API - Start');
 
         $.ajax({
@@ -497,7 +511,6 @@ $(document).ready(() => {
           data: JSON.stringify(data),
           timeout: 40000,
           success: function (response) {
-            // Track
             logMixpanel('Enrichment API - End', {
               status: 'Completed',
               response: response,
@@ -505,7 +518,6 @@ $(document).ready(() => {
             resolve(response);
           },
           error: function (xhr, status, error) {
-            // Track
             logMixpanel('Enrichment API - End', {
               error: error,
               status: xhr.status,
@@ -979,6 +991,16 @@ $(document).ready(() => {
       $input.val('1');
     }
   });
+
+  /*
+  // Validate the email instantly on change
+  wfForm.find('input[name="email"]').on('change', function () {
+    handleHubspotForm(wfForm, hsForm, true);
+  });
+  wfForm.find('input[name="cellphone"]').on('change', function () {
+    handleHubspotForm(wfForm, hsForm, true);
+  });
+  */
   //#endregion
 
   // #region defaulSDK
