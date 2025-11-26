@@ -129,9 +129,11 @@ $(document).ready(() => {
 
   let isDev = window.location.href.indexOf('dev') !== -1;
 
+  let wfForm = $('[demo-form]');
+
   // Qualification Variable
   let qualified;
-  let isSchedule = typeof scheduleFlow !== 'undefined' && scheduleFlow;
+  let isSchedule = wfForm.attr('data-show-schedule') === 'true';
   let isLiveBooked = false;
 
   // User ID
@@ -146,9 +148,10 @@ $(document).ready(() => {
   // #region Functions
 
   // Handle redirect
-  function handleRedirect(redirect) {
+  function handleRedirect() {
     if (isDev) return;
 
+    let redirect = wfForm.attr('data-custom-redirect');
     let placeId = getInputElementValue('place_id');
     let resName = getInputElementValue('name');
     let dqFlaq = getInputElementValue('auto_dq_flag');
@@ -446,7 +449,10 @@ $(document).ready(() => {
           qualified = undefined;
 
           // Conditions
-          isOwner = $('select[name="person-type"]').val() === "I'm a restaurant owner or manager";
+          let $personType = $('select[name="person-type"]');
+          isOwner = $personType.length
+            ? $personType.val() === "I'm a restaurant owner or manager"
+            : true;
           isUS = restaurant.address_components.some((component) => component.short_name === 'US');
 
           // Instantly follow to success link - Unqualified
@@ -822,8 +828,7 @@ $(document).ready(() => {
       !window.location.href.includes('/blog/') &&
       !window.location.href.includes('/resources/') &&
       !window.location.href.includes('/downloads/');
-    const redirectUrl = wfForm.attr('data-custom-redirect');
-    const showSchedule = isSchedule && qualified && !redirectUrl;
+    const showSchedule = isSchedule && qualified;
 
     // Toggle Loading
     wfForm.hide();
@@ -869,13 +874,10 @@ $(document).ready(() => {
     );
 
     // Success State flow
-    if (redirectUrl) {
-      success.show();
-      handleRedirect(redirectUrl);
-    } else if (shouldRedirect && !showSchedule) {
+    if (shouldRedirect && !showSchedule) {
       success.show();
       handleRedirect();
-    } else if (!showSchedule) {
+    } else {
       success.show();
     }
   };
@@ -884,8 +886,7 @@ $(document).ready(() => {
 
   // #region Flow Logic
 
-  // 1. Define Forms
-  let wfForm = $('[demo-form]');
+  // 1. Define HS Form
   let hsForm;
 
   // 2. Initialize the HubSpot form
@@ -1188,7 +1189,7 @@ $(document).ready(() => {
 
             if (countdown === 0) {
               clearInterval(interval);
-              handleRedirect('');
+              handleRedirect();
             }
           }, 1000);
         }, 0);
