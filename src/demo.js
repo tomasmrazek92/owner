@@ -510,7 +510,9 @@ $(document).ready(() => {
         logMixpanel('Enrichment API - Start');
 
         $.ajax({
-          url: 'https://owner-ops.net/business-info/',
+          url: isDev
+            ? 'https://fttumccdnv.us-east-1.awsapprunner.com/evaluate-business/'
+            : 'https://owner-ops.net/business-info/',
           type: 'POST',
           contentType: 'application/json',
           dataType: 'json',
@@ -609,11 +611,22 @@ $(document).ready(() => {
     // Global Validate checker
     let isValid = true;
 
-    // Validate all inputs internally
-    el.find(':input:visible, select').each(function () {
-      let validate = validateInput($(this));
-      isValid = isValid && validate;
-    });
+    // Check for visible nice selects
+    let selectsToValidate = el
+      .find('.nice-select:visible')
+      .map(function () {
+        return $(this).closest('[field-wrapper]').find('select');
+      })
+      .get();
+
+    // Validate all visible inputs internally
+    el.find(':input:visible')
+      .not('select')
+      .add(selectsToValidate)
+      .each(function () {
+        let validate = validateInput($(this));
+        isValid = isValid && validate;
+      });
 
     // Track
     logMixpanel('Form Internal Validation - End', { status: isValid });
@@ -853,6 +866,9 @@ $(document).ready(() => {
           );
           success.css('background-color', 'white');
           success.show();
+
+          // Fire GlobalEvent
+          $(document).trigger('DefaultSchedulerDisplayed', { url: url.toString() });
         }
 
         logMixpanel('Default Scheduler - Open');
@@ -993,6 +1009,11 @@ $(document).ready(() => {
     }
   });
 
+  // Success Reload
+  $('[data-form="reload-btn"]').on('click', function () {
+    location.reload();
+  });
+
   /*
   // Validate the email instantly on change
   wfForm.find('input[name="email"]').on('change', function () {
@@ -1002,6 +1023,7 @@ $(document).ready(() => {
     handleHubspotForm(wfForm, hsForm, true);
   });
   */
+
   //#endregion
 
   // #region defaulSDK
@@ -1222,119 +1244,58 @@ $(document).ready(() => {
 
   // #region multistep
   function initMultistep() {
-    function initGoalFlows() {
-      // Remove is-active class from all labels on page load
-      $(document).ready(function () {
-        $('.goals-screen input[name="goals"]').closest('label').removeClass('is-active');
-      });
+    const mutlistepTypes = {
+      '2-steps': {
+        0: ['restaurant', 'role', 'locations'],
+        1: ['email', 'first-name', 'last-name', 'cellphone', 'hear'],
+      },
+    };
 
-      // Use click handler
-      $(document).on('click', '.goals-screen input[name="goals"]', function (event) {
-        // Get the selected value
-        const selectedValue = $(this).val();
+    let multistep = $('[data-form-multistep]');
+    if (!multistep.length) return;
+    let type = multistep.attr('data-form-multistep');
 
-        // Remove is-active class from all labels and add it to the clicked one
-        $('.goals-screen input[name="goals"]').closest('label').removeClass('is-active');
-        $(this).closest('label').addClass('is-active');
-
-        // Handle the heading update
-        var screen2_heading = $('#screen2_heading');
-        if (selectedValue === 'All of the above') {
-          screen2_heading.html(
-            'Good news! Restaurants see online sales grow by up to <span class="text-color-brand">$8k</span> per month and reduce costs by up to <span class="text-color-brand">$2k</span> per month with Owner'
-          );
-        } else if (selectedValue === 'Reduce my costs') {
-          screen2_heading.html(
-            'Good news! Restaurants see costs reduce by up to <span class="text-color-brand">$2k</span> per month with Owner'
-          );
-        } else {
-          screen2_heading.html(
-            'Good news! Restaurants see online sales grow by up to <span class="text-color-brand">$8k</span> per month with Owner'
-          );
-        }
-
-        // Navigate to next screen
-        if (nextBtn) {
-          nextBtn.click();
-        }
-      });
-
-      // Remove the change handler completely to avoid double-firing
-      $(document).off('change', '.goals-screen input[name="goals"]');
-    }
-
-    // Elements
-    const steps = document.querySelectorAll('[class*="step-"]');
     const prevBtn = document.querySelector('[data-form="back-btn"]');
     const nextBtn = document.querySelector('[data-form="next-btn"]');
-    const submitBtn = document.querySelector('[data-form="multi-submit-btn"]');
+    const submitBtn = document.querySelector('[data-form="submit-btn"]');
 
-    if (!steps.length) return;
-
-    const progressbar = document.querySelector('.progressbar-left');
-    const form = document.getElementById('wf-form-email-form-v2');
-    const hearSelect = document.getElementById('Hear');
-
+    const stepsConfig = mutlistepTypes[type];
+    const totalSteps = Object.keys(stepsConfig).length;
     let currentStep = 0;
 
-    // Update step visibility
     function updateSteps(direction = 'next') {
-      const wrapper = document.querySelector('.all-screens');
+      const fieldNames = stepsConfig[currentStep];
 
-      if (wrapper) wrapper.style.overflow = 'hidden';
-
-      steps.forEach((step, index) => {
-        step.classList.remove(
-          'step-hide',
-          'step-active',
-          'step-slide',
-          'step-enter-left',
-          'step-enter-right'
-        );
-
-        if (index === currentStep) {
-          step.classList.add('step-slide', 'step-active');
-          step.classList.add(direction === 'next' ? 'step-enter-right' : 'step-enter-left');
-
-          void step.offsetWidth;
-
-          step.classList.remove('step-enter-left', 'step-enter-right');
-
-          setTimeout(() => {
-            if (wrapper) wrapper.style.overflow = 'visible';
-          }, 400);
-        } else {
-          step.classList.add('step-hide');
+      // Fields
+      $('[field-wrapper]').hide();
+      fieldNames.forEach((fieldName, index) => {
+        $(`[field-wrapper="${fieldName}"]`).css('order', index);
+        if (fieldName !== 'locations') {
+          $(`[field-wrapper="${fieldName}"]`).show();
         }
       });
 
-      const isFirstStep = currentStep === 0;
-      const isFinalStep = currentStep === steps.length - 1;
-
-      progressbar.style.display = isFirstStep ? 'none' : 'flex';
-      nextBtn.style.display = isFirstStep || isFinalStep ? 'none' : 'flex';
-      prevBtn.style.display = isFirstStep ? 'none' : 'flex';
-
-      // Remove existing continue-* classes and add current step class
-      nextBtn.className = nextBtn.className.replace(/continue-\d+/g, '');
-      nextBtn.classList.add(`continue-${currentStep}`);
-
-      updateProgress();
-    }
-
-    // Progress bar steps
-    function updateProgress() {
-      const progressItems = document.querySelectorAll('.progressbar__item-2');
-      progressItems.forEach((item, index) => {
-        // item.classList.toggle('active-bar', index === currentStep);
-        item.classList.toggle('active-bar', index <= currentStep);
+      // Headlines
+      $('[data-multistep-headline]').each(function () {
+        let step = $(this).attr('data-multistep-headline');
+        $(this).toggle(step == currentStep);
       });
+
+      // Btns
+      $(prevBtn).toggle(currentStep > 0);
+
+      if (currentStep === totalSteps - 1) {
+        $(nextBtn).hide();
+        $(submitBtn).show();
+      } else {
+        $(nextBtn).show();
+        $(submitBtn).hide();
+      }
     }
 
-    // Event: next step
     nextBtn?.addEventListener('click', async function () {
-      if (currentStep < steps.length - 1) {
-        const isValid = internalValidation($(steps[currentStep]));
+      if (currentStep < totalSteps - 1) {
+        const isValid = internalValidation(wfForm);
         if (isValid) {
           currentStep++;
           updateSteps('next');
@@ -1342,35 +1303,6 @@ $(document).ready(() => {
       }
     });
 
-    submitBtn?.addEventListener('click', async function () {
-      let qualification = await processQualification();
-
-      for (let i = 0; i < steps.length; i++) {
-        const invalidFields = $(steps[i])
-          .find('[field-validation]')
-          .filter(function () {
-            return $(this).css('display') === 'block';
-          });
-
-        if (invalidFields.length > 0) {
-          toggleLoader(false);
-          currentStep = i;
-          updateSteps('back');
-          break;
-        }
-      }
-
-      if (qualification) {
-        capturedFormData = scrapeFormFields();
-
-        hsForm[0].submit();
-        $('.last-button').hide();
-      } else {
-        toggleLoader(false);
-      }
-    });
-
-    // Event: prev step
     prevBtn?.addEventListener('click', function () {
       if (currentStep > 0) {
         currentStep--;
@@ -1378,10 +1310,9 @@ $(document).ready(() => {
       }
     });
 
-    // Initialize
     $(document).ready(function () {
-      initGoalFlows();
       updateSteps();
+      multistep.addClass('cc-active');
     });
   }
   initMultistep();
