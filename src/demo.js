@@ -12,22 +12,21 @@ import { getParamsFromSession } from '$utils/utms';
 const timer = (() => {
   const logs = [];
   let lastTime = 0;
-  let startTime = 0;
   let globalIndex = 0;
+  let cumulativeTime = 0;
   let isPaused = true;
-  let totalPausedTime = 0;
   let pauseStartTime = 0;
 
-  const logToConsole = (type, index, label, stepTime, actualTotalTime, data) => {
+  const logToConsole = (type, index, label, stepTime, totalTime, data) => {
     if (
       localStorage.getItem('isStagingForMe') === 'true' ||
       window.location.origin.includes('webflow.io')
     ) {
       if (type === 'event') {
         console.log(
-          `[Event #${index}]: ${label}: ${stepTime.toFixed(
+          `[Event #${index}]: ${label}: ${stepTime.toFixed(2)}ms (active time: ${totalTime.toFixed(
             2
-          )}ms (active time: ${actualTotalTime.toFixed(2)}ms)`
+          )}ms)`
         );
         if (data && Object.keys(data).length > 0) {
           console.log('  Data:', data);
@@ -46,29 +45,23 @@ const timer = (() => {
     log: (label, data) => {
       const now = performance.now();
 
-      if (!startTime) {
-        startTime = now;
+      if (!lastTime) {
         lastTime = now;
         globalIndex = 1;
         logs.push({ label, step: 0, total: 0, index: globalIndex, data });
-
         logToConsole('event', globalIndex, label, 0, 0, data);
         return;
       }
 
       globalIndex++;
 
-      let actualTotalTime = now - startTime - totalPausedTime;
-      if (isPaused && pauseStartTime) {
-        actualTotalTime -= now - pauseStartTime;
-      }
-
       const stepTime = now - lastTime;
+      cumulativeTime += stepTime;
 
-      logs.push({ label, step: stepTime, total: actualTotalTime, index: globalIndex, data });
+      logs.push({ label, step: stepTime, total: cumulativeTime, index: globalIndex, data });
       lastTime = now;
 
-      logToConsole('event', globalIndex, label, stepTime, actualTotalTime, data);
+      logToConsole('event', globalIndex, label, stepTime, cumulativeTime, data);
     },
 
     pause: () => {
@@ -80,9 +73,9 @@ const timer = (() => {
     },
 
     resume: () => {
-      if (isPaused && pauseStartTime) {
-        totalPausedTime += performance.now() - pauseStartTime;
+      if (isPaused) {
         isPaused = false;
+        lastTime = performance.now();
         pauseStartTime = 0;
         logToConsole('resume');
       }
@@ -96,10 +89,9 @@ const timer = (() => {
     reset: () => {
       logs.length = 0;
       lastTime = 0;
-      startTime = 0;
       globalIndex = 0;
+      cumulativeTime = 0;
       isPaused = true;
-      totalPausedTime = 0;
       pauseStartTime = 0;
     },
 
@@ -188,16 +180,14 @@ $(document).ready(() => {
 
       if (!processMap.has(processName)) {
         processMap.set(processName, {
-          startTime: now,
-          totalPausedTime: 0,
-          pauseStartTime: 0,
+          lastTime: now,
+          cumulativeTime: 0,
           isPaused: false,
         });
       } else {
         const process = processMap.get(processName);
         if (process.isPaused) {
-          process.totalPausedTime += now - process.pauseStartTime;
-          process.pauseStartTime = 0;
+          process.lastTime = now;
           process.isPaused = false;
         }
       }
@@ -213,11 +203,11 @@ $(document).ready(() => {
       const process = processMap.get(processName);
 
       if (process) {
-        if (process.isPaused && process.pauseStartTime) {
-          process.totalPausedTime += now - process.pauseStartTime;
+        if (!process.isPaused) {
+          process.cumulativeTime += now - process.lastTime;
         }
 
-        const totalActiveTime = now - process.startTime - process.totalPausedTime;
+        const totalActiveTime = process.cumulativeTime;
 
         processCompleteLog = `[Process Complete]: "${processName}" took ${totalActiveTime.toFixed(
           2
@@ -343,7 +333,12 @@ $(document).ready(() => {
 
       if (processMap.size > 0) {
         const [processName, process] = processMap.entries().next().value;
-        eventVars.processTime = performance.now() - process.startTime - process.totalPausedTime;
+        const now = performance.now();
+        let currentProcessTime = process.cumulativeTime;
+        if (!process.isPaused) {
+          currentProcessTime += now - process.lastTime;
+        }
+        eventVars.processTime = currentProcessTime;
         eventVars.processName = processName;
       }
     }
@@ -374,10 +369,10 @@ $(document).ready(() => {
         }
       }
 
-      // Track for mixPanel
-      mixpanel.track(status, flattenedEventVars);
+      if (!isDev) {
+        mixpanel.track(status, flattenedEventVars);
+      }
 
-      // Track to GTM as well
       window.dataLayer = window.dataLayer || [];
       window.dataLayer.push({
         event: status,
@@ -398,10 +393,8 @@ $(document).ready(() => {
           timerEventVars[stepKey] = logEntry.step;
         });
 
-        // Track for mixPanel
         mixpanel.track('Full Timer Log', timerEventVars);
 
-        // Track for GTM as well
         window.dataLayer.push({
           event: 'Full Timer Log',
           ...timerEventVars,
@@ -751,6 +744,9 @@ $(document).ready(() => {
   }
 
   // Run the Qualification Logic
+  let enrichmentPromise = null; // currently running request
+  let enrichmentPending = false; // whether another run is needed
+  let lastValues = ''; // track last input combo
   async function processQualification() {
     // Init
     disableButton(true);
@@ -761,33 +757,15 @@ $(document).ready(() => {
     // Proceed only if validation pass
     if (validation) {
       toggleLoader(true);
+
+      // Wait if an enrichment is STILL running from auto-trigger
+      if (enrichmentPromise) {
+        await enrichmentPromise;
+      }
+
       try {
-        // Wait for checkQualification to complete
-        await checkQualification();
-
-        // Call API only if InstaQualification is not set
-        if (typeof qualified !== 'boolean') {
-          const result = await callQualification();
-          const dqFlag = result.auto_dq_flag;
-
-          // We tag all submissions which runned the API
-          setInputElementValue('self_service_enrichment_api_used', true);
-
-          // We check if the returned value contains the dgFlag
-          if (typeof dqFlag === 'string') {
-            qualified = result.auto_dq_flag === 'True' ? false : true; // if dgFlaq equals true, it means its disqualified.
-            fillFormWithMatchingData(result, true); // We fill the data with API logic
-
-            if (qualified) {
-              setInputElementValue('self_service_scheduling_shown', true); // We tag the checkbox as the final destination is the schedule page
-            }
-          } else {
-            qualified = false; // No API Result so insta disqualified
-            fillFormWithMatchingData(result, false); // We fill the data without API
-          }
-        } else {
-          fillStaticAPIFields(qualified);
-        }
+        // Run enrichment ONLY if needed
+        await triggerEnrichment();
       } catch (error) {
         qualified = false;
       }
@@ -807,11 +785,87 @@ $(document).ready(() => {
     return false;
   }
 
+  async function handleEnrichment() {
+    try {
+      // Wait for checkQualification to complete
+      await checkQualification();
+
+      // Call API only if InstaQualification is not set
+      if (typeof qualified !== 'boolean') {
+        const result = await callQualification();
+        const dqFlag = result.auto_dq_flag;
+
+        // We tag all submissions which runned the API
+        setInputElementValue('self_service_enrichment_api_used', true);
+
+        // We check if the returned value contains the dgFlag
+        if (typeof dqFlag === 'string') {
+          qualified = result.auto_dq_flag === 'True' ? false : true; // if dgFlaq equals true, it means its disqualified.
+          fillFormWithMatchingData(result, true); // We fill the data with API logic
+
+          if (qualified) {
+            setInputElementValue('self_service_scheduling_shown', true); // We tag the checkbox as the final destination is the schedule page
+          }
+        } else {
+          qualified = false; // No API Result so insta disqualified
+          fillFormWithMatchingData(result, false); // We fill the data without API
+        }
+      } else {
+        fillStaticAPIFields(qualified);
+      }
+    } catch (error) {
+      qualified = false;
+    }
+  }
+
+  function triggerEnrichment() {
+    const roleVal = $('select[name="person-type"]').val() || '';
+    const restaurantVal = $('input[name="restaurant-name"]').val()?.trim() || '';
+
+    // Both fields must be filled AND valid
+    if (!roleVal || restaurantVal.length < 2) {
+      return enrichmentPromise || Promise.resolve();
+    }
+
+    const currentValues = roleVal + '|' + restaurantVal;
+
+    // If values haven't changed → do nothing
+    if (currentValues === lastValues) {
+      return enrichmentPromise || Promise.resolve();
+    }
+
+    // Save new snapshot
+    lastValues = currentValues;
+
+    // If enrichment is already running → queue another run
+    if (enrichmentPromise) {
+      enrichmentPending = true;
+      return enrichmentPromise;
+    }
+
+    // Otherwise start a fresh run
+    return runEnrichment();
+  }
+
+  function runEnrichment() {
+    enrichmentPending = false;
+
+    enrichmentPromise = handleEnrichment()
+      .catch(() => {}) // prevent unhandled rejections
+      .finally(() => {
+        enrichmentPromise = null;
+
+        // If inputs changed during the run → rerun once
+        if (enrichmentPending) {
+          runEnrichment();
+        }
+      });
+
+    return enrichmentPromise;
+  }
+
   // Handle Submit
   async function fireSubmit() {
-    // Reset timer
-    timer.reset();
-
     // Track
     logMixpanel('Submit Attempt - Start');
 
@@ -869,6 +923,23 @@ $(document).ready(() => {
 
           // Fire GlobalEvent
           $(document).trigger('DefaultSchedulerDisplayed', { url: url.toString() });
+
+          // Scroll to top of the iframe
+          if ($(window).width() < 992) {
+            $('html, body').animate(
+              {
+                scrollTop: $('.demo-form-box').offset().top,
+              },
+              600
+            );
+          } else {
+            $('html, body').animate(
+              {
+                scrollTop: 0,
+              },
+              600
+            );
+          }
         }
 
         logMixpanel('Default Scheduler - Open');
@@ -931,20 +1002,40 @@ $(document).ready(() => {
   let capturedFormData = null;
   let defaultSdkComplete = false;
 
+  let formSubmissionResolver;
+  let formSubmissionPromise;
+
   hbspt.forms.create({
     portalId: portalId,
     formId: formId,
     target: '#hbst-form',
     onFormReady: onFormReadyCallback,
+    onFormSubmit: () => {
+      formSubmissionPromise = new Promise((resolve) => {
+        formSubmissionResolver = resolve;
+      });
+
+      const timeoutPromise = new Promise((resolve) => {
+        setTimeout(() => resolve('timeout'), 20000);
+      });
+
+      Promise.race([formSubmissionPromise, timeoutPromise]).then((result) => {
+        if (result === 'timeout') {
+          logMixpanel('HS Form - Submission - End', { status: 'timeout' });
+          toggleLoader(false);
+        }
+      });
+    },
     onFormSubmitted: async (data) => {
-      // Track
+      if (formSubmissionResolver) {
+        formSubmissionResolver('success');
+      }
+
       logMixpanel('HS Form - Submission - End', { status: 'success' });
 
-      // Handle Default
       submitToDefaultSDK();
       await waitForDefaultSdk();
 
-      // Shows Result
       setTimeout(() => {
         successSubmit();
       }, 500);
@@ -967,9 +1058,10 @@ $(document).ready(() => {
   // #endregion
 
   // #region Custom Actions
+  // __ Role Locations
   locationType();
 
-  // Format US Phone Number
+  // __ Format US Phone Number
   $('[data-cleave-phone]').each(function () {
     new Cleave($(this), {
       numericOnly: true,
@@ -979,7 +1071,7 @@ $(document).ready(() => {
     });
   });
 
-  // Format Location Numbers
+  // __ Format Location Numbers
   function validateNumLocations(input) {
     const $input = $(input);
     let value = $input.val().replace(/\D/g, '');
@@ -1009,20 +1101,94 @@ $(document).ready(() => {
     }
   });
 
-  // Success Reload
+  // __ Hear Input
+  function handleHearInput() {
+    let hearSelect = $('select[name="hear"]');
+    let hearNiceSelect = hearSelect.siblings('.nice-select');
+    let otherInput = $('[data-form="other-input"]');
+    let otherInputClose = $('[data-form="other-input-close"]');
+    let dataInput = $('input[name="hear_input"]');
+
+    // Trigger Free input on other
+    hearSelect.on('change', function () {
+      let val = $(this).val();
+
+      if (val === 'Other') {
+        if (otherInput.length) {
+          hearNiceSelect.hide();
+          otherInput.css('display', 'flex');
+          otherInput.find('input').trigger('focus');
+        }
+      }
+    });
+    // Close Free Input
+    otherInputClose.on('click', function () {
+      hearNiceSelect.show();
+      otherInput.hide();
+      otherInput.find('input').val('');
+      dataInput.val('');
+      hearNiceSelect.find('ul [data-value]:first-child').click();
+      hearNiceSelect.find('.current').attr('style', '');
+    });
+
+    // Mirror free-input when "Other" is active
+    otherInput.find('input').on('input', function () {
+      if (hearSelect.val() === 'Other') dataInput.val($(this).val());
+    });
+
+    // Update dataInput when a regular option is selected
+    hearSelect.on('change', function () {
+      if ($(this).val() !== 'Other') dataInput.val($(this).val());
+    });
+  }
+  handleHearInput();
+
+  // __ Success Reload
   $('[data-form="reload-btn"]').on('click', function () {
     location.reload();
   });
 
-  /*
+  // __ Hubspot Insta Validations
   // Validate the email instantly on change
   wfForm.find('input[name="email"]').on('change', function () {
-    handleHubspotForm(wfForm, hsForm, true);
+    let value = $(this).val().trim() !== '';
+    if (value) {
+      handleHubspotForm(wfForm, hsForm, true);
+    }
   });
   wfForm.find('input[name="cellphone"]').on('change', function () {
-    handleHubspotForm(wfForm, hsForm, true);
+    if (value) {
+      handleHubspotForm(wfForm, hsForm, true);
+    }
   });
-  */
+
+  // __ Insta Field Validations
+  function validateForEnrichment() {
+    let role = $('select[name="person-type"]');
+    let restaurant = $('input[name="restaurant-name"]');
+
+    function validateRequiredInputs() {
+      var roleHasValue = role.val().trim() !== '';
+      var restaurantHasValue = restaurant.val().trim() !== '';
+
+      if (roleHasValue && restaurantHasValue) {
+        var roleValid = validateInput(role);
+        var restaurantValid = validateInput(restaurant);
+
+        if (roleValid && restaurantValid) {
+          triggerEnrichment();
+        }
+      }
+    }
+
+    role.on('change', function () {
+      validateRequiredInputs();
+    });
+    window.googleAutocomplete.addListener('place_changed', function () {
+      validateRequiredInputs();
+    });
+  }
+  validateForEnrichment();
 
   //#endregion
 

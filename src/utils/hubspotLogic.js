@@ -19,7 +19,7 @@ const inputMapping = {
   rating: 'place_rating',
   user_ratings_total: 'user_ratings_total',
   'number-of-locations': 'of_locations_number',
-  hear: 'how_did_you_hear_about_us',
+  hear_input: 'how_did_you_hear_about_us',
   page_url: 'last_pdf_download',
   page_lang: 'page_lang',
   brizo_id: ['brizo_id', '0-2/brizo_id_account'],
@@ -126,6 +126,7 @@ const mirrorHS = (hsform) => {
     gtEmail.text(hsEmailVal);
     gtEmail.show();
     isError = true;
+    hsform.find('input[name=email]').val('1');
   } else {
     gtEmail.hide();
   }
@@ -147,7 +148,7 @@ export function waitForFormReady() {
 }
 
 // Hahdle Errors and submit form
-export const handleHubspotForm = (formElement, hsform) => {
+export const handleHubspotForm = (formElement, hsform, sensitive) => {
   // Fill in the inputs
   fillHubSpot(formElement, hsform);
 
@@ -156,13 +157,26 @@ export const handleHubspotForm = (formElement, hsform) => {
     // Validation
     let isError;
 
+    /*
     // Fallback for Hubspot Validation to happen
     setTimeout(() => {
       // Run the Validation and stop the animation
       isError = mirrorHS(hsform);
       // Resolve the promise with the validation result
       resolve(!isError);
-    }, 3000);
+    }, 3000);\
+    */
+
+    // For Sensitive Inputs such as email and phone we need to wait for the validation to populate
+    if (sensitive) {
+      setTimeout(() => {
+        isError = mirrorHS(hsform);
+        resolve(!isError);
+      }, 3000);
+    } else {
+      isError = mirrorHS(hsform);
+      resolve(!isError);
+    }
   });
 };
 

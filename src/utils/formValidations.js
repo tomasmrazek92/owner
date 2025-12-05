@@ -112,6 +112,10 @@ export const validateInput = (element) => {
   let input = element;
   let isValidAll = true;
 
+  // Clear
+  $(input).removeClass('error');
+  $(input).removeClass('is-valid');
+
   if ($(input).prop('required')) {
     if ($(input).is('[type="checkbox"]')) {
       isValidAll = validateCheckbox(input);
@@ -136,6 +140,7 @@ export const validateInput = (element) => {
     $(input).addClass('error');
   } else {
     toggleValidationMsg($(input), false);
+    $(input).addClass('is-valid');
   }
 
   return isValidAll;
