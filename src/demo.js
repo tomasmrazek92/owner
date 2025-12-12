@@ -503,9 +503,7 @@ $(document).ready(() => {
         logMixpanel('Enrichment API - Start');
 
         $.ajax({
-          url: isDev
-            ? 'https://fttumccdnv.us-east-1.awsapprunner.com/evaluate-business/'
-            : 'https://owner-ops.net/business-info/',
+          url: 'https://owner-ops.net/evaluate-business/',
           type: 'POST',
           contentType: 'application/json',
           dataType: 'json',
@@ -1157,6 +1155,7 @@ $(document).ready(() => {
     }
   });
   wfForm.find('input[name="cellphone"]').on('change', function () {
+    let value = $(this).val().trim() !== '';
     if (value) {
       handleHubspotForm(wfForm, hsForm, true);
     }
@@ -1446,6 +1445,9 @@ $(document).ready(() => {
         let step = $(this).attr('data-multistep-headline');
         $(this).toggle(step == currentStep);
       });
+
+      // Counter
+      $('[data-form="step-counter"]').text(`Step ${currentStep + 1} of ${totalSteps}`);
 
       // Btns
       $(prevBtn).toggle(currentStep > 0);
