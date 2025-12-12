@@ -1183,9 +1183,17 @@ $(document).ready(() => {
     role.on('change', function () {
       validateRequiredInputs();
     });
-    window.googleAutocomplete.addListener('place_changed', function () {
-      validateRequiredInputs();
-    });
+    function waitForAutocomplete() {
+      if (window.googleAutocomplete) {
+        window.googleAutocomplete.addListener('place_changed', function () {
+          validateRequiredInputs();
+        });
+      } else {
+        setTimeout(waitForAutocomplete, 100);
+      }
+    }
+
+    waitForAutocomplete();
   }
   validateForEnrichment();
 
