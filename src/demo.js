@@ -119,7 +119,7 @@ $(document).ready(() => {
   // Load scripts
   loadScript('https://import-cdn.default.com/sdk.js');
 
-  let isDev = window.location.href.indexOf('dev') !== -1;
+  let isDev = window.location.href.indexOf('/dev') !== -1;
 
   let wfForm = $('[demo-form]');
 
