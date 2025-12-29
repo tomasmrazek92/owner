@@ -390,6 +390,7 @@ function initGooglePlaces(inputSelector, predictionsSelector) {
   // Submit button click handlers
   $('.hp-grader_btn-submit')
     .add('.hp-grader_btn-submit2')
+    .add('.hp-grader_btn-submit3')
     .on('click', function (e) {
       if (placeId) {
         redirectToGrader(placeId);

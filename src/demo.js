@@ -1420,7 +1420,7 @@ $(document).ready(() => {
     const mutlistepTypes = {
       '2-steps': {
         0: ['restaurant', 'role', 'locations'],
-        1: ['email', 'first-name', 'last-name', 'cellphone', 'hear'],
+        1: ['email', 'first-name', 'last-name', 'cellphone', 'hear', 'sms'],
       },
     };
 
