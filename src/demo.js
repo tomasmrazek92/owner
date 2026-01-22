@@ -127,6 +127,7 @@ $(document).ready(() => {
   let qualified;
   let isSchedule = wfForm.attr('data-show-schedule') === 'true';
   let isLiveBooked = false;
+  let isReferal = currentUrl.indexOf('refer') !== -1 || currentUrl.indexOf('benekeith') !== -1;
 
   // User ID
   // check cookies for an existing user ID
@@ -987,7 +988,7 @@ $(document).ready(() => {
   }
 
   // Referall Page Form
-  if (currentUrl.indexOf('refer') !== -1 || currentUrl.indexOf('benekeith') !== -1) {
+  if (isReferal) {
     formId = '969fbdc3-b662-4428-a208-c78b8f20efa6';
   }
 
@@ -1335,7 +1336,7 @@ $(document).ready(() => {
 
     // Use correct structure from docs
     const data = {
-      form_id: 593374,
+      form_id: isReferal ? 348215 : 593374,
       team_id: 514,
       email: emailValue,
       responses: capturedFormData.responses,
