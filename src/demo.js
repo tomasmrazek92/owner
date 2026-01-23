@@ -120,6 +120,8 @@ $(document).ready(() => {
   loadScript('https://import-cdn.default.com/sdk.js');
 
   let isDev = window.location.href.indexOf('/dev') !== -1;
+  const currentUrl = window.location.href;
+  let isReferal = currentUrl.indexOf('refer') !== -1 || currentUrl.indexOf('benekeith') !== -1;
 
   let wfForm = $('[demo-form]');
 
@@ -127,7 +129,6 @@ $(document).ready(() => {
   let qualified;
   let isSchedule = wfForm.attr('data-show-schedule') === 'true';
   let isLiveBooked = false;
-  let isReferal = currentUrl.indexOf('refer') !== -1 || currentUrl.indexOf('benekeith') !== -1;
 
   // User ID
   // check cookies for an existing user ID
@@ -980,7 +981,6 @@ $(document).ready(() => {
   // Default form ID
   let formId = 'f3807262-aed3-4b9c-93a3-247ad4c55e60';
   let portalId = '6449395';
-  const currentUrl = window.location.href;
 
   // Form for resources
   if (currentUrl.indexOf('/resources/') !== -1) {
