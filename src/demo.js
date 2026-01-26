@@ -646,11 +646,12 @@ $(document).ready(() => {
   }
 
   function fillCustomFields() {
-    // Some quick input filling
     setInputElementValue(
       'page_url',
       window.location.href.includes('benekeith')
         ? '/benekeith'
+        : window.location.pathname === '/refer'
+        ? '/referrals'
         : isSchedule
         ? '/demo-schedule'
         : window.location.pathname
