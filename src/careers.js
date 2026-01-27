@@ -1,4 +1,4 @@
-let url = 'https://lever.ownerengineering.com/postings';
+let url = 'https://api.ashbyhq.com/posting-api/job-board/Owner';
 
 if (window.location.pathname === '/careers') {
   fetch(url)
@@ -9,62 +9,44 @@ if (window.location.pathname === '/careers') {
       return response.json();
     })
     .then((data) => {
-      let roles = data.data;
-      console.log(data.data);
-
-      var teamListElement = $('.careers-roles_team-list');
-      var teamTemplate = teamListElement.children('li').clone();
-
-      teamListElement.empty();
+      console.log(data);
+      let roles = data.jobs;
 
       var groupedRoles = {};
 
       for (var i = 0; i < roles.length; i++) {
-        var { team } = roles[i].categories;
-
+        var team = roles[i].team;
         if (!groupedRoles[team]) {
           groupedRoles[team] = [];
         }
-
         groupedRoles[team].push(roles[i]);
       }
 
       var teams = Object.keys(groupedRoles).sort();
-
-      console.log(groupedRoles);
+      console.log(teams);
+      var html = '';
 
       for (var t = 0; t < teams.length; t++) {
         var team = teams[t];
         var teamRoles = groupedRoles[team];
 
         teamRoles.sort(function (a, b) {
-          return a.text.localeCompare(b.text);
+          return a.title.localeCompare(b.title);
         });
 
-        var currentTeam = teamTemplate.clone();
-
-        currentTeam.find('[data-team-name]').text(team);
-
-        var rolesList = currentTeam.find('.careers-roles_list');
-        var roleTemplate = rolesList.find('li').clone();
-
-        rolesList.empty();
+        var rolesHtml = '';
 
         for (var r = 0; r < teamRoles.length; r++) {
-          var currentRole = roleTemplate.clone();
-          currentRole.find('a').attr('href', '/careers/role?=' + teamRoles[r].id);
-          currentRole.find('[data-title]').text(teamRoles[r].text);
-          currentRole.find('[data-category]').text(teamRoles[r].categories.team);
-          currentRole.find('[data-location]').text(teamRoles[r].categories.allLocations.join(', '));
-          rolesList.append(currentRole);
+          rolesHtml += `<li><a href="/careers/role?=${teamRoles[r].id}" target="_blank" class="careers-roles_item w-inline-block"><p data-title="" id="w-node-_86bb2348-612f-64e3-1a96-c5d8e0401310-9fbcf1de" class="h15">${teamRoles[r].title}</p><div id="w-node-_86bb2348-612f-64e3-1a96-c5d8e0401312-9fbcf1de" class="text-color-content-quaternary"><p data-category="" class="h15">${teamRoles[r].team}</p></div><div id="w-node-_86bb2348-612f-64e3-1a96-c5d8e0401315-9fbcf1de" class="text-color-content-quaternary"><p data-location="" class="h15">${teamRoles[r].location}</p></div><div id="w-node-_86bb2348-612f-64e3-1a96-c5d8e0401318-9fbcf1de" class="button is-link is-role"><p class="h15">Apply Now</p><div class="button_arrow cc-inherit"><div class="button_arrow-tail w-embed"><svg width="100%" height="100%" viewBox="0 0 10 2" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M9 1L1 1" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></div><div class="button_arrow-head w-embed"><svg width="100%" height="100%" viewBox="0 0 7 12" fill="none" xmlns="http://www.w3.org/2000/svg"><path d="M1 1.5L5 6L1 10.5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round"></path></svg></div></div></div></a></li>`;
         }
 
-        teamListElement.append(currentTeam);
+        html += `<li><div class="margin-bottom margin-12"><p class="h24" data-team-name="">${team}</p></div><ul class="careers-roles_list">${rolesHtml}</ul></li>`;
       }
 
-      $('[roles-counter]').text(roles.length);
-      teamListElement.css('opacity', '1');
-      $('.careers-roles_list').css('opacity', '1');
+      document.querySelector('.careers-roles_team-list').innerHTML = html;
+      document.querySelector('[roles-counter]').textContent = roles.length;
+      document.querySelector('.careers-roles_team-list').style.opacity = '1';
+      document.querySelectorAll('.careers-roles_list').forEach((el) => (el.style.opacity = '1'));
     })
     .catch((error) => console.error('Error fetching data:', error));
 }
@@ -73,7 +55,7 @@ if (window.location.pathname === '/careers/role') {
   var jobId = window.location.search.split('=')[1];
 
   // Fetch and Display Data
-  fetch(`${url}/${jobId}`)
+  fetch(url)
     .then((response) => {
       if (!response.ok) {
         throw new Error('Network response was not ok');
@@ -81,17 +63,13 @@ if (window.location.pathname === '/careers/role') {
       return response.json();
     })
     .then((data) => {
-      console.log(data.data.posting);
-      // Filter the job by its ID
-      let filteredJob = data.data.posting;
+      let filteredJob = data.jobs.find((job) => job.id === jobId);
 
       if (filteredJob) {
         console.log('Filtered Job:', filteredJob);
 
-        // Set page title dynamically
-        document.title = filteredJob.text + ' | owner.com';
+        document.title = filteredJob.title + ' | owner.com';
 
-        // Update other elements with job details
         let name = $('[data-role-title]');
         let location = $('[data-role-location]');
         let type = $('[data-role-type]');
@@ -101,54 +79,28 @@ if (window.location.pathname === '/careers/role') {
         let detailAdditional = $('[data-role-additional]');
 
         function cleanInlineStyles(htmlString) {
-          // Create a temporary div with the HTML content
           let $temp = $('<div>').html(htmlString);
-
-          // Remove all style attributes from all elements
           $temp.find('*').removeAttr('style');
-
-          // Return the cleaned HTML string
           return $temp.html();
         }
 
-        // Data
-        name.text(filteredJob.text);
-        location.text(filteredJob.categories.location);
+        name.text(filteredJob.title);
+        location.text(filteredJob.location);
 
-        // Categories
         let details = [];
-        if (filteredJob.categories.commitment) {
-          details.push(filteredJob.categories.commitment);
+        if (filteredJob.employmentType) {
+          details.push(filteredJob.employmentType);
         }
-        if (filteredJob.categories.team) {
-          details.push(filteredJob.categories.team);
+        if (filteredJob.team) {
+          details.push(filteredJob.team);
         }
         let combinedDetails = details.join(' / ');
         type.text(combinedDetails);
 
-        // Link
-        detailLink.attr('href', filteredJob.urls.apply);
+        detailLink.attr('href', filteredJob.jobUrl);
 
-        // Opening
-        detailOpening.html(cleanInlineStyles(filteredJob.content.descriptionHtml));
+        detailOpening.html(cleanInlineStyles(filteredJob.descriptionHtml));
 
-        filteredJob.content.lists.forEach((item) => {
-          // Create the HTML elements
-          let listSection = $('<div>');
-          let heading = $('<h3>').text(item.text);
-          let list = $('<ul>').html(item.content);
-
-          // Append heading and list to the section
-          listSection.append(heading).append(list);
-
-          // Append the entire section to detailHtml
-          detailHtml.append(listSection);
-        });
-
-        // Additional
-        detailAdditional.html(cleanInlineStyles(filteredJob.content.closing));
-
-        // Reveal
         $('.section_job-role').addClass('rendered');
       }
     })
