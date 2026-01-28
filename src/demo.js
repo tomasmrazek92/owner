@@ -656,6 +656,7 @@ $(document).ready(() => {
         ? '/demo-schedule'
         : window.location.pathname
     );
+    setInputElementValue('most_recent_conversion_page_url', window.location.href);
     setInputElementValue('page_lang', $('html').attr('lang'));
     setInputElementValue(
       'url',
@@ -991,12 +992,6 @@ $(document).ready(() => {
   // Referall Page Form
   if (isReferal) {
     formId = '969fbdc3-b662-4428-a208-c78b8f20efa6';
-  }
-
-  // Dev QA
-  if (isDev) {
-    formId = 'e13f4000-0da1-48db-bc88-752e55c82fe7';
-    portalId = '50356338';
   }
 
   let capturedFormData = null;
