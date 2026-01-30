@@ -78,21 +78,24 @@ const initGooglePlaceAutocomplete = () => {
 
   $('input[name="restaurant-name"]').each(function () {
     const self = $(this);
-    const types =
+    // Default allowed place types for restaurant autocomplete
+    const defaultTypes = ['restaurant', 'cafe', 'bar', 'bakery', 'food'];
+    
+    // Try to get types from HTML attribute, otherwise use defaults
+    const typesFromAttr =
       self
         .attr('data-place-types')
         ?.match(/'([^']+)'/g)
         ?.map((t) => t.replace(/'/g, '')) || [];
+    
+    // Use types from attribute if provided, otherwise use defaults
+    const types = typesFromAttr.length > 0 ? typesFromAttr : defaultTypes;
     const country = self.attr('data-country-restrict');
 
     const gpaOptions = {
       language: 'en',
+      types: types, // Always set types to limit autocomplete results
     };
-
-    // Only add types if there are actually types
-    if (types.length) {
-      gpaOptions.types = types;
-    }
 
     // Only add component restrictions if there is a country
     if (country) {
