@@ -59,13 +59,26 @@ function validateSelect(input) {
   return isValid;
 }
 
-// Validate Checkboy
+// Validate Checkbox
 function validateCheckbox(input) {
   if (!$(input).is(':checked')) {
     toggleValidationMsg($(input), true);
     return false;
   }
   toggleValidationMsg($(input), false);
+  return true;
+}
+
+// Validate Group Checkbox
+function validateCheckboxGroup(groupSelector) {
+  var $group = $(groupSelector);
+  var $checkboxes = $group.find('input[type="checkbox"]');
+  console.log($checkboxes.filter(':checked').length === 0);
+  if ($checkboxes.filter(':checked').length === 0) {
+    toggleValidationMsg($group, true);
+    return false;
+  }
+  toggleValidationMsg($group, false);
   return true;
 }
 
@@ -116,8 +129,13 @@ export const validateInput = (element) => {
   $(input).removeClass('error');
   $(input).removeClass('is-valid');
 
-  if ($(input).prop('required')) {
-    if ($(input).is('[type="checkbox"]')) {
+  if ($(input).prop('required') || $(input).closest('[data-form="check-checkbox"]').length) {
+    // Multistep Conditions
+    if ($(input).closest('[data-form="check-checkbox"]').length) {
+      isValidAll = validateCheckboxGroup($(input).closest('[field-wrapper]'));
+    }
+    // General Conditions
+    else if ($(input).is('[type="checkbox"]')) {
       isValidAll = validateCheckbox(input);
     } else if ($(input).is('[type="radio"]')) {
       isValidAll = validateRadio(input);
