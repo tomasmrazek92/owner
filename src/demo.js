@@ -897,7 +897,8 @@ $(document).ready(() => {
     const shouldRedirect =
       !window.location.href.includes('/blog/') &&
       !window.location.href.includes('/resources/') &&
-      !window.location.href.includes('/downloads/');
+      !window.location.href.includes('/downloads/') &&
+      !window.location.href.includes('demo-quiz-grader');
     const showSchedule = isSchedule && qualified;
 
     // Toggle Loading
