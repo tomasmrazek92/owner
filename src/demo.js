@@ -1513,6 +1513,13 @@ $(document).ready(() => {
 
       // Expose to global
       window.dispatchEvent(new CustomEvent('stepChanged', { detail: { step: currentStep } }));
+
+      // Log to DataLayer
+      window.dataLayer = window.dataLayer || [];
+      window.dataLayer.push({
+        event: 'Step ' + currentStep + ' Continue',
+        page_url: window.location.href,
+      });
     }
 
     nextBtn?.addEventListener('click', async function () {
