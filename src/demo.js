@@ -146,6 +146,7 @@ $(document).ready(() => {
     if (isDev) return;
 
     let redirect = wfForm.attr('data-custom-redirect');
+    let newTab = wfForm.attr('data-redirect-new-tab') === 'true';
     let placeId = getInputElementValue('place_id');
     let resName = getInputElementValue('name');
     let dqFlaq = getInputElementValue('auto_dq_flag');
@@ -160,7 +161,11 @@ $(document).ready(() => {
     // Track
     logMixpanel('Form - Success - Redirect', { redirectUrl: finalRedirect });
 
-    window.location.href = finalRedirect;
+    if (newTab) {
+      window.open(finalRedirect, '_blank');
+    } else {
+      window.location.href = finalRedirect;
+    }
   }
 
   const processMap = new Map();
@@ -803,7 +808,7 @@ $(document).ready(() => {
 
         // We check if the returned value contains the dgFlag
         if (typeof dqFlag === 'string') {
-          qualified = result.auto_dq_flag === 'True' ? false : true; // if dgFlaq equals true, it means its disqualified.
+          qualified = !(result.auto_dq_flag === true || result.auto_dq_flag === 'true'); // if dgFlaq equals true, it means its disqualified.
           fillFormWithMatchingData(result, true); // We fill the data with API logic
 
           if (qualified) {
@@ -894,11 +899,14 @@ $(document).ready(() => {
 
   const successSubmit = () => {
     const success = $('.demo-form_success');
+    const customRedirect = wfForm.attr('data-custom-redirect');
+
     const shouldRedirect =
-      !window.location.href.includes('/blog/') &&
-      !window.location.href.includes('/resources/') &&
-      !window.location.href.includes('/downloads/') &&
-      !window.location.href.includes('demo-quiz-grader');
+      customRedirect ||
+      (!window.location.href.includes('/blog/') &&
+        !window.location.href.includes('/resources/') &&
+        !window.location.href.includes('/downloads/') &&
+        !window.location.href.includes('demo-quiz-grader'));
     const showSchedule = isSchedule && qualified;
 
     // Toggle Loading
