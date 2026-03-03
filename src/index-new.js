@@ -85,10 +85,12 @@ function initMixpanel() {
 // Initialize with your project token
 initMixpanel();
 
-mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
-  record_sessions_percent: 100,
-  record_mask_text_selector: '',
-});
+if (!window.location.pathname.includes('/dev')) {
+  mixpanel.init('8e3c791cba0b20f2bc5aa67d9fb2732a', {
+    record_sessions_percent: 100,
+    record_mask_text_selector: '',
+  });
+}
 
 $(document).ready(function () {
   // User ID
