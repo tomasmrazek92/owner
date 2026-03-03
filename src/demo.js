@@ -500,8 +500,6 @@ $(document).ready(() => {
       name: restaurant.name,
       address: restaurant.formatted_address,
       website: restaurant.website,
-      email: 'jonathan@owner.com',
-      token: 'AJXuyxPXgGF68NMv',
       sfdc_id: 'None',
     };
 
@@ -509,8 +507,12 @@ $(document).ready(() => {
       return new Promise((resolve, reject) => {
         logMixpanel('Enrichment API - Start');
 
+        const isStaging = window.location.hostname.endsWith('.webflow.io');
+        const apiHost = isStaging ? 'https://dev-api.owner.com' : 'https://api.owner.com';
+        const apiBase = `${apiHost}/sales/v1/enrichment/evaluate-business`;
+
         $.ajax({
-          url: 'https://owner-ops.net/evaluate-business/',
+          url: apiBase,
           type: 'POST',
           contentType: 'application/json',
           dataType: 'json',
@@ -542,10 +544,10 @@ $(document).ready(() => {
     }
 
     return callApi(data).then((response) => {
-      if (response && response[0]) {
-        return response[0];
+      if (response) {
+        return response[0] || response;
       }
-      return false; // Return false if no valid response
+      return false;
     });
   }
 
@@ -564,14 +566,25 @@ $(document).ready(() => {
 
     // Flag = We run this only when the apiCall runned
     if (flag) {
-      // Fill all the fiels coming from API
+      // Remap API keys to match form field names
+      const remappedData = {
+        ...apiData,
+        auto_enrich_date: apiData.base_enrich_date,
+      };
+
+      // Fill all the fields coming from API
       inputs.each(function () {
         const inputName = $(this).attr('name');
-        if (allowedKeys.includes(inputName) && apiData.hasOwnProperty(inputName)) {
-          var value = apiData[inputName];
+        if (allowedKeys.includes(inputName) && remappedData.hasOwnProperty(inputName)) {
+          var value = remappedData[inputName];
 
           if (typeof value === 'string' && value.match(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}/)) {
+            // Old format: "2026-03-03T00:00:00" → "2026-03-03"
             $(this).val(value.split('T')[0]);
+          } else if (typeof value === 'string' && value.match(/^\d{2}\/\d{2}\/\d{2}$/)) {
+            // New format: "03/03/26" → "2026-03-03"
+            const [mm, dd, yy] = value.split('/');
+            $(this).val(`20${yy}-${mm}-${dd}`);
           } else if (typeof value === 'number' || (!isNaN(value) && !isNaN(parseFloat(value)))) {
             $(this).val(Number(value).toFixed(2));
           } else {
