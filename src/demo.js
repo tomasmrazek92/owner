@@ -152,7 +152,7 @@ $(document).ready(() => {
     let dqFlaq = getInputElementValue('auto_dq_flag');
     let prosResult = dqFlaq === 'False' ? 'aql' : 'non-aql';
 
-    const defaultUrl = '/demo-thank-you-grader';
+    const defaultUrl = dqFlaq === 'False' ? '/demo-thank-you-grader' : '/funnel-demo-requested';
 
     const finalRedirect = `${
       redirect || defaultUrl
@@ -921,6 +921,10 @@ $(document).ready(() => {
         !window.location.href.includes('/downloads/') &&
         !window.location.href.includes('demo-quiz-grader'));
     const showSchedule = isSchedule && qualified;
+    const dqFlaq = getInputElementValue('auto_dq_flag') === 'True';
+
+    console.log('redirect:' + shouldRedirect);
+    console.log('showSchedule:' + showSchedule);
 
     // Toggle Loading
     wfForm.hide();
@@ -987,7 +991,7 @@ $(document).ready(() => {
     );
 
     // Success State flow
-    if (shouldRedirect && !showSchedule) {
+    if (shouldRedirect && (!showSchedule || dqFlaq)) {
       success.show();
       handleRedirect();
     } else {
