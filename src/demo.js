@@ -501,6 +501,7 @@ $(document).ready(() => {
       address: restaurant.formatted_address,
       website: restaurant.website,
       sfdc_id: 'None',
+      source: 'core',
     };
 
     function callApi(data) {
