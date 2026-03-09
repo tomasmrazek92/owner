@@ -152,7 +152,7 @@ $(document).ready(() => {
     let dqFlaq = getInputElementValue('auto_dq_flag');
     let prosResult = dqFlaq === 'False' ? 'aql' : 'non-aql';
 
-    const defaultUrl = dqFlaq === 'False' ? '/demo-thank-you-grader' : '/funnel-demo-requested';
+    const defaultUrl = '/demo-thank-you-grader';
 
     const finalRedirect = `${
       redirect || defaultUrl
